@@ -1,0 +1,38 @@
+import './App.css'
+import LayoutHeader from './pages/header'
+import LayoutHome from './pages/Home'
+import LayoutFooter from './pages/footer'
+import ReactDom from 'react-dom'
+import { MetaMask } from '@web3-react/metamask'
+import { Web3ReactProvider, Web3ReactHooks } from '@web3-react/core'
+import { hooks as metaMaskHooks, metaMask } from './connectors/metaMask'
+import { useEffect } from 'react'
+import { ToastContainer } from 'react-toastify'
+import { HashRouter } from 'react-router-dom'
+
+const connectors: [MetaMask, Web3ReactHooks][] = [[metaMask, metaMaskHooks]]
+function App() {
+  return (
+    <Web3ReactProvider connectors={connectors}>
+      <HashRouter>
+        <div className="w-full h-full flex flex-col items-center">
+          <LayoutHeader />
+          <div className="max-w-screen-xl mt-8">
+            <LayoutHome />
+            {/* <LayoutFooter /> */}
+          </div>
+          {ReactDom.createPortal(
+            <ToastContainer
+              position="top-left"
+              closeOnClick={false}
+              autoClose={6000}
+              toastClassName="break-all bg-neutral-200 z-50"
+            />,
+            document.body
+          )}
+        </div>
+      </HashRouter>
+    </Web3ReactProvider>
+  )
+}
+export default App
