@@ -14,17 +14,18 @@ import { isAddress } from 'ethers/lib/utils'
 interface TTokenSelectProps {
   tokenMeta: TTokenMeta | undefined
   setTokenMeta: (tokenMeta: TTokenMeta) => void
+  dialogDefaultOpen?: boolean
 }
 const { useProvider, useChainId, useAccount } = metaMaskHooks
 export default function TokenSelect(props: TTokenSelectProps) {
-  const { tokenMeta, setTokenMeta } = props
+  const { tokenMeta, setTokenMeta, dialogDefaultOpen = false } = props
   const { tokenList: sourceTokenList, getToken, setToken } = useTokenMeta()
   const provider = useProvider()
   const chainId = useChainId()
   const account = useAccount()
   const nativeTokenBalance = useBalance(provider, account)
   const [loading, setLoading] = useState<boolean>(false)
-  const [dialogVisible, setDialogVisible] = useState<boolean>(false)
+  const [dialogVisible, setDialogVisible] = useState<boolean>(dialogDefaultOpen)
   const [tokenAddress, setTokenAddress] = useState<string>()
 
   const nativeTokenMeta = useMemo(() => {

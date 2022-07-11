@@ -66,6 +66,7 @@ export default function TokensSelect(props: {
             <TokenSelect
               tokenMeta={token}
               setTokenMeta={(token) => setTokenMetaByIndex(token, index)}
+              dialogDefaultOpen={index === 1}
             />
           </div>
         )
