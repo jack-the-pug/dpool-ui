@@ -19,6 +19,9 @@ import { Pool } from '../pool/PoolDetail'
 import useTokenMeta from '../../hooks/useTokenMeta'
 
 import TextareaMode from './TextareaMode'
+import useDPoolAddress from '../../hooks/useDPoolAddress'
+import { toast } from 'react-toastify'
+import DPoolFactory from './dPoolFactory/index'
 
 export type TPoolRow = PoolRow & { key?: number | string }
 
@@ -47,6 +50,39 @@ export default function PoolsList() {
   usePageClose()
   const account = useAccount()
   const { getToken } = useTokenMeta()
+  const { isOwner, dPoolAddress } = useDPoolAddress()
+  const [dPoolFactoryVisible, setDPoolFactoryVisible] = useState<boolean>(false)
+  useEffect(() => {
+    if (!dPoolAddress) {
+      setDPoolFactoryVisible(true)
+    } else {
+      setDPoolFactoryVisible(false)
+    }
+  }, [dPoolAddress])
+  useEffect(() => {
+    if (!isOwner) {
+      toast.warning(
+        ({ closeToast }) => (
+          <div>
+            <p className="break-normal">
+              You are not the owner of this dPool contract.
+            </p>
+            <span
+              className="text-green-500"
+              onClick={() => {
+                closeToast!()
+                setDPoolFactoryVisible(true)
+              }}
+            >
+              Create your own dPool -&gt;
+            </span>
+          </div>
+        ),
+        { autoClose: false }
+      )
+    }
+  }, [isOwner])
+
   const [tokenMetaList, setTokenMetaList] = useState<TokenMetaList>([undefined])
   const [poolName, setPoolName] = useState<string>('Distribution')
   const [poolList, setPoolList] = useState<TPoolRow[]>([creatPoolEmptyItem()])
@@ -146,6 +182,7 @@ export default function PoolsList() {
     initPool()
   }, [])
 
+  // compute second token values
   useEffect(() => {
     if (!baseTokenMeta || !secondTokenMeta) return
     const amounts = poolList.map((col) => {
@@ -158,14 +195,12 @@ export default function PoolsList() {
         secondTokenTotalAmount ? secondTokenTotalAmount.toString() : '0',
         secondTokenMeta.decimals
       )
-
       const value = formatBaseAmount
         .mul(formatSecontTokenTotoalAmount)
         .div(baseTotalAmount)
 
       return parseFloat(utils.formatUnits(value, secondTokenMeta.decimals))
     })
-
     setSecondTokenAmounts(amounts)
   }, [
     secondTokenTotalAmount,
@@ -268,7 +303,8 @@ export default function PoolsList() {
 
   const callDataCheck = useMemo(() => {
     if (!createPoolCallData) return
-    const { isFundNow, distributionType } = poolConfig
+    if (!isOwner) return
+    const { distributionType } = poolConfig
     const callData = createPoolCallData[0]
 
     const claimer = callData[PoolCreator.Claimers]
@@ -284,7 +320,7 @@ export default function PoolsList() {
     if (!claimer.length || !amounts.length) return 'no claimers'
     setErrMsg('')
     return true
-  }, [createPoolCallData, poolConfig])
+  }, [createPoolCallData, poolConfig, isOwner])
 
   useEffect(() => {
     if (!callDataCheck) return
@@ -294,8 +330,7 @@ export default function PoolsList() {
   }, [callDataCheck])
 
   /**
-   * textarea.table Mode switch.
-   *
+   * textarea,table Mode switch.
    */
   const poolList2textarea = useCallback(() => {
     const textarea = poolList.filter(isLegalPoolRow).reduce((pre, cur) => {
@@ -312,6 +347,7 @@ export default function PoolsList() {
         text.split(':'),
         text.split(' '),
         text.split(','),
+        text.split('='),
       ]
       const rowMeta = maybeRowMetaList.find((item) => item.length === 2)
       if (!rowMeta) continue
@@ -328,7 +364,6 @@ export default function PoolsList() {
       }
       poolList.push(item)
     }
-
     setPoolList(() => (poolList.length ? poolList : [creatPoolEmptyItem()]))
   }, [textarea])
 
@@ -337,8 +372,9 @@ export default function PoolsList() {
     if (typeof callDataCheck !== 'boolean') return
     setConfirmVisible(true)
   }, [callDataCheck])
-
-  return (
+  return dPoolFactoryVisible ? (
+    <DPoolFactory />
+  ) : (
     <div className="flex flex-col items-center justify-center">
       <div className="w-full flex justify-center items-center">
         <input

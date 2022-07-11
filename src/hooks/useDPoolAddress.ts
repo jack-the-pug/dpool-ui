@@ -2,25 +2,27 @@ import { isAddress } from 'ethers/lib/utils'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import useDPoolFactory from './useDPoolFactory'
-import { hooks as metaMaskHooks } from '../connectors/metaMask'
+
 import { BigNumber } from 'ethers'
 import { chains } from '../constants'
+
+import { hooks as metaMaskHooks } from '../connectors/metaMask'
 const { useAccount, useChainId } = metaMaskHooks
 
 export default function useDPoolAddress() {
   const [address, setAddress] = useState<string>()
-  const [isOwner, setIsOwner] = useState<boolean>(false)
+  const [isOwner, setIsOwner] = useState<boolean>(true)
   const [searchParams, setSearchParams] = useSearchParams()
   const dPoolFactory = useDPoolFactory()
   const account = useAccount()
   const chainId = useChainId()
-
   const DP_KEY = useMemo(() => {
     if (!chainId || !account) return undefined
     return `${chainId}-${account.toLowerCase()}-${chains[
       chainId
     ]?.dPoolFactoryAddress.toLowerCase()}-DPOOL-ADDRESS`
   }, [account, chainId])
+
   const urlDPoolAddress = useMemo(() => {
     return searchParams.get('dPoolAddress')
   }, [searchParams])
@@ -42,6 +44,21 @@ export default function useDPoolAddress() {
     },
     [searchParams, setSearchParams]
   )
+  useEffect(() => {
+    if (!urlDPoolAddress && !localStorageDPoolAddress) return
+    if (
+      !urlDPoolAddress &&
+      localStorageDPoolAddress &&
+      isAddress(localStorageDPoolAddress)
+    ) {
+      setDPoolAddress(localStorageDPoolAddress)
+      return
+    }
+    if (urlDPoolAddress && isAddress(urlDPoolAddress) && DP_KEY) {
+      localStorage.setItem(DP_KEY, urlDPoolAddress)
+      setDPoolAddress(urlDPoolAddress)
+    }
+  }, [urlDPoolAddress, localStorageDPoolAddress, DP_KEY])
 
   const getDPoolAddressByAccount = useCallback(
     async (account: string) => {
@@ -54,29 +71,13 @@ export default function useDPoolAddress() {
   )
 
   useEffect(() => {
-    if (
-      !urlDPoolAddress &&
-      localStorageDPoolAddress &&
-      isAddress(localStorageDPoolAddress)
-    ) {
-      setDPoolAddress(localStorageDPoolAddress)
-      return
-    }
-    if (urlDPoolAddress && isAddress(urlDPoolAddress) && DP_KEY) {
-      localStorage.setItem(DP_KEY, urlDPoolAddress)
-      setAddress(urlDPoolAddress)
-    }
-  }, [urlDPoolAddress, localStorageDPoolAddress, setDPoolAddress, DP_KEY])
-
-  useEffect(() => {
     if (!account) return
+    if (!address) return
     const req = getDPoolAddressByAccount(account)
     if (!req) return
     req.then((_address: string) => {
       if (_address && isAddress(_address) && address && isAddress(address)) {
-        BigNumber.from(address).eq(_address)
-          ? setIsOwner(true)
-          : setIsOwner(false)
+        setIsOwner(() => BigNumber.from(address).eq(_address))
       }
     })
   }, [address, getDPoolAddressByAccount, account])

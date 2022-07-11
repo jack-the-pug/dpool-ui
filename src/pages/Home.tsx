@@ -3,7 +3,7 @@ import AddressBook from './addressBook/index'
 import { Routes, Route } from 'react-router-dom'
 import PoolList from './pool/PoolList'
 import PoolDetail from './pool/PoolDetail'
-import useDPoolAddress from '../hooks/useDPoolAddress'
+import DPoolFactory from './distribution/dPoolFactory'
 
 export default function Home() {
   return (

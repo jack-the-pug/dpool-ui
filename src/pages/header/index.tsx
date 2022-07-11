@@ -11,7 +11,7 @@ export default function LayoutHeader() {
     <header className="w-full flex justify-between items-center mt-2 px-5 gap-10">
       <div className="flex flex-col">
         <h2>dPool</h2>
-        {dPoolAddress ? (
+        {dPoolAddress && pathname !== '/dPoolFactory' ? (
           <span className="mr-1 text-xs text-gray-500">{dPoolAddress}</span>
         ) : null}
       </div>
