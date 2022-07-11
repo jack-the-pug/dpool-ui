@@ -46,15 +46,13 @@ export default function Connector() {
 
   return (
     <div
-      className="border border-gray-900 px-2 rounded-md hover:bg-gray-100 flex items-center "
+      className="border w-36 justify-center border-gray-900 px-2 rounded-md hover:bg-gray-100 flex items-center "
       style={{ height: '30px' }}
       onMouseEnter={() => setIsAddressHover(true)}
       onMouseLeave={() => setIsAddressHover(false)}
     >
       {isAddressHover ? (
-        <button className="w-28" onClick={() => setIsConnect(false)}>
-          Disconnect
-        </button>
+        <button onClick={() => setIsConnect(false)}>Disconnect</button>
       ) : (
         <div>
           {account
