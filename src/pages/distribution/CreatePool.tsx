@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { MaterialSymbolsAdd, RiContactsBookLine } from '../../components/icon'
+import { MaterialSymbolsAdd } from '../../components/icon'
 import { usePageClose } from '../../hooks/usePageClose'
 
 import { BigNumber, utils } from 'ethers'
@@ -15,11 +15,9 @@ import PoolSetting from './PoolSetting'
 import { Profile } from './ProfileForm'
 import TokensSelect, { TokenMetaList } from './Token'
 import CreatePoolConfirm from './CreatePoolConfirm'
-import { Link, useLocation } from 'react-router-dom'
 import { Pool } from '../pool/PoolDetail'
 import useTokenMeta from '../../hooks/useTokenMeta'
-import { getUnixTime } from 'date-fns'
-import { isAddress } from 'ethers/lib/utils'
+
 import TextareaMode from './TextareaMode'
 
 export type TPoolRow = PoolRow & { key?: number | string }
@@ -301,28 +299,36 @@ export default function PoolsList() {
    */
   const poolList2textarea = useCallback(() => {
     const textarea = poolList.filter(isLegalPoolRow).reduce((pre, cur) => {
-      return `${pre}${cur.address}:${cur.baseTokenAmount}\n`
+      return `${pre}${cur.address},${cur.baseTokenAmount}\n`
     }, '')
     setTextarea(textarea)
   }, [poolList])
   const textarea2poolList = useCallback(() => {
     const textByRow = textarea.split('\n')
-    const poolList = textByRow
-      .map((text, index): TPoolRow => {
-        const rowMeta = text.split(':')
-        const [address, baseAmount] = rowMeta
-        let baseTokenAmount = parseFloat(baseAmount)
-        if (isNaN(baseTokenAmount)) {
-          baseTokenAmount = 0
-        }
-        return {
-          address,
-          baseTokenAmount: baseTokenAmount,
-          name: '',
-          key: `${Date.now()}-${index}`,
-        }
-      })
-      .filter(isLegalPoolRow)
+    const poolList: TPoolRow[] = []
+    for (let i = 0; i < textByRow.length; i++) {
+      const text = textByRow[i]
+      const maybeRowMetaList = [
+        text.split(':'),
+        text.split(' '),
+        text.split(','),
+      ]
+      const rowMeta = maybeRowMetaList.find((item) => item.length === 2)
+      if (!rowMeta) continue
+      const [address, baseAmount] = rowMeta
+      let baseTokenAmount = parseFloat(baseAmount)
+      if (isNaN(baseTokenAmount)) {
+        baseTokenAmount = 0
+      }
+      const item = {
+        address,
+        baseTokenAmount: baseTokenAmount,
+        name: '',
+        key: `${Date.now()}-${i}`,
+      }
+      poolList.push(item)
+    }
+
     setPoolList(() => (poolList.length ? poolList : [creatPoolEmptyItem()]))
   }, [textarea])
 
