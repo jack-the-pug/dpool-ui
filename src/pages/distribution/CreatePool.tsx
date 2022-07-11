@@ -21,6 +21,7 @@ import useTokenMeta from '../../hooks/useTokenMeta'
 import TextareaMode from './TextareaMode'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import { toast } from 'react-toastify'
+
 import DPoolFactory from './dPoolFactory/index'
 
 export type TPoolRow = PoolRow & { key?: number | string }
@@ -44,7 +45,7 @@ const creatPoolEmptyItem = () => ({
   key: Date.now(),
 })
 
-const { useAccount, useChainId } = metaMaskHooks
+const { useAccount } = metaMaskHooks
 
 export default function PoolsList() {
   usePageClose()

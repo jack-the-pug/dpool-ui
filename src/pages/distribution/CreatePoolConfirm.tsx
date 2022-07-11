@@ -31,8 +31,8 @@ interface PoolMeta {
   name: string
   pool: TPoolRow[]
   length: number
-  baseTokenTotal: string
-  secondTokenTotal?: string
+  baseTokenTotal: BigNumber
+  secondTokenTotal?: BigNumber
   config: Omit<PoolConfig, 'distributionType'>
 }
 
@@ -94,7 +94,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       name: baseCallData[PoolCreator.Name],
       pool: [],
       length: len,
-      baseTokenTotal: '0',
+      baseTokenTotal: BigNumber.from(0),
       config: {
         isFundNow: baseCallData[PoolCreator.isFundNow],
         date: [
@@ -105,13 +105,11 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       },
     }
     const amounts = baseCallData[PoolCreator.Amounts]
-    poolMeta.baseTokenTotal = utils.formatUnits(
-      amounts.reduce(
-        (sum, cur) => sum.add(BigNumber.from(cur)),
-        BigNumber.from(0)
-      ),
+    ;(poolMeta.baseTokenTotal = amounts.reduce(
+      (sum, cur) => sum.add(BigNumber.from(cur)),
+      BigNumber.from(0)
+    )),
       baseTokenMeta.decimals
-    )
 
     const _pool: TPoolRow[] = []
     for (let i = 0; i < len; i++) {
@@ -126,12 +124,11 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     if (secondTokenMeta) {
       const secondCallData = callData[1]
       const amounts = secondCallData[PoolCreator.Amounts]
-      poolMeta.secondTokenTotal = utils.formatUnits(
-        amounts.reduce(
-          (sum, cur) => sum.add(BigNumber.from(cur)),
-          BigNumber.from(0)
-        )
+      poolMeta.secondTokenTotal = amounts.reduce(
+        (sum, cur) => sum.add(BigNumber.from(cur)),
+        BigNumber.from(0)
       )
+
       _pool.forEach(
         (row, index) =>
           (row.secondTokenAmount = parseFloat(
@@ -153,17 +150,10 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       return '0'
     let value = BigNumber.from(0)
     if (BigNumber.from(baseTokenMeta.address).eq(0)) {
-      value = value.add(
-        utils.parseUnits(poolMeta.baseTokenTotal, baseTokenMeta.decimals)
-      )
+      value = value.add(poolMeta.baseTokenTotal)
     }
     if (secondTokenMeta && BigNumber.from(secondTokenMeta.address).eq(0)) {
-      value = value.add(
-        utils.parseUnits(
-          poolMeta.secondTokenTotal || '0',
-          secondTokenMeta.decimals
-        )
-      )
+      value = value.add(poolMeta.secondTokenTotal || BigNumber.from(0))
     }
     return value.toString()
   }, [poolMeta, baseTokenMeta, secondTokenMeta])
@@ -311,7 +301,9 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         setCreateTx(tx)
       }
     } catch (err: any) {
-      toast.error(`${typeof err === 'object' ? err.reason || JSON.stringify(err) : err}`)
+      toast.error(
+        `${typeof err === 'object' ? err.reason || JSON.stringify(err) : err}`
+      )
       setCreatePoolState(ActionState.FAILED)
     }
   }, [
@@ -340,6 +332,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       setVisible(false)
     }
   }, [createPoolState, setVisible])
+
   useEffect(() => {
     if (!account) return
     if (poolMeta?.config.distributor.toLowerCase() !== account.toLowerCase()) {
@@ -347,6 +340,13 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       setSecondTokenApproveState(ActionState.SUCCESS)
     }
   }, [account, poolMeta])
+  const remainingBalance = useMemo(() => {}, [
+    poolMeta,
+    baseTokenMeta,
+    secondTokenMeta,
+  ])
+  console.log(poolMeta)
+
   function CreateAction() {
     const waitApproved = (
       <div className="flex items-center">
@@ -391,7 +391,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     )
   }
   if (!poolMeta || !poolMeta.pool.length) return null
-
   return (
     <Dialog visible={visible} onClose={onClosePage}>
       <h1 className="flex justify-between items-center">
@@ -399,6 +398,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         <div className="font-medium font-xl">{poolMeta.name}</div>
         <ZondiconsClose onClick={onClosePage} className="cursor-pointer" />
       </h1>
+
       <div className="border-b border-black border-dotted w-full my-2"></div>
       <div className="font-mono">
         <div>
@@ -446,7 +446,15 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
 
           <div className="flex-1 flex justify-end">
             <div className="flex-1 flex justify-end">
-              {addKilobits(parseFloat(poolMeta.baseTokenTotal), 3)}
+              {addKilobits(
+                parseFloat(
+                  utils.formatUnits(
+                    poolMeta.baseTokenTotal,
+                    baseTokenMeta.decimals
+                  )
+                ),
+                3
+              )}
             </div>
             <div className="w-16 text-left pl-2 text-gray-500 italic">
               {baseTokenMeta.symbol}
@@ -455,7 +463,15 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           {poolMeta.secondTokenTotal && secondTokenMeta && (
             <div className="text-right flex">
               <div className="flex-1">
-                {addKilobits(parseFloat(poolMeta.secondTokenTotal), 3)}
+                {addKilobits(
+                  parseFloat(
+                    utils.formatUnits(
+                      poolMeta.secondTokenTotal,
+                      secondTokenMeta.decimals
+                    )
+                  ),
+                  3
+                )}
               </div>
               <div className="w-16 text-left pl-2 text-gray-500 italic">
                 {secondTokenMeta.symbol}
@@ -464,7 +480,45 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           )}
         </div>
       </div>
+      <div
+        className={`grid ${
+          secondTokenMeta ? 'grid-cols-4' : 'grid-cols-3'
+        } gap-4 w-full  my-4 justify-between items-center`}
+      >
+        <div className="flex items-center col-span-2">Balance</div>
 
+        <div className="flex-1 flex justify-end">
+          <div className="flex-1 flex justify-end">
+            {addKilobits(
+              parseFloat(
+                utils.formatUnits(baseTokenMeta.balance, baseTokenMeta.decimals)
+              ),
+              3
+            )}
+          </div>
+          <div className="w-16 text-left pl-2 text-gray-500 italic">
+            {baseTokenMeta.symbol}
+          </div>
+        </div>
+        {poolMeta.secondTokenTotal && secondTokenMeta && (
+          <div className="text-right flex">
+            <div className="flex-1">
+              {addKilobits(
+                parseFloat(
+                  utils.formatUnits(
+                    secondTokenMeta.balance,
+                    secondTokenMeta.decimals
+                  )
+                ),
+                3
+              )}
+            </div>
+            <div className="w-16 text-left pl-2 text-gray-500 italic">
+              {secondTokenMeta.symbol}
+            </div>
+          </div>
+        )}
+      </div>
       <div className="">
         {poolMeta.config.distributor.toLowerCase() !==
         account?.toLowerCase() ? (
@@ -493,6 +547,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           </div>
         )}
       </div>
+
       {poolMeta.config.distributor.toLowerCase() === account?.toLowerCase() ? (
         <div className="flex justify-between mb-2 mt-6">
           <div className="flex">
@@ -504,10 +559,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
                   tokenAddress={baseTokenMeta.address}
                   approveState={baseTokenApproveState}
                   setApproveState={setBaseTokenApproveState}
-                  approveAmount={utils.parseUnits(
-                    poolMeta.baseTokenTotal,
-                    baseTokenMeta.decimals
-                  )}
+                  approveAmount={poolMeta.baseTokenTotal}
                 />
               ) : null}
               {secondTokenMeta && dPoolAddress ? (
@@ -516,10 +568,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
                   tokenAddress={secondTokenMeta.address}
                   approveState={secondTokenApproveState}
                   setApproveState={setSecondTokenApproveState}
-                  approveAmount={utils.parseUnits(
-                    poolMeta.secondTokenTotal!,
-                    secondTokenMeta.decimals
-                  )}
+                  approveAmount={poolMeta.secondTokenTotal!}
                 />
               ) : null}
             </div>

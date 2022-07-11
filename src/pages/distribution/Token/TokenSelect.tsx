@@ -8,9 +8,10 @@ import useTokenMeta from '../../../hooks/useTokenMeta'
 import { TokenMeta as TTokenMeta } from '../../../type'
 import { chains } from '../../../constants'
 import useSignerOrProvider from '../../../hooks/useSignOrProvider'
-import { useBalance } from '../../../hooks/useBalance'
+
 import { toast } from 'react-toastify'
 import { isAddress } from 'ethers/lib/utils'
+import { useBalance } from '../../../hooks/useBalance'
 interface TTokenSelectProps {
   tokenMeta: TTokenMeta | undefined
   setTokenMeta: (tokenMeta: TTokenMeta) => void
@@ -29,7 +30,7 @@ export default function TokenSelect(props: TTokenSelectProps) {
   const [tokenAddress, setTokenAddress] = useState<string>()
 
   const nativeTokenMeta = useMemo(() => {
-    if (!chainId || !chains[chainId]) return null
+    if (!chainId || !chains[chainId] || !nativeTokenBalance) return null
     const nativeToken: TTokenMeta = {
       address: '0x0000000000000000000000000000000000000000',
       decimals: chains[chainId].decimals,

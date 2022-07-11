@@ -1,29 +1,36 @@
 import { BigNumber, Contract } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { chains, ESC20ABI } from '../constants'
 import { TokenMeta as TTokenMeta } from '../type'
 import { hooks as metaMaskHooks } from '../connectors/metaMask'
 import useSignerOrProvider from './useSignOrProvider'
+import { useBalance } from './useBalance'
 
 type TSetToken = (token: TTokenMeta) => void
 
-const { useAccount, useChainId } = metaMaskHooks
+const { useAccount, useChainId, useProvider } = metaMaskHooks
 export default function useTokenMeta() {
   const account = useAccount()
   const chainId = useChainId()
+  const provider = useProvider()
   const signerOrProvider = useSignerOrProvider()
+  const nativeTokenBalance = useBalance(provider, account)
+
   const nativeTokenMeta = useMemo(() => {
-    if (!chainId) return
+    if (!chainId || !nativeTokenBalance) return
     const nativeToken: TTokenMeta = {
       address: '0x0000000000000000000000000000000000000000',
       decimals: chains[chainId].decimals,
       symbol: chains[chainId].symbol,
-      balance: BigNumber.from(0),
+      balance: nativeTokenBalance,
       chainId,
     }
     return nativeToken
-  }, [chainId])
+  }, [chainId, nativeTokenBalance])
+  useEffect(() => {
+    console.log('nativeTokenMeta', nativeTokenMeta, nativeTokenBalance)
+  }, [nativeTokenMeta, nativeTokenBalance])
   const getERC20TokenContract = useCallback(
     (tokenAddress: string) => {
       if (!signerOrProvider || !tokenAddress || !isAddress(tokenAddress))
@@ -48,16 +55,16 @@ export default function useTokenMeta() {
   const getToken = useCallback(
     async (address: string): Promise<TTokenMeta | undefined> => {
       if (!chainId) return
-      if (BigNumber.from(address).eq(0) && nativeTokenMeta) {
+
+      if (BigNumber.from(address).eq(0)) {
         return nativeTokenMeta
       }
-      let token: TTokenMeta = tokens[address.toLowerCase()]
-      if (token) return token
+
       const tokenContract = getERC20TokenContract(address)!
       const decimals = await tokenContract.decimals()
       const symbol = await tokenContract.symbol()
       const balance = await tokenContract.balanceOf(account)
-      token = {
+      const token = {
         symbol,
         decimals,
         balance,

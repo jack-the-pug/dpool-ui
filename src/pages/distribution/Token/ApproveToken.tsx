@@ -37,10 +37,8 @@ export default function ApproveToken(props: {
   )
 
   useEffect(() => {
-    getToken(tokenAddress).then((token) => {
-      setTokenMeta(token)
-    })
-  }, [])
+    getToken(tokenAddress).then(setTokenMeta)
+  }, [tokenAddress])
 
   useEffect(() => {
     if (BigNumber.from(tokenAddress).eq(0)) return
@@ -72,15 +70,15 @@ export default function ApproveToken(props: {
       })
   }, [approveType, approveAmount])
 
-  if (!tokenMeta) return null
-  if (BigNumber.from(tokenAddress).eq(0) || approvedAmount.gte(approveAmount)) {
+  if (
+    !tokenMeta ||
+    BigNumber.from(tokenAddress).eq(0) ||
+    approvedAmount.gte(approveAmount)
+  ) {
     setApproveState(ActionState.SUCCESS)
     return null
   }
-  console.log({
-    approveAmount: approveAmount.toString(),
-    approvedAmount: approvedAmount.toString(),
-  })
+
   return (
     <div className="flex">
       <select
