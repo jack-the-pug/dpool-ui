@@ -13,24 +13,9 @@ const { useAccount, useChainId, useProvider } = metaMaskHooks
 export default function useTokenMeta() {
   const account = useAccount()
   const chainId = useChainId()
-  const provider = useProvider()
   const signerOrProvider = useSignerOrProvider()
-  const nativeTokenBalance = useBalance(provider, account)
+  const nativeTokenBalance = useBalance(account)
 
-  const nativeTokenMeta = useMemo(() => {
-    if (!chainId || !nativeTokenBalance) return
-    const nativeToken: TTokenMeta = {
-      address: '0x0000000000000000000000000000000000000000',
-      decimals: chains[chainId].decimals,
-      symbol: chains[chainId].symbol,
-      balance: nativeTokenBalance,
-      chainId,
-    }
-    return nativeToken
-  }, [chainId, nativeTokenBalance])
-  useEffect(() => {
-    console.log('nativeTokenMeta', nativeTokenMeta, nativeTokenBalance)
-  }, [nativeTokenMeta, nativeTokenBalance])
   const getERC20TokenContract = useCallback(
     (tokenAddress: string) => {
       if (!signerOrProvider || !tokenAddress || !isAddress(tokenAddress))
@@ -55,9 +40,19 @@ export default function useTokenMeta() {
   const getToken = useCallback(
     async (address: string): Promise<TTokenMeta | undefined> => {
       if (!chainId) return
-
+      console.log(
+        'BigNumber.from(address).eq(0)',
+        BigNumber.from(address).eq(0)
+      )
       if (BigNumber.from(address).eq(0)) {
-        return nativeTokenMeta
+        const nativeToken: TTokenMeta = {
+          address: '0x0000000000000000000000000000000000000000',
+          decimals: chains[chainId].decimals,
+          symbol: chains[chainId].symbol,
+          balance: nativeTokenBalance || BigNumber.from(0),
+          chainId,
+        }
+        return nativeToken
       }
 
       const tokenContract = getERC20TokenContract(address)!
@@ -74,7 +69,7 @@ export default function useTokenMeta() {
       setToken(token)
       return token
     },
-    [tokens, chainId, getERC20TokenContract, nativeTokenMeta]
+    [tokens, chainId, getERC20TokenContract, setToken]
   )
   const tokenList = useMemo<TTokenMeta[]>(() => Object.values(tokens), [tokens])
   return {

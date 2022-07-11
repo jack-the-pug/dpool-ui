@@ -37,7 +37,11 @@ export default function ApproveToken(props: {
   )
 
   useEffect(() => {
-    getToken(tokenAddress).then(setTokenMeta)
+    console.log('tokenAddress', tokenAddress)
+    getToken(tokenAddress).then((token) => {
+      console.log('token', token)
+      setTokenMeta(token)
+    })
   }, [tokenAddress])
 
   useEffect(() => {
@@ -69,12 +73,8 @@ export default function ApproveToken(props: {
         setApproveState(ActionState.FAILED)
       })
   }, [approveType, approveAmount])
-
-  if (
-    !tokenMeta ||
-    BigNumber.from(tokenAddress).eq(0) ||
-    approvedAmount.gte(approveAmount)
-  ) {
+  if (!tokenMeta) return null
+  if (BigNumber.from(tokenAddress).eq(0) || approvedAmount.gte(approveAmount)) {
     setApproveState(ActionState.SUCCESS)
     return null
   }

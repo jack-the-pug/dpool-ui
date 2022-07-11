@@ -340,12 +340,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       setSecondTokenApproveState(ActionState.SUCCESS)
     }
   }, [account, poolMeta])
-  const remainingBalance = useMemo(() => {}, [
-    poolMeta,
-    baseTokenMeta,
-    secondTokenMeta,
-  ])
-  console.log(poolMeta)
 
   function CreateAction() {
     const waitApproved = (

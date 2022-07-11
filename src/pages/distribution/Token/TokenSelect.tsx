@@ -24,7 +24,7 @@ export default function TokenSelect(props: TTokenSelectProps) {
   const provider = useProvider()
   const chainId = useChainId()
   const account = useAccount()
-  const nativeTokenBalance = useBalance(provider, account)
+  const nativeTokenBalance = useBalance(account)
   const [loading, setLoading] = useState<boolean>(false)
   const [dialogVisible, setDialogVisible] = useState<boolean>(dialogDefaultOpen)
   const [tokenAddress, setTokenAddress] = useState<string>()
