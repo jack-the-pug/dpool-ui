@@ -8,5 +8,5 @@ An open source interface for the dPool protocol.
 
 ```
 pnpm install
-pnmp dev
+pnpm dev
 ```
