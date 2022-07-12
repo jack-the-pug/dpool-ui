@@ -12,6 +12,8 @@ interface TextareaModeProp {
   setSecondTokenTotalAmount: (n: number) => void
   secondTokenAmounts: number[]
   textarea2poolList: Function
+  basePercentModeTotal: number
+  setBasePercentModeTotal: (n: number) => void
 }
 
 export default function TextareaMode(props: TextareaModeProp) {
@@ -26,6 +28,8 @@ export default function TextareaMode(props: TextareaModeProp) {
     setSecondTokenTotalAmount,
     secondTokenAmounts,
     textarea2poolList,
+    basePercentModeTotal,
+    setBasePercentModeTotal,
   } = props
   const onKeyUp = useCallback(
     (e: React.KeyboardEvent) => {
@@ -62,6 +66,8 @@ export default function TextareaMode(props: TextareaModeProp) {
           onRemoveTokenCallBack={onRemoveTokenCallBack}
           secondTokenTotalAmount={secondTokenTotalAmount}
           setSecondTokenTotalAmount={setSecondTokenTotalAmount}
+          basePercentModeTotal={basePercentModeTotal}
+          setBasePercentModeTotal={setBasePercentModeTotal}
         />
       </div>
       <div className="flex">

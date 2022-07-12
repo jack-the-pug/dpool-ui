@@ -92,7 +92,7 @@ export default function TokenSelect(props: TTokenSelectProps) {
         onClick={() => setDialogVisible(true)}
         className="cursor-pointer bg-white ring-1 ring-gray-400  shadow-inner ring-offset-white px-2"
       >
-        {tokenMeta ? tokenMeta.symbol : 'Select Token'}
+        {tokenMeta ? tokenMeta.symbol : '...'}
       </span>
       <Dialog visible={dialogVisible} onClose={() => setDialogVisible(false)}>
         <div className="flex flex-col" style={{ minWidth: '380px' }}>

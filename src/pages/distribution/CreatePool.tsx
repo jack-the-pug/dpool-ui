@@ -24,7 +24,10 @@ import { toast } from 'react-toastify'
 
 import DPoolFactory from './dPoolFactory/index'
 
-export type TPoolRow = PoolRow & { key?: number | string }
+export type TPoolRow = PoolRow & {
+  key?: number | string
+  point?: number
+}
 
 export enum DistributionType {
   Pull = 'pull',
@@ -368,11 +371,29 @@ export default function PoolsList() {
     setPoolList(() => (poolList.length ? poolList : [creatPoolEmptyItem()]))
   }, [textarea])
 
+  const [percentModeTokenTotalAmount, setPercentModeTokenTotalAmount] =
+    useState<number>(0)
+  const isPercentMode = useMemo(
+    () => !!percentModeTokenTotalAmount && !isNaN(percentModeTokenTotalAmount),
+    [percentModeTokenTotalAmount]
+  )
+  const percentModeRowAmountTotal = useMemo(() => {
+    if (!percentModeTokenTotalAmount || isNaN(percentModeTokenTotalAmount))
+      return 0
+    return poolList.reduce(
+      (pre, cur) => pre + (cur.point && !isNaN(cur.point) ? cur.point : 0),
+      0
+    )
+  }, [poolList, percentModeTokenTotalAmount])
+
   const [confirmVisible, setConfirmVisible] = useState<boolean>(false)
   const onConfirm = useCallback(() => {
     if (typeof callDataCheck !== 'boolean') return
     setConfirmVisible(true)
   }, [callDataCheck])
+  useEffect(() => {
+    console.log('poolList', poolList)
+  }, [poolList])
   return dPoolFactoryVisible ? (
     <DPoolFactory />
   ) : (
@@ -418,6 +439,8 @@ export default function PoolsList() {
           setSecondTokenTotalAmount={setSecondTokenTotalAmount}
           secondTokenAmounts={secondTokenAmounts}
           textarea2poolList={textarea2poolList}
+          basePercentModeTotal={percentModeTokenTotalAmount}
+          setBasePercentModeTotal={setPercentModeTokenTotalAmount}
         />
       ) : (
         <div className="w-full">
@@ -436,6 +459,8 @@ export default function PoolsList() {
                   setTokenMetaList={setTokenMetaList}
                   onAddTokenCallBack={onAddTokenCallBack}
                   onRemoveTokenCallBack={onRemoveTokenCallBack}
+                  basePercentModeTotal={percentModeTokenTotalAmount}
+                  setBasePercentModeTotal={setPercentModeTokenTotalAmount}
                   secondTokenTotalAmount={secondTokenTotalAmount}
                   setSecondTokenTotalAmount={setSecondTokenTotalAmount}
                 />
@@ -453,6 +478,9 @@ export default function PoolsList() {
                 onChange={onPoolItemChange}
                 hasSecondToken={!!secondTokenMeta}
                 secondTokenAmounts={secondTokenAmounts}
+                percentModeTokenTotalAmount={percentModeTokenTotalAmount}
+                percentModeRowAmountTotal={percentModeRowAmountTotal}
+                isPercentMode={isPercentMode}
               />
             ))}
           </div>

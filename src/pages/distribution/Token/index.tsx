@@ -13,6 +13,8 @@ export default function TokensSelect(props: {
   setTokenMetaList: (tokens: TokenMetaList) => void
   onRemoveTokenCallBack: () => void
   onAddTokenCallBack: () => void
+  basePercentModeTotal: number
+  setBasePercentModeTotal: (n: number) => void
   secondTokenTotalAmount: number
   setSecondTokenTotalAmount: (n: number) => void
 }) {
@@ -21,6 +23,8 @@ export default function TokensSelect(props: {
     setTokenMetaList: setTokens,
     onRemoveTokenCallBack,
     onAddTokenCallBack,
+    basePercentModeTotal,
+    setBasePercentModeTotal,
     secondTokenTotalAmount,
     setSecondTokenTotalAmount,
   } = props
@@ -36,9 +40,26 @@ export default function TokensSelect(props: {
   return (
     <div className="flex items-center">
       {tokens.map((token, index) => {
-        let totalAmount: React.ReactElement | null = null
+        let totalAmountNode: React.ReactElement | null = null
+        if (index === 0) {
+          totalAmountNode = (
+            <div>
+              <input
+                value={basePercentModeTotal}
+                placeholder="Total amount"
+                type="number"
+                min={0}
+                onChange={(e) => {
+                  const value = e.target.valueAsNumber
+                  setBasePercentModeTotal(value)
+                }}
+                className="w-40 outline-none :focus:outline-none px-2 bg-neutral-200"
+              />
+            </div>
+          )
+        }
         if (index === 1) {
-          totalAmount = (
+          totalAmountNode = (
             <div>
               <input
                 value={secondTokenTotalAmount}
@@ -47,7 +68,6 @@ export default function TokensSelect(props: {
                 min={0}
                 onChange={(e) => {
                   const value = e.target.valueAsNumber
-                  console.log('value', value)
                   setSecondTokenTotalAmount(value)
                 }}
                 className="w-40 outline-none :focus:outline-none px-2 bg-neutral-200"
@@ -57,12 +77,10 @@ export default function TokensSelect(props: {
         }
         return (
           <div
-            className={`w-60 flex flex-1 items-center ${
-              index === 1 ? 'justify-between' : 'justify-center'
-            } cursor-pointer  border-r border-gray-400`}
+            className={`w-60 flex flex-1 items-center justify-between cursor-pointer  border-r border-gray-400`}
             key={index}
           >
-            {totalAmount}
+            {totalAmountNode}
             <TokenSelect
               tokenMeta={token}
               setTokenMeta={(token) => setTokenMetaByIndex(token, index)}
