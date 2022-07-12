@@ -333,6 +333,20 @@ export default function PoolsList() {
     }
   }, [callDataCheck])
 
+  const [percentModeTokenTotalAmount, setPercentModeTokenTotalAmount] =
+    useState<number>(0)
+  const isPercentMode = useMemo(
+    () => !!percentModeTokenTotalAmount && !isNaN(percentModeTokenTotalAmount),
+    [percentModeTokenTotalAmount]
+  )
+  const percentModeRowAmountTotal = useMemo(() => {
+    if (!percentModeTokenTotalAmount || isNaN(percentModeTokenTotalAmount))
+      return 0
+    return poolList.reduce(
+      (pre, cur) => pre + (cur.point && !isNaN(cur.point) ? cur.point : 0),
+      0
+    )
+  }, [poolList, percentModeTokenTotalAmount])
   /**
    * textarea,table Mode switch.
    */
@@ -344,7 +358,7 @@ export default function PoolsList() {
   }, [poolList])
   const textarea2poolList = useCallback(() => {
     const textByRow = textarea.split('\n')
-    const poolList: TPoolRow[] = []
+    const _poolList: TPoolRow[] = []
     for (let i = 0; i < textByRow.length; i++) {
       const text = textByRow[i]
       const maybeRowMetaList = [
@@ -360,31 +374,19 @@ export default function PoolsList() {
       if (isNaN(baseTokenAmount)) {
         baseTokenAmount = 0
       }
-      const item = {
+      const item: TPoolRow = {
         address,
         baseTokenAmount: baseTokenAmount,
         name: '',
         key: `${Date.now()}-${i}`,
       }
-      poolList.push(item)
+      if (isPercentMode) {
+        item.point = poolList[i].point
+      }
+      _poolList.push(item)
     }
     setPoolList(() => (poolList.length ? poolList : [creatPoolEmptyItem()]))
-  }, [textarea])
-
-  const [percentModeTokenTotalAmount, setPercentModeTokenTotalAmount] =
-    useState<number>(0)
-  const isPercentMode = useMemo(
-    () => !!percentModeTokenTotalAmount && !isNaN(percentModeTokenTotalAmount),
-    [percentModeTokenTotalAmount]
-  )
-  const percentModeRowAmountTotal = useMemo(() => {
-    if (!percentModeTokenTotalAmount || isNaN(percentModeTokenTotalAmount))
-      return 0
-    return poolList.reduce(
-      (pre, cur) => pre + (cur.point && !isNaN(cur.point) ? cur.point : 0),
-      0
-    )
-  }, [poolList, percentModeTokenTotalAmount])
+  }, [textarea, isPercentMode, poolList])
 
   const [confirmVisible, setConfirmVisible] = useState<boolean>(false)
   const onConfirm = useCallback(() => {
