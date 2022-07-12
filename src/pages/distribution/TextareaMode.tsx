@@ -8,11 +8,11 @@ interface TextareaModeProp {
   setTokenMetaList: (tokens: TokenMetaList) => void
   onRemoveTokenCallBack: () => void
   onAddTokenCallBack: () => void
-  secondTokenTotalAmount: number
+  secondTokenTotalAmount: number | undefined
   setSecondTokenTotalAmount: (n: number) => void
-  secondTokenAmounts: number[]
+  secondTokenAmounts: string[]
   textarea2poolList: Function
-  basePercentModeTotal: number
+  basePercentModeTotal: number | undefined
   setBasePercentModeTotal: (n: number) => void
 }
 

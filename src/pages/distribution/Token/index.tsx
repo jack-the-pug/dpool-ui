@@ -13,9 +13,9 @@ export default function TokensSelect(props: {
   setTokenMetaList: (tokens: TokenMetaList) => void
   onRemoveTokenCallBack: () => void
   onAddTokenCallBack: () => void
-  basePercentModeTotal: number
+  basePercentModeTotal: number | undefined
   setBasePercentModeTotal: (n: number) => void
-  secondTokenTotalAmount: number
+  secondTokenTotalAmount: number | undefined
   setSecondTokenTotalAmount: (n: number) => void
 }) {
   const {

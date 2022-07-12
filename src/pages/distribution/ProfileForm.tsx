@@ -1,4 +1,4 @@
-import { BigNumber, utils } from 'ethers'
+import { BigNumber, FixedNumber, utils } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { IconoirDeleteCircledOutline } from '../../components/icon'
@@ -12,9 +12,10 @@ interface TProfileProps {
   profileKey: string
   onRemove: (index: number) => void
   onChange: (index: number, profile: PoolRow) => void
+  baseTokenMeta: TokenMeta | undefined
   hasSecondToken: boolean
-  secondTokenAmounts: number[] | undefined
-  percentModeTokenTotalAmount: number
+  secondTokenAmounts: string[] | undefined
+  percentModeTokenTotalAmount: number | undefined
   percentModeRowAmountTotal: number
   isPercentMode: boolean
 }
@@ -29,29 +30,11 @@ export function Profile(props: TProfileProps) {
     secondTokenAmounts,
     percentModeTokenTotalAmount,
     percentModeRowAmountTotal,
-
+    baseTokenMeta,
     isPercentMode,
   } = props
   const [address, setAddress] = useState<string>(_profile.address)
-  const [amount, setAmount] = useState<number>(_profile.baseTokenAmount || 0)
-  const [point, setPoint] = useState<number>(_profile.point || 0)
-  const percentageModeAmount = useMemo(() => {
-    console.log('TEST')
-    if (
-      !percentModeRowAmountTotal ||
-      isNaN(percentModeRowAmountTotal) ||
-      isNaN(point) ||
-      isNaN(percentModeTokenTotalAmount)
-    ) {
-      return
-    }
-    // return BigNumber.from(point)
-    //   .mul(BigNumber.from(percentModeTokenTotalAmount))
-    //   .div(BigNumber.from(percentModeRowAmountTotal))
-    //   .toNumber()
-
-    return (point * percentModeTokenTotalAmount) / percentModeRowAmountTotal
-  }, [point, percentModeRowAmountTotal, percentModeTokenTotalAmount])
+  const [amount, setAmount] = useState<string>(_profile.userInputAmount)
 
   const addressBookObj = useMemo(
     () => JSON.parse(localStorage.getItem('ADDRESS_BOOK') || '{}'),
@@ -59,22 +42,49 @@ export function Profile(props: TProfileProps) {
   )
   useEffect(() => {
     submit()
-  }, [percentageModeAmount])
-
+  }, [percentModeRowAmountTotal])
   const submit = useCallback(() => {
+    if (!baseTokenMeta) return
     const profile = { ..._profile }
     profile.address = address
-    profile.baseTokenAmount = amount
-    if (isPercentMode) {
-      profile.baseTokenAmount = percentageModeAmount!
+    profile.userInputAmount = amount
+    const _amount = utils.parseUnits(amount || '0', baseTokenMeta.decimals)
+    profile.parsedTokenAmount = _amount
+    if (
+      isPercentMode &&
+      percentModeTokenTotalAmount &&
+      percentModeRowAmountTotal
+    ) {
+      const _percentModeTokenTotalAmount = utils.parseUnits(
+        percentModeTokenTotalAmount.toString(),
+        baseTokenMeta.decimals
+      )
+      const _percentModeRowAmountTotal = utils.parseUnits(
+        percentModeRowAmountTotal.toString(),
+        baseTokenMeta.decimals
+      )
+
+      profile.parsedTokenAmount = _amount
+        .mul(_percentModeTokenTotalAmount)
+        .div(_percentModeRowAmountTotal)
     }
-    profile.point = point
     onChange(index, profile)
-  }, [address, amount, index, _profile, point, percentageModeAmount])
+  }, [
+    address,
+    amount,
+    index,
+    _profile,
+    baseTokenMeta,
+    isPercentMode,
+    percentModeRowAmountTotal,
+    percentModeTokenTotalAmount,
+  ])
 
   const [fouceInputNumber, setFouceInputNumber] = useState(-1)
   const [addressErrorMsg, setAddressErrorMsg] = useState('')
-
+  const percent = useMemo(() => {
+    return `${((Number(amount) / percentModeRowAmountTotal) * 100).toFixed(2)}%`
+  }, [percentModeRowAmountTotal, amount])
   const onAddressBlur = useCallback(() => {
     setFouceInputNumber(-1)
     if (!isAddress(address)) {
@@ -87,17 +97,11 @@ export function Profile(props: TProfileProps) {
   const [amountErrorMsg, setAmountErrorMsg] = useState('')
 
   const onAmountBlur = useCallback(() => {
-    if (amount && !isNaN(amount)) {
+    if (amount) {
       submit()
     }
     setFouceInputNumber(-1)
   }, [amount, submit])
-
-  const onPercentageBlur = useCallback(() => {
-    setFouceInputNumber(-1)
-    console.log('_profile', _profile)
-    submit()
-  }, [point, submit])
 
   const [addressBookName, setAddressBookName] = useState<string>('')
   useEffect(() => {
@@ -148,67 +152,50 @@ export function Profile(props: TProfileProps) {
           <div className="text-red-500 text-xs px-2">{addressErrorMsg}</div>
         ) : null}
       </div>
-      {isPercentMode ? (
-        <div
-          className={`${
-            fouceInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
-          } border border-solid border-r-0 border-b-0 border-gray-400 flex justify-center items-center px-2 w-80`}
-        >
-          <div className="flex flex-1 flex-col justify-between">
-            <input
-              className={`${
-                fouceInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
-              } outline-none :focus:outline-none  bg-neutral-200`}
-              placeholder="amount"
-              key={props.profileKey + 'percent'}
-              type="number"
-              value={point}
-              min={0}
-              onChange={(e) => setPoint(e.target.valueAsNumber)}
-              onBlur={onPercentageBlur}
-              onFocus={() => setFouceInputNumber(2)}
-            />
 
-            <div className="text-xs text-gray-500">
-              {`${((point / percentModeRowAmountTotal) * 100).toFixed(2)} %`}
-            </div>
-            {amountErrorMsg ? (
-              <div className="text-red-500 text-xs px-2">{amountErrorMsg}</div>
-            ) : null}
-          </div>
-          <div className="text-xs text-gray-500">
-            {percentageModeAmount?.toFixed(2)}
-          </div>
-        </div>
-      ) : (
-        <div
-          className={`${
-            fouceInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
-          } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-center px-2 w-80`}
-        >
+      <div
+        className={`${
+          fouceInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
+        } border border-solid border-r-0 border-b-0 border-gray-400 flex justify-between items-center px-2 w-80`}
+      >
+        <div className="flex flex-col">
           <input
             className={`${
               fouceInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
-            } outline-none :focus:outline-none px-2 bg-neutral-200`}
+            } outline-none :focus:outline-none  bg-neutral-200`}
             placeholder="amount"
             key={props.profileKey + 'amount'}
             type="number"
             value={amount}
             min={0}
             onBlur={onAmountBlur}
-            onChange={(e) => setAmount(e.target.valueAsNumber)}
+            onChange={(e) => setAmount(e.target.value)}
             onFocus={() => setFouceInputNumber(2)}
           />
+          {isPercentMode ? (
+            <div className="text-xs text-gray-500">{percent}</div>
+          ) : null}
           {amountErrorMsg ? (
             <div className="text-red-500 text-xs px-2">{amountErrorMsg}</div>
           ) : null}
         </div>
-      )}
+        {isPercentMode && baseTokenMeta ? (
+          <div className="text-xs text-gray-500">
+            {Number(
+              utils.formatUnits(
+                _profile.parsedTokenAmount,
+                baseTokenMeta.decimals
+              )
+            ).toFixed(2)}
+          </div>
+        ) : null}
+      </div>
+
       {hasSecondToken && secondTokenAmounts && (
         <div
           className={`w-60 cursor-not-allowed text-gray-500 border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-center px-2`}
         >
-          {secondTokenAmounts[index]}
+          {secondTokenAmounts[index].toString()}
         </div>
       )}
       <div

@@ -413,7 +413,8 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               </div>
               <div className="flex-1 flex justify-end">
                 <div className="flex-1 flex justify-end">
-                  {addKilobits(row.baseTokenAmount, 3)}
+                  {/* TODO: */}
+                  {/* {addKilobits(row.baseTokenAmount, 3)} */}
                 </div>
                 <div className="w-16"></div>
               </div>

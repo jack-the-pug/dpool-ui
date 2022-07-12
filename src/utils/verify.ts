@@ -11,7 +11,5 @@ export function isEmptyObject(obj: { [key: string]: any }): boolean {
 
 export function isLegalPoolRow(profile: PoolRow): boolean {
   if (!profile) return false
-  if (typeof profile.baseTokenAmount !== 'number') return false
-  if (profile.baseTokenAmount <= 0) return false
-  return utils.isAddress(profile.address)
+  return profile.parsedTokenAmount.gt(0) && utils.isAddress(profile.address)
 }

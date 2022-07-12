@@ -2,8 +2,8 @@ import { BigNumber } from 'ethers'
 
 export interface PoolRow {
   address: string
-  baseTokenAmount: number
-  name: string
+  parsedTokenAmount: BigNumber
+  userInputAmount: string
 }
 
 export interface TokenMeta {
