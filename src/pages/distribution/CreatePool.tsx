@@ -115,14 +115,16 @@ export default function PoolsList() {
     }, BigNumber.from(0))
   }, [poolList, baseTokenMeta])
 
-  // use input secondTokenTotal
+  // user input secondTokenTotal
   const [secondTokenTotalAmount, setSecondTokenTotalAmount] =
     useState<number>(0)
   // compute each row secondTokenAmount by firstTokenAmount
   const secondTokenAmounts = useMemo(() => {
     if (!secondTokenMeta) return null
     const _secondTokenTotalAmount = utils.parseUnits(
-      secondTokenTotalAmount.toString(),
+      secondTokenTotalAmount && !isNaN(secondTokenTotalAmount)
+        ? secondTokenTotalAmount.toString()
+        : '0',
       secondTokenMeta.decimals
     )
     return poolList.map(
@@ -279,12 +281,15 @@ export default function PoolsList() {
         (pre, cur) => pre.add(cur),
         BigNumber.from(0)
       )
-      const diff = secondTokenAmountSum.sub(
-        utils.parseUnits(
-          secondTokenTotalAmount.toString(),
+      const diff = utils
+        .parseUnits(
+          secondTokenTotalAmount && !isNaN(secondTokenTotalAmount)
+            ? secondTokenTotalAmount.toString()
+            : '0',
           secondTokenMeta.decimals
         )
-      )
+        .sub(secondTokenAmountSum)
+
       secondTokenAmounts[0] = secondTokenAmounts[0].add(diff)
       const secondCallData: PoolCreateCallData = [
         poolName,
