@@ -249,7 +249,7 @@ export default function PoolsList() {
     pool.sort((a, b) => (a.address > b.address ? 1 : -1))
     const claimer = pool.map((row) => row.address)
     const baseAmounts = pool.map((row) => row.parsedTokenAmount)
-    // handle accuracy loss. The rest to the first address
+    // handle accuracy loss. The rest give to the first address
     if (isPercentMode && percentModeTokenTotalAmount) {
       const total = utils.parseUnits(
         percentModeTokenTotalAmount.toString(),
@@ -275,6 +275,17 @@ export default function PoolsList() {
 
     // if have second token
     if (secondTokenMeta && secondTokenAmounts) {
+      const secondTokenAmountSum = secondTokenAmounts.reduce(
+        (pre, cur) => pre.add(cur),
+        BigNumber.from(0)
+      )
+      const diff = secondTokenAmountSum.sub(
+        utils.parseUnits(
+          secondTokenTotalAmount.toString(),
+          secondTokenMeta.decimals
+        )
+      )
+      secondTokenAmounts[0] = secondTokenAmounts[0].add(diff)
       const secondCallData: PoolCreateCallData = [
         poolName,
         secondTokenMeta.address,
