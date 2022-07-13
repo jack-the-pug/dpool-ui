@@ -3,7 +3,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { MaterialSymbolsAdd } from '../../components/icon'
 import { PoolRow } from '../../type/index'
 import SetProfile from './SetProfile'
-export type AddressBookItem = Omit<PoolRow, 'baseTokenAmount'>
+export interface AddressBookItem {
+  address: string
+  name: string
+}
 
 export default function AddressBook() {
   const [addressBook, setAddressBook] = useState<AddressBookItem[]>([])

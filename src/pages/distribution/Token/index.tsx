@@ -11,8 +11,6 @@ export type TokenMetaList = [...TokenMeta[], undefined | TokenMeta]
 export default function TokensSelect(props: {
   tokenMetaList: TokenMetaList
   setTokenMetaList: (tokens: TokenMetaList) => void
-  onRemoveTokenCallBack: () => void
-  onAddTokenCallBack: () => void
   basePercentModeTotal: number | undefined
   setBasePercentModeTotal: (n: number) => void
   secondTokenTotalAmount: number | undefined
@@ -21,8 +19,7 @@ export default function TokensSelect(props: {
   const {
     tokenMetaList: tokens,
     setTokenMetaList: setTokens,
-    onRemoveTokenCallBack,
-    onAddTokenCallBack,
+
     basePercentModeTotal,
     setBasePercentModeTotal,
     secondTokenTotalAmount,
@@ -77,7 +74,9 @@ export default function TokensSelect(props: {
         }
         return (
           <div
-            className={`w-60 flex flex-1 items-center justify-between cursor-pointer  border-r border-gray-400`}
+            className={`${
+              index === 0 ? 'w-80' : 'w-60'
+            } flex items-center justify-between cursor-pointer  border-r border-gray-400`}
             key={index}
           >
             {totalAmountNode}
@@ -94,7 +93,6 @@ export default function TokensSelect(props: {
           <IconoirDeleteCircledOutline
             onClick={() => {
               setTokens([tokens[0]])
-              onRemoveTokenCallBack()
             }}
             className="cursor-pointer"
           />
@@ -104,7 +102,6 @@ export default function TokensSelect(props: {
             className="flex-1 cursor-pointer"
             onClick={() => {
               setTokens([tokens[0] as TokenMeta, undefined])
-              onAddTokenCallBack()
             }}
           />
         )}

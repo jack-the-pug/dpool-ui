@@ -13,8 +13,9 @@ interface TProfileProps {
   onRemove: (index: number) => void
   onChange: (index: number, profile: PoolRow) => void
   baseTokenMeta: TokenMeta | undefined
+  secondTokenMeta: TokenMeta | undefined
   hasSecondToken: boolean
-  secondTokenAmounts: string[] | undefined
+  secondTokenAmounts: BigNumber[] | null
   percentModeTokenTotalAmount: number | undefined
   percentModeRowAmountTotal: number
   isPercentMode: boolean
@@ -31,6 +32,7 @@ export function Profile(props: TProfileProps) {
     percentModeTokenTotalAmount,
     percentModeRowAmountTotal,
     baseTokenMeta,
+    secondTokenMeta,
     isPercentMode,
   } = props
   const [address, setAddress] = useState<string>(_profile.address)
@@ -118,7 +120,7 @@ export function Profile(props: TProfileProps) {
       setAddressBookName(name)
     }
   }, [address, addressBookObj])
-
+  console.log('s', secondTokenAmounts)
   return (
     <form className="flex h-12">
       <div className="w-10 text-black border border-solid border-r-0 border-b-0  border-gray-400 outline-none  px-2 flex items-center">
@@ -191,11 +193,14 @@ export function Profile(props: TProfileProps) {
         ) : null}
       </div>
 
-      {hasSecondToken && secondTokenAmounts && (
+      {hasSecondToken && secondTokenMeta && secondTokenAmounts && (
         <div
           className={`w-60 cursor-not-allowed text-gray-500 border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-center px-2`}
         >
-          {secondTokenAmounts[index].toString()}
+          {utils.formatUnits(
+            secondTokenAmounts[index].toString(),
+            secondTokenMeta.decimals
+          )}
         </div>
       )}
       <div

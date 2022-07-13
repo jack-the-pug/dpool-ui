@@ -93,6 +93,7 @@ export default function PoolsList() {
 
   const baseTokenMeta = useMemo(() => tokenMetaList[0], [tokenMetaList[0]])
   const secondTokenMeta = useMemo(() => tokenMetaList[1], [tokenMetaList[1]])
+
   const [poolConfig, setPoolConfig] = useState<PoolConfig>({
     isFundNow: true,
     distributionType: DistributionType.Push,
@@ -114,22 +115,28 @@ export default function PoolsList() {
     }, BigNumber.from(0))
   }, [poolList, baseTokenMeta])
 
-  const [secondTokenAmounts, setSecondTokenAmounts] = useState<string[]>([])
+  // use input secondTokenTotal
   const [secondTokenTotalAmount, setSecondTokenTotalAmount] =
     useState<number>(0)
-
-  // add new token
-  function onAddTokenCallBack() {
-    setSecondTokenTotalAmount(
-      Number(utils.formatUnits(baseTotalAmount, baseTokenMeta?.decimals))
+  // compute each row secondTokenAmount by firstTokenAmount
+  const secondTokenAmounts = useMemo(() => {
+    if (!secondTokenMeta) return null
+    const _secondTokenTotalAmount = utils.parseUnits(
+      secondTokenTotalAmount.toString(),
+      secondTokenMeta.decimals
     )
-    const amounts = poolList.map((col) => col.userInputAmount)
-    setSecondTokenAmounts(amounts)
-  }
-  // remove token
-  function onRemoveTokenCallBack() {
-    setSecondTokenAmounts([])
-  }
+    return poolList.map(
+      (row) =>
+        row.parsedTokenAmount.mul(_secondTokenTotalAmount).div(baseTotalAmount),
+      []
+    )
+  }, [
+    secondTokenMeta,
+    baseTokenMeta,
+    poolList,
+    secondTokenTotalAmount,
+    baseTotalAmount,
+  ])
 
   // distribute pool again
   const initPool = useCallback(async () => {
@@ -179,31 +186,6 @@ export default function PoolsList() {
   useEffect(() => {
     initPool()
   }, [])
-
-  // compute second token values
-  useEffect(() => {
-    if (!baseTokenMeta || !secondTokenMeta) return
-    const amounts = poolList.map((col) => {
-      if (baseTotalAmount.eq(0)) return '0'
-
-      const formatSecontTokenTotoalAmount = utils.parseUnits(
-        secondTokenTotalAmount ? secondTokenTotalAmount.toString() : '0',
-        secondTokenMeta.decimals
-      )
-      const value = col.parsedTokenAmount
-        .mul(formatSecontTokenTotoalAmount)
-        .div(baseTotalAmount)
-
-      return utils.formatUnits(value, baseTokenMeta.decimals)
-    })
-    setSecondTokenAmounts(amounts)
-  }, [
-    secondTokenTotalAmount,
-    poolList,
-    baseTotalAmount,
-    baseTokenMeta,
-    secondTokenMeta,
-  ])
 
   const scrollToViewDiv = useRef<HTMLDivElement | null>()
   const addEmptyProfile = useCallback(() => {
@@ -262,25 +244,19 @@ export default function PoolsList() {
     if (_pool.length === 0) return null
     const poolAddressMap = new Map()
     _pool.forEach((row) => poolAddressMap.set(row.address, row))
-    const pool = Array.from(poolAddressMap.values())
+    const pool: TPoolRow[] = Array.from(poolAddressMap.values())
 
     pool.sort((a, b) => (a.address > b.address ? 1 : -1))
     const claimer = pool.map((row) => row.address)
-    const baseAmounts = pool.map((row) =>
-      utils
-        .parseUnits(
-          row.baseTokenAmount ? row.baseTokenAmount.toString() : '0',
-          baseTokenMeta.decimals
-        )
-        .toString()
-    )
+    const baseAmounts = pool.map((row) => row.parsedTokenAmount)
+    // handle accuracy loss. The rest to the first address
     if (isPercentMode && percentModeTokenTotalAmount) {
       const total = utils.parseUnits(
         percentModeTokenTotalAmount.toString(),
         baseTokenMeta.decimals
       )
       const diff = total.sub(baseTotalAmount)
-      baseAmounts[0] = diff.sub(baseAmounts[0]).toString()
+      baseAmounts[0] = baseAmounts[0].add(diff)
     }
 
     const [startTime, endTime] = date
@@ -299,22 +275,19 @@ export default function PoolsList() {
 
     // if have second token
     if (secondTokenMeta && secondTokenAmounts) {
-      const _secondTokenAmounts = secondTokenAmounts.map((amount) =>
-        utils.parseUnits(amount.toString(), secondTokenMeta.decimals).toString()
-      )
       const secondCallData: PoolCreateCallData = [
         poolName,
         secondTokenMeta.address,
         distributor,
         isFundNow,
         claimer,
-        _secondTokenAmounts,
+        secondTokenAmounts,
         startTime,
         endTime,
       ]
       callData.push(secondCallData)
     }
-    console.log('callData', callData)
+
     return callData
   }, [
     account,
@@ -444,11 +417,15 @@ export default function PoolsList() {
           setTextarea={setTextarea}
           tokenMetaList={tokenMetaList}
           setTokenMetaList={setTokenMetaList}
-          onAddTokenCallBack={onAddTokenCallBack}
-          onRemoveTokenCallBack={onRemoveTokenCallBack}
           secondTokenTotalAmount={secondTokenTotalAmount}
           setSecondTokenTotalAmount={setSecondTokenTotalAmount}
-          secondTokenAmounts={secondTokenAmounts}
+          secondTokenAmounts={
+            secondTokenAmounts
+              ? secondTokenAmounts.map((amount) =>
+                  utils.formatUnits(amount, secondTokenMeta?.decimals)
+                )
+              : null
+          }
           textarea2poolList={textarea2poolList}
           basePercentModeTotal={percentModeTokenTotalAmount}
           setBasePercentModeTotal={setPercentModeTokenTotalAmount}
@@ -468,8 +445,6 @@ export default function PoolsList() {
                 <TokensSelect
                   tokenMetaList={tokenMetaList}
                   setTokenMetaList={setTokenMetaList}
-                  onAddTokenCallBack={onAddTokenCallBack}
-                  onRemoveTokenCallBack={onRemoveTokenCallBack}
                   basePercentModeTotal={percentModeTokenTotalAmount}
                   setBasePercentModeTotal={setPercentModeTokenTotalAmount}
                   secondTokenTotalAmount={secondTokenTotalAmount}
@@ -488,6 +463,7 @@ export default function PoolsList() {
                 onRemove={removeItemFromPool}
                 onChange={onPoolItemChange}
                 baseTokenMeta={baseTokenMeta}
+                secondTokenMeta={secondTokenMeta}
                 hasSecondToken={!!secondTokenMeta}
                 secondTokenAmounts={secondTokenAmounts}
                 percentModeTokenTotalAmount={percentModeTokenTotalAmount}

@@ -36,9 +36,9 @@ export type PoolCreateCallData = [
   string, // name
   string, // token
   string, // distributor
-  boolean, // escrow
-  string[], // claimer
-  string[], // amount
+  boolean, // isEscrow
+  string[], // claimers
+  BigNumber[], // amounts
   number, // startTime
   number // deadline
 ]

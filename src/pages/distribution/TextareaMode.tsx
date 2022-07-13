@@ -1,3 +1,4 @@
+import { BigNumber } from 'ethers'
 import React, { useCallback, useContext, useState } from 'react'
 import TokensSelect, { TokenMetaList } from './Token'
 
@@ -6,11 +7,9 @@ interface TextareaModeProp {
   setTextarea: (s: string) => void
   tokenMetaList: TokenMetaList
   setTokenMetaList: (tokens: TokenMetaList) => void
-  onRemoveTokenCallBack: () => void
-  onAddTokenCallBack: () => void
   secondTokenTotalAmount: number | undefined
   setSecondTokenTotalAmount: (n: number) => void
-  secondTokenAmounts: string[]
+  secondTokenAmounts: string[] | null
   textarea2poolList: Function
   basePercentModeTotal: number | undefined
   setBasePercentModeTotal: (n: number) => void
@@ -22,8 +21,7 @@ export default function TextareaMode(props: TextareaModeProp) {
     setTextarea,
     tokenMetaList,
     setTokenMetaList,
-    onAddTokenCallBack,
-    onRemoveTokenCallBack,
+
     secondTokenTotalAmount,
     setSecondTokenTotalAmount,
     secondTokenAmounts,
@@ -62,8 +60,6 @@ export default function TextareaMode(props: TextareaModeProp) {
         <TokensSelect
           tokenMetaList={tokenMetaList}
           setTokenMetaList={setTokenMetaList}
-          onAddTokenCallBack={onAddTokenCallBack}
-          onRemoveTokenCallBack={onRemoveTokenCallBack}
           secondTokenTotalAmount={secondTokenTotalAmount}
           setSecondTokenTotalAmount={setSecondTokenTotalAmount}
           basePercentModeTotal={basePercentModeTotal}
@@ -84,14 +80,16 @@ export default function TextareaMode(props: TextareaModeProp) {
           ></textarea>
         </div>
         <div className="flex-1 p-2">
-          {secondTokenAmounts.map((amount, index) => (
-            <div
-              key={`${amount}-${index}`}
-              className="text-gray-500 leading-8 cursor-not-allowed"
-            >
-              {amount}
-            </div>
-          ))}
+          {secondTokenAmounts
+            ? secondTokenAmounts.map((amount, index) => (
+                <div
+                  key={`${amount}-${index}`}
+                  className="text-gray-500 leading-8 cursor-not-allowed"
+                >
+                  {amount}
+                </div>
+              ))
+            : null}
         </div>
       </div>
     </div>

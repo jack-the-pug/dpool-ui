@@ -25,7 +25,10 @@ import { useApproveToken } from '../../hooks/useApproveToken'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import ApproveToken from './Token/ApproveToken'
 
-type TPoolRow = Omit<PoolRow & { secondTokenAmount?: number }, 'name'>
+type TPoolRow = Omit<
+  PoolRow & { secondParsedTokenAmount?: BigNumber },
+  'name' | 'userInputAmount'
+>
 
 interface PoolMeta {
   name: string
@@ -105,19 +108,16 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       },
     }
     const amounts = baseCallData[PoolCreator.Amounts]
-    ;(poolMeta.baseTokenTotal = amounts.reduce(
+    poolMeta.baseTokenTotal = amounts.reduce(
       (sum, cur) => sum.add(BigNumber.from(cur)),
       BigNumber.from(0)
-    )),
-      baseTokenMeta.decimals
+    )
 
     const _pool: TPoolRow[] = []
     for (let i = 0; i < len; i++) {
       const row: TPoolRow = {
         address: claimers[i],
-        baseTokenAmount: parseFloat(
-          utils.formatUnits(amounts[i], baseTokenMeta.decimals)
-        ),
+        parsedTokenAmount: amounts[i],
       }
       _pool.push(row)
     }
@@ -125,17 +125,14 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       const secondCallData = callData[1]
       const amounts = secondCallData[PoolCreator.Amounts]
       poolMeta.secondTokenTotal = amounts.reduce(
-        (sum, cur) => sum.add(BigNumber.from(cur)),
+        (sum, cur) => sum.add(cur),
         BigNumber.from(0)
       )
-
       _pool.forEach(
-        (row, index) =>
-          (row.secondTokenAmount = parseFloat(
-            utils.formatUnits(amounts[index], secondTokenMeta.decimals)
-          ))
+        (row, index) => (row.secondParsedTokenAmount = amounts[index])
       )
     }
+
     poolMeta.pool = _pool
     return poolMeta
   }, [callData, baseTokenMeta, secondTokenMeta])
@@ -413,15 +410,20 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               </div>
               <div className="flex-1 flex justify-end">
                 <div className="flex-1 flex justify-end">
-                  {/* TODO: */}
-                  {/* {addKilobits(row.baseTokenAmount, 3)} */}
+                  {utils.formatUnits(
+                    row.parsedTokenAmount,
+                    baseTokenMeta.decimals
+                  )}
                 </div>
                 <div className="w-16"></div>
               </div>
-              {row.secondTokenAmount && (
+              {row.secondParsedTokenAmount && (
                 <div className="text-right flex">
                   <div className="flex-1">
-                    {addKilobits(row.secondTokenAmount, 3)}
+                    {utils.formatUnits(
+                      row.secondParsedTokenAmount,
+                      baseTokenMeta.decimals
+                    )}
                   </div>
                   <div className="w-16"></div>
                 </div>
