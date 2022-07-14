@@ -22,6 +22,8 @@ enum ApproveType {
   MAX = 'MAX',
 }
 const { useChainId } = metaMaskHooks
+
+// TODO:BUG: all token are approved. But approvedToken.current.size not equal tokens.length
 export default function ApproveTokens(props: {
   tokens: {
     address: string
@@ -32,12 +34,14 @@ export default function ApproveTokens(props: {
   const { dPoolAddress } = useDPoolAddress()
 
   const { tokens, setIsTokensApproved } = props
-  const approvedToken = useRef<string[]>([])
+  const approvedToken = useRef<Set<string>>(new Set())
 
-  if (approvedToken.current.length === tokens.length) {
-    setIsTokensApproved(true)
-  }
-  console.log('approvedToken', approvedToken.current)
+  useEffect(() => {
+    if (approvedToken.current.size === tokens.length) {
+      setIsTokensApproved(true)
+    }
+  }, [approvedToken.current.size, tokens.length])
+
   if (!dPoolAddress) return null
   return (
     <div className="flex flex-col gap-4">
@@ -48,7 +52,8 @@ export default function ApproveTokens(props: {
           dPoolAddress={dPoolAddress}
           approveAmount={token.amount}
           onApproved={() => {
-            approvedToken.current.push(token.address)
+            approvedToken.current.add(token.address)
+
             console.log(token.address, 'approved')
           }}
         />
@@ -117,6 +122,7 @@ export function ApproveToken(props: ApproveTokenProps) {
   }, [approveState, shouldApproveAmount, token, tokenMeta])
 
   useEffect(() => {
+    console.log('isApproved', isApproved)
     if (isApproved) {
       onApproved()
     }

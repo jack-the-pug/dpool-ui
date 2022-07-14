@@ -1,4 +1,4 @@
-import { BigNumber } from 'ethers'
+import { BigNumber, utils } from 'ethers'
 import React, { useCallback } from 'react'
 import { TokenMeta } from '../../type'
 
@@ -31,19 +31,21 @@ export default function TextareaMode(props: TextareaModeProp) {
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const { value } = e.target
       setTextarea(value)
+
       const numberOfLineBreaks = (value.match(/\n/g) || []).length
       // min-height + lines x line-height + padding + border
       const newHeight = 20 + numberOfLineBreaks * 2 * 14 + 12 + 2
       e.target.style.height = `${newHeight}px`
+      textarea2poolList()
     },
-    []
+    [textarea2poolList]
   )
-  console.log(parsedTokenAmounts)
+
   return (
     <div
       id="textarea-mode-view"
       style={{ minWidth: 640 }}
-      className="w-full border-gray-400 border border-solid border-b-0 flex"
+      className="w-full border-gray-400 border border-solid border-b-0 flex gap-4"
     >
       <textarea
         wrap="soft"
@@ -55,6 +57,22 @@ export default function TextareaMode(props: TextareaModeProp) {
         onChange={onTextareaChange}
         onKeyUp={onKeyUp}
       ></textarea>
+
+      {parsedTokenAmounts.map((cols, colIndex) => {
+        if (colIndex === 0) return null
+        return (
+          <div
+            key={colIndex}
+            className="flex flex-col leading-8 p-2 text-gray-500"
+          >
+            {cols.map((amount, rowIndex) => (
+              <div key={`${rowIndex}-${colIndex}`}>
+                {utils.formatUnits(amount, tokenMetaList[colIndex].decimals)}
+              </div>
+            ))}
+          </div>
+        )
+      })}
     </div>
   )
 }

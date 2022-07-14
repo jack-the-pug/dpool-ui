@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
 import { BigNumber, ContractReceipt, ethers, utils } from 'ethers'
-import { useCallback, useMemo, useState, useEffect } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import Action, { ActionState } from '../../components/action'
 import { Dialog } from '../../components/dialog'
@@ -14,14 +14,12 @@ import {
   PoolRow,
   TokenMeta,
 } from '../../type'
-import { addKilobits } from '../../utils/number'
 import { DistributionType, PoolConfig } from './CreatePool'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { isAddress } from 'ethers/lib/utils'
 import { AddressBookItem } from '../addressBook'
 import { useNavigate } from 'react-router-dom'
 import { dPoolABI } from '../../constants'
-import { useApproveToken } from '../../hooks/useApproveToken'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import ApproveTokens from '../../components/token/ApproveTokens'
 

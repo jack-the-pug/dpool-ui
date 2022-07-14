@@ -113,7 +113,7 @@ export default function PoolsList() {
     [poolList, tokenMetaList[0]]
   )
 
-  const parsedTokenAmounts: Array<BigNumber[]> = useMemo(() => {
+  const parsedTokenAmounts: BigNumber[][] = useMemo(() => {
     /**
      *  first column:
      *  tableHeaderInputList[0] has value ? percent mode : amount mode
@@ -343,6 +343,7 @@ export default function PoolsList() {
   }, [poolList])
   const textarea2poolList = useCallback(() => {
     const textByRow = textarea.split('\n')
+    console.log('textByRow', textByRow)
     const _poolList: TPoolRow[] = []
     for (let i = 0; i < textByRow.length; i++) {
       const text = textByRow[i]
@@ -353,20 +354,21 @@ export default function PoolsList() {
         text.split('='),
       ]
       const rowMeta = maybeRowMetaList.find((item) => item.length === 2)
+      console.log('rowMeta', rowMeta)
       if (!rowMeta) continue
       const [address, baseAmount] = rowMeta
-      let amount = parseFloat(baseAmount)
+      let amount = Number(baseAmount)
       if (isNaN(amount)) {
         amount = 0
       }
       const item: TPoolRow = {
         address,
-        userInputAmount: baseAmount,
+        userInputAmount: amount.toString(),
         key: `${Date.now()}-${i}`,
       }
       _poolList.push(item)
     }
-    setPoolList(() => (poolList.length ? poolList : [creatPoolEmptyItem()]))
+    setPoolList(() => (poolList.length ? _poolList : [creatPoolEmptyItem()]))
   }, [textarea, isPercentMode, poolList])
 
   const [confirmVisible, setConfirmVisible] = useState<boolean>(false)
@@ -433,6 +435,8 @@ export default function PoolsList() {
             textarea={textarea}
             setTextarea={setTextarea}
             textarea2poolList={textarea2poolList}
+            parsedTokenAmounts={parsedTokenAmounts}
+            tokenMetaList={tokenMetaList}
           />
         ) : (
           <div className="w-full">
