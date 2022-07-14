@@ -54,7 +54,6 @@ export function Profile(props: TProfileProps) {
   }, [inputAmount])
 
   const [fouceInputNumber, setFouceInputNumber] = useState(-1)
-  const [addressErrorMsg, setAddressErrorMsg] = useState('')
 
   const onAddressBlur = useCallback(() => {
     setFouceInputNumber(-1)
@@ -68,31 +67,22 @@ export function Profile(props: TProfileProps) {
     setFouceInputNumber(-1)
   }, [inputAmount, submit])
 
-  const [addressBookName, setAddressBookName] = useState<string>('')
+  const addressBookName = useMemo(() => {
+    if (isAddress(address) && addressBookObj[address.toLowerCase()]) {
+      return addressBookObj[address.toLowerCase()].name
+    }
+  }, [addressBookObj, address])
 
-  useEffect(() => {
-    if (!address) {
-      setAddressBookName('')
-      setAddressErrorMsg('')
-      return
-    }
-    if (isAddress(address)) {
-      if (addressBookObj[address.toLowerCase()]) {
-        const name = addressBookObj[address.toLowerCase()].name
-        setAddressBookName(name)
-      }
-      if (
-        repeateAddress &&
-        repeateAddress.toLowerCase() === address.toLowerCase()
-      ) {
-        setAddressErrorMsg('addresses cannot be duplicated')
-      } else {
-        setAddressErrorMsg('')
-      }
-    } else {
-      setAddressErrorMsg('Invalid address')
-    }
-  }, [address, addressBookObj, repeateAddress])
+  const addressErrorMsg = useMemo(() => {
+    if (!address) return
+    if (!isAddress(address)) return 'Invalid address'
+    if (
+      repeateAddress &&
+      repeateAddress.toLowerCase() === address.toLowerCase()
+    )
+      return 'Addresses cannot be duplicated'
+    return
+  }, [address, repeateAddress])
 
   return (
     <form className="flex h-12">
