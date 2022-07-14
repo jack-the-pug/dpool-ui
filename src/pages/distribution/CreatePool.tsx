@@ -153,6 +153,7 @@ export default function PoolsList() {
     }
     return tokenAmounts
   }, [tokenMetaList, tableHeaderInputList, poolList, isPercentMode])
+
   const parsedTokenAmountsTotal = useMemo(() => {
     return parsedTokenAmounts.map((amounts) =>
       amounts.reduce((pre, cur) => pre.add(cur), BigNumber.from(0))
@@ -250,6 +251,7 @@ export default function PoolsList() {
       return [..._pool]
     })
   }
+  // check repeated address
   const repeateAddress = useMemo(() => {
     const addressMap: Map<string, number> = new Map()
     for (let i = 0; i < poolList.length; i++) {
@@ -263,13 +265,14 @@ export default function PoolsList() {
     }
     return
   }, [poolList])
+
   // batchCreate callData
   const createPoolCallData: PoolCreateCallData[] | null = useMemo(() => {
     if (!tokenMetaList[0] || repeateAddress) return null
     const { isFundNow, date } = poolConfig
     const distributor = poolConfig.distributor
     const _pool = poolList.filter((row) => isLegalPoolRow(row))
-    if (_pool.length === 0) return null
+    if (_pool.length !== poolList.length) return null
 
     // address must be unique
     const poolAddressMap = new Map()
@@ -318,6 +321,20 @@ export default function PoolsList() {
     tableHeaderInputList,
     repeateAddress,
   ])
+  const tokenTotalAmounts = useMemo(() => {
+    if (!createPoolCallData) return
+    const totalAmount: BigNumber[] = []
+    console.log('callData', createPoolCallData)
+    createPoolCallData.forEach((data) =>
+      totalAmount.push(
+        data[PoolCreator.Amounts].reduce(
+          (sum, cur) => sum.add(cur),
+          BigNumber.from(0)
+        )
+      )
+    )
+    return totalAmount
+  }, [createPoolCallData])
 
   const callDataCheck = useMemo(() => {
     if (!createPoolCallData) return
@@ -486,14 +503,15 @@ export default function PoolsList() {
         <div className="flex items-baseline">
           Total:
           <div className="flex flex-col font-medium mx-2">
-            {parsedTokenAmountsTotal.map((amount, index) => (
-              <div key={'token-' + index}>
-                {utils.formatUnits(amount, tokenMetaList[index]?.decimals)}
-                <span className="ml-1 text-gray-500">
-                  {tokenMetaList[index]?.symbol}
-                </span>
-              </div>
-            ))}
+            {tokenTotalAmounts &&
+              tokenTotalAmounts.map((amount, index) => (
+                <div key={'token-' + index}>
+                  {utils.formatUnits(amount, tokenMetaList[index]?.decimals)}
+                  <span className="ml-1 text-gray-500">
+                    {tokenMetaList[index]?.symbol}
+                  </span>
+                </div>
+              ))}
           </div>
         </div>
         <div>
