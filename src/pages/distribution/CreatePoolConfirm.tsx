@@ -373,9 +373,11 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           <div className="flex gap-4 my-1 justify-between">
             <div key={row.address} className="">
               {row.address}{' '}
-              <span className="text-gray-500 italic text-xs">{`(${getAddressName(
-                row.address
-              )})`}</span>
+              {getAddressName(row.address) ? (
+                <span className="text-gray-500 italic text-xs">
+                  {`(${getAddressName(row.address)})`}{' '}
+                </span>
+              ) : null}
             </div>
             <div className="flex gap-2">
               {row.amounts.map((amount, i) => (
