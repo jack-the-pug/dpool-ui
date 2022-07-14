@@ -40,10 +40,6 @@ export default function useTokenMeta() {
   const getToken = useCallback(
     async (address: string): Promise<TTokenMeta | undefined> => {
       if (!chainId) return
-      console.log(
-        'BigNumber.from(address).eq(0)',
-        BigNumber.from(address).eq(0)
-      )
       if (BigNumber.from(address).eq(0)) {
         const nativeToken: TTokenMeta = {
           address: '0x0000000000000000000000000000000000000000',

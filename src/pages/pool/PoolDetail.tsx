@@ -19,7 +19,7 @@ import { format } from 'date-fns'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 
 import useTokenMeta from '../../hooks/useTokenMeta'
-import ApproveToken from '../distribution/Token/ApproveToken'
+import ApproveTokens from '../distribution/poolHeader/ApproveTokens'
 
 export type Claimer = {
   address: string
@@ -291,32 +291,8 @@ export default function PoolDetail() {
       }
     }, [dPoolContract, chainId, nativeTokenAmount])
 
-    const [baseTokenApproveState, setBaseTokenApproveState] =
-      useState<ActionState>(ActionState.WAIT)
-    const [secondTokenApproveState, setSecondTokenApproveState] =
-      useState<ActionState>(ActionState.WAIT)
     return (
       <div className="flex gap-2">
-        <div>
-          {dPoolAddress ? (
-            <ApproveToken
-              dPoolAddress={dPoolAddress}
-              tokenAddress={baseTokenMeta.address}
-              approveState={baseTokenApproveState}
-              setApproveState={setBaseTokenApproveState}
-              approveAmount={poolDetail.baseTotalAmount}
-            />
-          ) : null}
-          {secondTokenMeta && dPoolAddress ? (
-            <ApproveToken
-              dPoolAddress={dPoolAddress}
-              tokenAddress={secondTokenMeta.address}
-              approveState={secondTokenApproveState}
-              setApproveState={setSecondTokenApproveState}
-              approveAmount={poolDetail.secondTotalAmount!}
-            />
-          ) : null}
-        </div>
         <RenderActionButton
           state={fundState}
           stateMsgMap={{
