@@ -269,7 +269,6 @@ export default function PoolsList() {
     const { isFundNow, date } = poolConfig
     const distributor = poolConfig.distributor
     const _pool = poolList.filter((row) => isLegalPoolRow(row))
-    console.log('_pool', _pool)
     if (_pool.length === 0) return null
 
     // address must be unique

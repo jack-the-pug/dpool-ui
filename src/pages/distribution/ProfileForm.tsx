@@ -71,29 +71,29 @@ export function Profile(props: TProfileProps) {
   const [addressBookName, setAddressBookName] = useState<string>('')
 
   useEffect(() => {
-    if (!address || !isAddress(address)) {
-      setAddressErrorMsg('')
+    if (!address) {
       setAddressBookName('')
+      setAddressErrorMsg('')
       return
     }
-    if (isAddress(address) && addressBookObj[address.toLowerCase()]) {
-      const name = addressBookObj[address.toLowerCase()].name
-      setAddressBookName(name)
-    }
-  }, [address, addressBookObj])
-
-  useEffect(() => {
-    if (!isAddress(address)) return
-    if (
-      repeateAddress &&
-      repeateAddress.toLowerCase() === address.toLowerCase()
-    ) {
-      setAddressErrorMsg('addresses cannot be duplicated')
+    if (isAddress(address)) {
+      if (addressBookObj[address.toLowerCase()]) {
+        const name = addressBookObj[address.toLowerCase()].name
+        setAddressBookName(name)
+      }
+      if (
+        repeateAddress &&
+        repeateAddress.toLowerCase() === address.toLowerCase()
+      ) {
+        setAddressErrorMsg('addresses cannot be duplicated')
+      } else {
+        setAddressErrorMsg('')
+      }
     } else {
-      setAddressErrorMsg('')
+      setAddressErrorMsg('Invalid address')
     }
-  }, [repeateAddress, address])
-  console.log('repeateAddress', repeateAddress)
+  }, [address, addressBookObj, repeateAddress])
+
   return (
     <form className="flex h-12">
       <div className="w-10 text-black border border-solid border-r-0 border-b-0  border-gray-400 outline-none  px-2 flex items-center">
