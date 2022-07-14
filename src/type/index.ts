@@ -2,7 +2,6 @@ import { BigNumber } from 'ethers'
 
 export interface PoolRow {
   address: string
-  parsedTokenAmount: BigNumber
   userInputAmount: string
 }
 

@@ -1,6 +1,6 @@
 import { BigNumber } from 'ethers'
 import React, { useCallback, useContext, useState } from 'react'
-import TokensSelect, { TokenMetaList } from './Token'
+import TokensSelect, { TokenMetaList } from './poolHeader'
 
 interface TextareaModeProp {
   textarea: string
