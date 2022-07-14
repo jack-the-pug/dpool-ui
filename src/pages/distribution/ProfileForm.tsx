@@ -13,6 +13,7 @@ interface TProfileProps {
   profileKey: string
   onRemove: (index: number) => void
   onChange: (index: number, profile: PoolRow) => void
+  repeateAddress: string | undefined
   isPercentMode: boolean
   parsedTokenAmounts: BigNumber[][]
   tokenMetaList: TokenMeta[]
@@ -29,6 +30,7 @@ export function Profile(props: TProfileProps) {
     tokenMetaList,
     isPercentMode,
     userInputTotal,
+    repeateAddress,
   } = props
 
   const [address, setAddress] = useState<string>(_profile.address)
@@ -59,7 +61,6 @@ export function Profile(props: TProfileProps) {
     if (!isAddress(address)) {
       return
     }
-    setAddressErrorMsg('')
     submit()
   }, [address, inputAmount, submit])
 
@@ -68,20 +69,31 @@ export function Profile(props: TProfileProps) {
   }, [inputAmount, submit])
 
   const [addressBookName, setAddressBookName] = useState<string>('')
+
   useEffect(() => {
-    if (!address) {
+    if (!address || !isAddress(address)) {
       setAddressErrorMsg('')
       setAddressBookName('')
       return
     }
-    if (!isAddress(address)) {
-      setAddressBookName('')
-      setAddressErrorMsg('Invalid Address')
-    } else if (addressBookObj[address.toLowerCase()]) {
+    if (isAddress(address) && addressBookObj[address.toLowerCase()]) {
       const name = addressBookObj[address.toLowerCase()].name
       setAddressBookName(name)
     }
   }, [address, addressBookObj])
+
+  useEffect(() => {
+    if (!isAddress(address)) return
+    if (
+      repeateAddress &&
+      repeateAddress.toLowerCase() === address.toLowerCase()
+    ) {
+      setAddressErrorMsg('addresses cannot be duplicated')
+    } else {
+      setAddressErrorMsg('')
+    }
+  }, [repeateAddress, address])
+  console.log('repeateAddress', repeateAddress)
   return (
     <form className="flex h-12">
       <div className="w-10 text-black border border-solid border-r-0 border-b-0  border-gray-400 outline-none  px-2 flex items-center">
@@ -106,14 +118,18 @@ export function Profile(props: TProfileProps) {
           name="address"
         />
 
-        {addressBookName ? (
-          <span className="text-xs px-2 font-thin italic text-gray-500">
-            {addressBookName}
-          </span>
-        ) : null}
-        {addressErrorMsg ? (
-          <div className="text-red-500 text-xs px-2">{addressErrorMsg}</div>
-        ) : null}
+        {(addressBookName || addressErrorMsg) && (
+          <div className="flex gap-4">
+            {addressBookName ? (
+              <span className="text-xs px-2 font-thin italic text-gray-500">
+                {addressBookName}
+              </span>
+            ) : null}
+            {addressErrorMsg ? (
+              <div className="text-red-500 text-xs px-2">{addressErrorMsg}</div>
+            ) : null}
+          </div>
+        )}
       </div>
 
       <div

@@ -105,6 +105,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
 
   const tokenTotalAmounts = useMemo(() => {
     const totalAmount: BigNumber[] = []
+    console.log('callData', callData)
     callData.forEach((data) =>
       totalAmount.push(
         data[PoolCreator.Amounts].reduce(

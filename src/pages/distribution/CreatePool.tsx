@@ -23,6 +23,7 @@ import useDPoolAddress from '../../hooks/useDPoolAddress'
 import { toast } from 'react-toastify'
 
 import DPoolFactory from './dPoolFactory/index'
+import { isAddress } from 'ethers/lib/utils'
 
 export type TPoolRow = PoolRow & {
   key?: number | string
@@ -249,10 +250,22 @@ export default function PoolsList() {
       return [..._pool]
     })
   }
-
+  const repeateAddress = useMemo(() => {
+    const addressMap: Map<string, number> = new Map()
+    for (let i = 0; i < poolList.length; i++) {
+      const row = poolList[i]
+      if (!isAddress(row.address)) continue
+      const n = addressMap.get(row.address.toLowerCase()) || 1
+      if (n > 1) {
+        return row.address
+      }
+      addressMap.set(row.address.toLowerCase(), n + 1)
+    }
+    return
+  }, [poolList])
   // batchCreate callData
   const createPoolCallData: PoolCreateCallData[] | null = useMemo(() => {
-    if (!tokenMetaList[0]) return null
+    if (!tokenMetaList[0] || repeateAddress) return null
     const { isFundNow, date } = poolConfig
     const distributor = poolConfig.distributor
     const _pool = poolList.filter((row) => isLegalPoolRow(row))
@@ -262,6 +275,7 @@ export default function PoolsList() {
     // address must be unique
     const poolAddressMap = new Map()
     _pool.forEach((row) => poolAddressMap.set(row.address, row))
+
     const pool: TPoolRow[] = Array.from(poolAddressMap.values())
 
     // dPool contract need sort by address.
@@ -303,6 +317,7 @@ export default function PoolsList() {
     tokenMetaList,
     parsedTokenAmountsTotal,
     tableHeaderInputList,
+    repeateAddress,
   ])
 
   const callDataCheck = useMemo(() => {
@@ -448,6 +463,7 @@ export default function PoolsList() {
                 index={index}
                 onRemove={removeItemFromPool}
                 onChange={onPoolItemChange}
+                repeateAddress={repeateAddress}
                 parsedTokenAmounts={parsedTokenAmounts}
                 isPercentMode={isPercentMode}
                 tokenMetaList={tokenMetaList}
