@@ -13,7 +13,7 @@ import {
 import { isLegalPoolRow, parsed2NumberString } from '../../utils/verify'
 import PoolSetting from './PoolSetting'
 import { Profile } from './ProfileForm'
-import TokensSelect from './poolHeader'
+import TokensSelect from './PoolHeader'
 import CreatePoolConfirm from './CreatePoolConfirm'
 import { Pool } from '../pool/PoolDetail'
 import useTokenMeta from '../../hooks/useTokenMeta'
@@ -57,7 +57,7 @@ export default function PoolsList() {
   const [dPoolFactoryVisible, setDPoolFactoryVisible] = useState<boolean>(false)
 
   useEffect(() => {
-    setDPoolFactoryVisible(() => !!dPoolAddress)
+    setDPoolFactoryVisible(() => !dPoolAddress)
   }, [dPoolAddress])
   useEffect(() => {
     if (!isOwner) {
@@ -335,51 +335,48 @@ export default function PoolsList() {
   /**
    * textarea,table Mode switch.
    */
-  // const poolList2textarea = useCallback(() => {
-  //   const textarea = poolList.filter(isLegalPoolRow).reduce((pre, cur) => {
-  //     return `${pre}${cur.address},${cur.userInputAmount}\n`
-  //   }, '')
-  //   setTextarea(textarea)
-  // }, [poolList])
-  // const textarea2poolList = useCallback(() => {
-  //   const textByRow = textarea.split('\n')
-  //   const _poolList: TPoolRow[] = []
-  //   for (let i = 0; i < textByRow.length; i++) {
-  //     const text = textByRow[i]
-  //     const maybeRowMetaList = [
-  //       text.split(':'),
-  //       text.split(' '),
-  //       text.split(','),
-  //       text.split('='),
-  //     ]
-  //     const rowMeta = maybeRowMetaList.find((item) => item.length === 2)
-  //     if (!rowMeta) continue
-  //     const [address, baseAmount] = rowMeta
-  //     let baseTokenAmount = parseFloat(baseAmount)
-  //     if (isNaN(baseTokenAmount)) {
-  //       baseTokenAmount = 0
-  //     }
-  //     const item: TPoolRow = {
-  //       address,
-  //       userInputAmount: baseAmount,
-  //       parsedTokenAmount: utils.parseUnits(baseAmount, baseTokenMeta.decimals),
-  //       key: `${Date.now()}-${i}`,
-  //     }
-  //     _poolList.push(item)
-  //   }
-  //   setPoolList(() => (poolList.length ? poolList : [creatPoolEmptyItem()]))
-  // }, [textarea, isPercentMode, poolList, baseTokenMeta])
+  const poolList2textarea = useCallback(() => {
+    const textarea = poolList.filter(isLegalPoolRow).reduce((pre, cur) => {
+      return `${pre}${cur.address},${cur.userInputAmount}\n`
+    }, '')
+    setTextarea(textarea)
+  }, [poolList])
+  const textarea2poolList = useCallback(() => {
+    const textByRow = textarea.split('\n')
+    const _poolList: TPoolRow[] = []
+    for (let i = 0; i < textByRow.length; i++) {
+      const text = textByRow[i]
+      const maybeRowMetaList = [
+        text.split(':'),
+        text.split(' '),
+        text.split(','),
+        text.split('='),
+      ]
+      const rowMeta = maybeRowMetaList.find((item) => item.length === 2)
+      if (!rowMeta) continue
+      const [address, baseAmount] = rowMeta
+      let amount = parseFloat(baseAmount)
+      if (isNaN(amount)) {
+        amount = 0
+      }
+      const item: TPoolRow = {
+        address,
+        userInputAmount: baseAmount,
+        key: `${Date.now()}-${i}`,
+      }
+      _poolList.push(item)
+    }
+    setPoolList(() => (poolList.length ? poolList : [creatPoolEmptyItem()]))
+  }, [textarea, isPercentMode, poolList])
 
   const [confirmVisible, setConfirmVisible] = useState<boolean>(false)
   const onConfirm = useCallback(() => {
     if (typeof callDataCheck !== 'boolean') return
     setConfirmVisible(true)
   }, [callDataCheck])
-  // return dPoolFactoryVisible ? (
-  //   <DPoolFactory />
-  // ) :
-
-  return (
+  return dPoolFactoryVisible ? (
+    <DPoolFactory />
+  ) : (
     <div className="flex flex-col items-center justify-center">
       <div className="w-full flex justify-center items-center">
         <input
@@ -398,7 +395,7 @@ export default function PoolsList() {
           <input
             onChange={(e) => {
               setIsTextareaMode(e.target.checked)
-              // e.target.checked ? poolList2textarea() : textarea2poolList()
+              e.target.checked ? poolList2textarea() : textarea2poolList()
             }}
             type="checkbox"
             checked={isTextareaMode}
@@ -431,22 +428,31 @@ export default function PoolsList() {
             </div>
           </div>
         </div>
-        <div className="w-full">
-          {poolList.map((p, index) => (
-            <Profile
-              key={`${p.key}`}
-              profileKey={`${p.key}`}
-              profile={p}
-              index={index}
-              onRemove={removeItemFromPool}
-              onChange={onPoolItemChange}
-              parsedTokenAmounts={parsedTokenAmounts}
-              isPercentMode={isPercentMode}
-              tokenMetaList={tokenMetaList}
-              userInputTotal={userInputTotal}
-            />
-          ))}
-        </div>
+        {isTextareaMode ? (
+          <TextareaMode
+            textarea={textarea}
+            setTextarea={setTextarea}
+            textarea2poolList={textarea2poolList}
+          />
+        ) : (
+          <div className="w-full">
+            {poolList.map((p, index) => (
+              <Profile
+                key={`${p.key}`}
+                profileKey={`${p.key}`}
+                profile={p}
+                index={index}
+                onRemove={removeItemFromPool}
+                onChange={onPoolItemChange}
+                parsedTokenAmounts={parsedTokenAmounts}
+                isPercentMode={isPercentMode}
+                tokenMetaList={tokenMetaList}
+                userInputTotal={userInputTotal}
+              />
+            ))}
+          </div>
+        )}
+
         <div
           onClick={() => addEmptyProfile()}
           className="w-full cursor-cell flex items-center justify-center h-8 border border-dashed  border-gray-500"

@@ -23,7 +23,7 @@ import { useNavigate } from 'react-router-dom'
 import { dPoolABI } from '../../constants'
 import { useApproveToken } from '../../hooks/useApproveToken'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
-import ApproveTokens from './poolHeader/ApproveTokens'
+import ApproveTokens from '../../components/token/ApproveTokens'
 
 type TPoolRow = Omit<
   PoolRow & { secondParsedTokenAmount?: BigNumber },

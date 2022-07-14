@@ -19,7 +19,7 @@ import { format } from 'date-fns'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 
 import useTokenMeta from '../../hooks/useTokenMeta'
-import ApproveTokens from '../distribution/poolHeader/ApproveTokens'
+import ApproveTokens from '../../components/token/ApproveTokens'
 
 export type Claimer = {
   address: string
