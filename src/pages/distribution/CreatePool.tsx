@@ -267,9 +267,11 @@ export default function PoolsList() {
 
   // batchCreate callData
   const createPoolCallData: PoolCreateCallData[] | null = useMemo(() => {
-    if (!tokenMetaList[0] || repeatedAddress) return null
+    if (!tokenMetaList[0] || repeatedAddress || !account) return null
     const { isFundNow, date } = poolConfig
-    const distributor = poolConfig.distributor
+    const distributor = isAddress(poolConfig.distributor)
+      ? poolConfig.distributor
+      : account
     const _pool = poolList.filter((row) => isLegalPoolRow(row))
     if (_pool.length !== poolList.length) return null
 
@@ -315,11 +317,13 @@ export default function PoolsList() {
     poolConfig,
     poolName,
     poolList,
+    account,
     tokenMetaList,
     parsedTokenAmountsTotal,
     tableHeaderInputList,
     repeatedAddress,
   ])
+
   const tokenTotalAmounts = useMemo(() => {
     if (!createPoolCallData) return
     const totalAmount: BigNumber[] = []
@@ -347,6 +351,7 @@ export default function PoolsList() {
     if (distributionType === DistributionType.Pull) {
       if (endTime <= startTime) return 'end time must be after the start time '
       const nowTime = Math.round(Date.now() / 1000)
+      console.log('nowTime', startTime, nowTime)
       if (nowTime >= startTime) return 'start time must in future'
     }
 
@@ -373,7 +378,6 @@ export default function PoolsList() {
   }, [poolList])
   const textarea2poolList = useCallback(() => {
     const textByRow = textarea.split('\n')
-    console.log('textByRow', textByRow)
     const _poolList: TPoolRow[] = []
     for (let i = 0; i < textByRow.length; i++) {
       const text = textByRow[i]
@@ -384,7 +388,6 @@ export default function PoolsList() {
         text.split('='),
       ]
       const rowMeta = maybeRowMetaList.find((item) => item.length === 2)
-      console.log('rowMeta', rowMeta)
       if (!rowMeta) continue
       const [address, baseAmount] = rowMeta
       let amount = Number(baseAmount)

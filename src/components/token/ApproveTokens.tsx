@@ -33,7 +33,7 @@ export default function ApproveTokens(props: {
 
   const { tokens, setIsTokensApproved } = props
   const approvedToken = useRef<Set<string>>(new Set())
-
+  console.log('approvedToken.current.size', approvedToken.current.size)
   useEffect(() => {
     if (approvedToken.current.size === tokens.length) {
       setIsTokensApproved(true)

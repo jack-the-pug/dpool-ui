@@ -154,18 +154,17 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
   const onCreateSuccess = useCallback(
     (ids: string[]) => {
       if (!poolMeta || !chainId || !account || !dPoolAddress) return
-      const localPoolMeta: DPoolLocalStorageMeta = {
+      const poolList = ids.map((id) => ({
         name: poolMeta.name,
         creator: account,
         dPoolAddress,
         chainId,
-        poolIds: ids,
-      }
-
+        poolId: id,
+      }))
       const localPoolMetaList = JSON.parse(
         localStorage.getItem('localPoolMetaList') || '[]'
       )
-      localPoolMetaList.push(localPoolMeta)
+      localPoolMetaList.push(...poolList)
       localStorage.setItem(
         'localPoolMetaList',
         JSON.stringify(localPoolMetaList)
@@ -212,11 +211,13 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
   const singleCreate = useCallback(
     async (callData: PoolCreateCallData): Promise<string | undefined> => {
       if (!dPoolContract || !dPoolAddress) return
+      console.log('dPoolContract', dPoolContract)
       const singleCreateRequest = await dPoolContract.create(callData, {
         value: nativeTokenValue,
       })
       const singleCreateResponse: ContractReceipt =
         await singleCreateRequest.wait()
+      console.log('singleCreateResponse', singleCreateResponse)
       const { transactionHash, logs: _logs } = singleCreateResponse
       const logs = _logs.filter((log) =>
         BigNumber.from(log.address).eq(dPoolAddress)
@@ -288,6 +289,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         setCreateTx(tx)
       }
     } catch (err: any) {
+      console.log('err', err)
       toast.error(
         `${typeof err === 'object' ? err.reason || JSON.stringify(err) : err}`
       )
@@ -327,7 +329,11 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         Waiting for approval
       </div>
     )
-    if (!isTokensApproved) return waitApproved
+    if (
+      !isTokensApproved &&
+      poolMeta?.config.distributor.toLowerCase() === account?.toLowerCase()
+    )
+      return waitApproved
     return (
       <Action
         state={createPoolState}
@@ -438,15 +444,17 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           </div>
         )}
       </div>
-      <div className="mt-4">
-        <ApproveTokens
-          tokens={tokenMetaList.map((token, index) => ({
-            address: token.address,
-            amount: tokenTotalAmounts[index],
-          }))}
-          setIsTokensApproved={setIsTokensApproved}
-        />
-      </div>
+      {poolMeta.config.distributor.toLowerCase() === account?.toLowerCase() ? (
+        <div className="mt-4">
+          <ApproveTokens
+            tokens={tokenMetaList.map((token, index) => ({
+              address: token.address,
+              amount: tokenTotalAmounts[index],
+            }))}
+            setIsTokensApproved={setIsTokensApproved}
+          />
+        </div>
+      ) : null}
       <div className="flex flex-col justify-between mt-6">
         <CreateAction />
         <div className="flex justify-center text-gray-500 text-sm my-2">

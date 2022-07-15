@@ -50,7 +50,6 @@ export interface BasePool {
   distributor: string
   token: string
   name: string
-  owner: string
   startTime: number
   deadline: number
   escrowedAmount: BigNumber
@@ -73,7 +72,7 @@ export enum DPoolEvent {
 
 export interface DPoolLocalStorageMeta {
   name: string
-  poolIds: string[]
+  poolId: string
   chainId: number
   dPoolAddress: string
   creator: string

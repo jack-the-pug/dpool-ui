@@ -29,6 +29,7 @@ export default function PoolList() {
     setPoolList(formatPoolList)
     setIsLoading(false)
   }, [chainId, dPoolAddress, dPoolContract])
+
   const getPoolFromContract = useCallback(() => {
     if (!dPoolContract || !chainId || !dPoolAddress) return
     setIsLoading(true)
@@ -37,7 +38,7 @@ export default function PoolList() {
       const ListInDPoolContract = Array(id.toNumber())
         .fill(0)
         .map((_, index) => ({
-          poolIds: [`${index + 1}`],
+          poolId: `${index + 1}`,
           name: `Distribution Pool`,
           creator: '',
           chainId,
@@ -55,12 +56,10 @@ export default function PoolList() {
     <div className="flex flex-col w-full break-all  flex-1  items-center">
       {poolList.length ? (
         poolList.map((pool, index) => {
-          console.log('pool', pool)
-          const strPoolIds = pool.poolIds.join(',')
           return (
             <Link
-              key={strPoolIds}
-              to={strPoolIds}
+              key={pool.poolId}
+              to={pool.poolId}
               className="flex px-4 py-1 hover:bg-gray-100 hover:scale-110 transition-all ease-in-out rounded-sm"
             >
               <div className="mr-4 text-gray-500">{index + 1}</div>

@@ -5,6 +5,7 @@ import {
   BasePool,
   DPoolEvent,
   GetPoolRes,
+  PoolRow,
   PoolState,
   TokenMeta,
 } from '../../type'
@@ -19,30 +20,17 @@ import { format } from 'date-fns'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 
 import useTokenMeta from '../../hooks/useTokenMeta'
-import ApproveTokens from '../../components/token/ApproveTokens'
+import ApproveTokens, {
+  ApproveToken,
+} from '../../components/token/ApproveTokens'
 
-export type Claimer = {
-  address: string
-  baseTokenAmount: BigNumber
-  secondTokenAmount?: BigNumber
-  tx?: string
+export type Pool = BasePool & {
+  state: PoolState
 }
 
-export type Pool = Omit<
-  BasePool,
-  'amounts' | 'token' | 'totalAmount' | 'escrowedAmount' | 'claimedAmount'
-> & {
-  state: PoolState
-  baseToken: string
-  secondToken?: string
-  baseTokenAmounts: BigNumber[]
-  secondTokenAmounts?: BigNumber[]
-  baseTotalAmount: BigNumber
-  secondTotalAmount?: BigNumber
-  baseClaimedAmount: BigNumber
-  secondClaimedAmount?: BigNumber
-  baseRemainingTokenAmount: BigNumber
-  secondRemainingTokenAmount?: BigNumber
+export interface TableRow {
+  address: string
+  amount: BigNumber
 }
 
 const { useAccount, useChainId, useProvider } = metaMaskHooks
@@ -72,112 +60,108 @@ function RenderState({ state, title }: { state: PoolState; title: string }) {
     </div>
   )
 }
+export default function PoolDetailList() {
+  const { poolIds: _poolIds } = useParams()
+  const poolIds = useMemo((): string[] => {
+    if (!_poolIds) return []
+    try {
+      const ids = _poolIds.split(',')
+      return ids
+    } catch {
+      return []
+    }
+  }, [_poolIds])
 
-export default function PoolDetail() {
-  const { poolId: _pooId } = useParams()
+  if (!poolIds.length) return null
+  return (
+    <div className="flex flex-col gap-20">
+      {poolIds.map((id) => (
+        <PoolDetail poolId={id} key={id} />
+      ))}
+    </div>
+  )
+}
+
+export function PoolDetail({ poolId }: { poolId: string }) {
   const navigate = useNavigate()
   const { dPoolAddress, isOwner } = useDPoolAddress()
   const { getToken } = useTokenMeta()
 
-  const [claimers, setClaimers] = useState<Claimer[]>([])
-  const [poolDetail, setPoolDetail] = useState<Pool>()
-  console.log('poolDetail', poolDetail)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const account = useAccount()
   const chainId = useChainId()
-  const provider = useProvider()
   const dPoolContract = useDPoolContract(dPoolAddress)
-  const poolIds = useMemo(() => (_pooId ? _pooId.split(',') : []), [_pooId])
-  const [baseTokenMeta, setBaseTokenMeta] = useState<TokenMeta>()
-  const [secondTokenMeta, setSecondTokenMeta] = useState<TokenMeta>()
+
+  const [poolMeta, setPoolMeta] = useState<Pool>()
+  const [tokenMeta, setTokenMeta] = useState<TokenMeta>()
+  const poolList = useMemo((): TableRow[] => {
+    if (!poolMeta) return []
+    return poolMeta.claimers.map((claimer, index) => ({
+      address: claimer,
+      amount: poolMeta.amounts[index],
+    }))
+  }, [poolMeta])
+
   useEffect(() => {
-    if (!poolDetail || !provider) return
-    const { baseToken, secondToken } = poolDetail
-    getToken(baseToken).then(setBaseTokenMeta)
-    if (secondToken) {
-      getToken(secondToken).then(setSecondTokenMeta)
-    }
-  }, [poolDetail])
-  // format pool data
+    console.log('dPoolContract', dPoolContract)
+    console.log('poolMeta', poolMeta)
+  }, [dPoolContract])
+
+  useEffect(() => {
+    if (!poolMeta) return
+    const tokenAddress = poolMeta.token
+    getToken(tokenAddress).then((meta) => meta && setTokenMeta(meta))
+  }, [poolMeta, getToken])
+
+  // format table data
   const getPoolDetail = useCallback(async () => {
-    if (!dPoolContract || !poolIds) return
-
+    if (!dPoolContract || !poolId) return
     setIsLoading(true)
-    setPoolDetail(undefined)
-    setClaimers([])
-    let pool: Pool | undefined = undefined
-    for (let i = 0; i < poolIds.length; i++) {
-      const poolRes: GetPoolRes = await dPoolContract.getPoolById(poolIds[i])
-      console.log('poolRes', poolRes)
-      // first pool
-      if (!pool) {
-        const {
-          amounts,
-          claimedAmount,
-          claimers,
-          deadline,
-          distributor,
-          totalAmount,
-          name,
-          owner,
-          startTime,
-          token,
-        } = poolRes[0]
-        const state = poolRes[1]
-        pool = {
-          baseClaimedAmount: claimedAmount,
-          claimers,
-          deadline,
-          distributor,
-          name,
-          owner,
-          startTime,
-          state,
-          baseToken: token,
-          baseTokenAmounts: amounts,
-          baseRemainingTokenAmount: totalAmount.sub(claimedAmount),
-          baseTotalAmount: totalAmount,
-        }
-      }
-      // second pool
-      else {
-        const { amounts, token, claimedAmount, totalAmount } = poolRes[0]
-        pool.secondTokenAmounts = amounts
-        pool.secondToken = token
-        pool.secondClaimedAmount = claimedAmount
-        pool.secondRemainingTokenAmount = totalAmount.sub(claimedAmount)
-        pool.secondTotalAmount = totalAmount
-      }
+    const poolRes: GetPoolRes = await dPoolContract.getPoolById(poolId)
+    const {
+      amounts,
+      claimedAmount,
+      claimers,
+      deadline,
+      distributor,
+      totalAmount,
+      name,
+      startTime,
+      escrowedAmount,
+      token,
+    } = poolRes[0]
+    const state = poolRes[1]
+    const _poolMeta = {
+      amounts,
+      claimedAmount,
+      claimers,
+      deadline,
+      distributor,
+      totalAmount,
+      name,
+      startTime,
+      escrowedAmount,
+      token,
+      state,
     }
-    const claimerList: Claimer[] = []
-    const { claimers, baseTokenAmounts, secondTokenAmounts } = pool!
-    claimers.forEach((address: string, index) => {
-      const claimerMeta: Claimer = {
-        address,
-        baseTokenAmount: baseTokenAmounts[index],
-      }
-      if (secondTokenAmounts) {
-        claimerMeta.secondTokenAmount = secondTokenAmounts[index]
-      }
-      claimerList.push(claimerMeta)
-    })
-    setPoolDetail(pool)
-    setClaimers(claimerList)
+    if (startTime !== 0) {
+      setPoolMeta(_poolMeta)
+    }
     setIsLoading(false)
-  }, [dPoolContract, account, poolIds, chainId])
+  }, [dPoolContract, account, poolId, chainId])
 
   useEffect(() => {
-    if (dPoolAddress && dPoolContract && poolIds && poolIds.length && chainId) {
+    if (dPoolAddress && dPoolContract && poolId && chainId) {
       getPoolDetail()
     }
-  }, [dPoolContract, account, poolIds, chainId])
+  }, [dPoolContract, account, poolId, chainId])
 
   const distributeAgain = useCallback(() => {
-    localStorage.setItem('distributeAgainData', JSON.stringify(poolDetail))
+    localStorage.setItem('distributeAgainData', JSON.stringify(poolMeta))
     navigate('/')
-  }, [poolDetail])
+  }, [poolMeta])
 
-  if (isLoading || !poolDetail) {
+  if (isLoading) {
     return (
       <p className="w-full flex justify-center">
         <EosIconsBubbleLoading width="5em" height="5em" />
@@ -186,12 +170,12 @@ export default function PoolDetail() {
   }
 
   function RenderCancel() {
-    if (!poolDetail || !account) return null
-    if (poolDetail.state !== PoolState.Initialized) return null
+    if (!poolMeta || !account) return null
+    if (poolMeta.state !== PoolState.Initialized) return null
     if (!isOwner) {
       return null
     }
-    const { startTime, deadline } = poolDetail
+    const { startTime, deadline } = poolMeta
     const nowTime = Date.now() / 1000
     if (nowTime >= startTime && nowTime <= deadline) {
       return null
@@ -201,10 +185,10 @@ export default function PoolDetail() {
     )
 
     const cancelPool = useCallback(async () => {
-      if (!dPoolContract || !poolIds || !chainId) return
+      if (!dPoolContract || !poolId || !chainId) return
       setCancelState(ActionState.ING)
       try {
-        const cancelPoolByIdRes = await dPoolContract.cancel(poolIds)
+        const cancelPoolByIdRes = await dPoolContract.cancel(poolId)
         const transactionResponse: ContractReceipt =
           await cancelPoolByIdRes.wait()
         setCancelState(ActionState.SUCCESS)
@@ -240,36 +224,24 @@ export default function PoolDetail() {
     )
   }
   function RenderFund() {
-    if (!poolDetail || !account) return null
-    if (!isOwner) return null
-    if (poolDetail.state !== PoolState.Initialized) return null
-    if (!baseTokenMeta) return null
+    if (!poolMeta || !account || !dPoolAddress) return null
+    if (poolMeta.distributor.toLowerCase() !== account.toLowerCase())
+      return null
+    if (poolMeta.state !== PoolState.Initialized) return null
+    if (!tokenMeta) return null
 
     const [fundState, setFundState] = useState<ActionState>(ActionState.WAIT)
+    const [isTokensApproved, setIsTokensApproved] = useState<boolean>(false)
     const nativeTokenAmount = useMemo(() => {
-      let amount = BigNumber.from(0)
-      if (BigNumber.from(baseTokenMeta.address).eq(0)) {
-        amount = amount.add(poolDetail.baseTotalAmount)
-      }
-      if (
-        secondTokenMeta &&
-        poolDetail.secondTotalAmount &&
-        BigNumber.from(secondTokenMeta.address).eq(0)
-      ) {
-        amount = amount.add(poolDetail.secondTotalAmount)
-      }
-
-      return amount
-    }, [poolDetail, baseTokenMeta, secondTokenMeta])
-
+      if (!BigNumber.from(poolMeta.token).eq(0)) return BigNumber.from(0)
+      return poolMeta.totalAmount
+    }, [poolMeta])
     const fundPool = useCallback(async () => {
-      if (!dPoolContract || !poolIds.length || !chainId) return
+      if (!dPoolContract || !poolId || !chainId || !isTokensApproved) return
       setFundState(ActionState.ING)
       try {
-        // if unapproved token, approve token first
-        console.log('nativeTokenAmount', nativeTokenAmount)
-        const fundPoolByIdRes = await dPoolContract.batchFund(poolIds, {
-          value: nativeTokenAmount.toString(),
+        const fundPoolByIdRes = await dPoolContract.fund(poolId, {
+          value: nativeTokenAmount,
         })
         const transactionResponse: ContractReceipt =
           await fundPoolByIdRes.wait()
@@ -289,10 +261,15 @@ export default function PoolDetail() {
         toast.error(`${err}`)
         setFundState(ActionState.FAILED)
       }
-    }, [dPoolContract, chainId, nativeTokenAmount])
-
+    }, [dPoolContract, chainId, isTokensApproved, poolId, nativeTokenAmount])
     return (
       <div className="flex gap-2">
+        <ApproveToken
+          token={tokenMeta.address}
+          approveAmount={poolMeta.totalAmount}
+          dPoolAddress={dPoolAddress}
+          onApproved={() => setIsTokensApproved(true)}
+        />
         <RenderActionButton
           state={fundState}
           stateMsgMap={{
@@ -308,31 +285,21 @@ export default function PoolDetail() {
   }
 
   function RenderDistribute() {
-    if (!poolDetail || !account) return null
-    if (poolDetail.state !== PoolState.Funded) return null
-    if (!BigNumber.from(poolDetail.distributor).eq(account)) return null
-    // const { startTime, deadline } = poolDetail
-    // const nowTime = Date.now() / 1000
-    // console.log('startTime, deadline', startTime, nowTime, deadline)
-    // if (nowTime <= startTime || nowTime >= deadline) {
-    //   return null
-    // }
+    if (!poolMeta || !account) return null
+    if (poolMeta.state !== PoolState.Funded) return null
+    if (!BigNumber.from(poolMeta.distributor).eq(account)) return null
     const [distributionState, setDistributionState] = useState<ActionState>(
       ActionState.WAIT
     )
     const [distributeTx, setDistributeTx] = useState<string>()
 
     const distributePool = useCallback(async () => {
-      if (!dPoolContract || !poolIds.length || !chainId) return
+      if (!dPoolContract || !poolId || !chainId) return
       setDistributionState(ActionState.ING)
       const successClaimedAddress: string[] = []
 
       try {
-        const distributionPoolByIdRes =
-          poolIds.length === 1
-            ? await dPoolContract.distribute(poolIds[0])
-            : await dPoolContract.batchDistribute(poolIds)
-
+        const distributionPoolByIdRes = await dPoolContract.distribute(poolId)
         const transactionResponse: ContractReceipt =
           await distributionPoolByIdRes.wait()
         setDistributeTx(transactionResponse.transactionHash)
@@ -374,51 +341,38 @@ export default function PoolDetail() {
     )
   }
 
-  function RenderClaim(props: { claimer: Claimer; index: number }) {
+  function RenderClaim(props: { claimer: TableRow; index: number }) {
     const { claimer, index } = props
-    if (poolDetail?.state !== PoolState.Funded) return null
-    const { startTime, deadline } = poolDetail
+    if (!poolMeta) return null
+    const { startTime, deadline } = poolMeta
     const nowTime = Date.now() / 1000
     if (nowTime <= startTime || nowTime >= deadline) {
       return null
     }
     const [claimState, setClaimState] = useState<ActionState>(ActionState.WAIT)
     const [claimedTx, setClaimedTx] = useState<string>()
-    const [isClaimed, setIsClaimed] = useState<boolean>(false)
-
-    const getIsClaimed = useCallback(
-      async (claimer: string, index: number) => {
-        if (!dPoolContract || !claimer) return
-        const basePoolClaimedAmount = await dPoolContract.userClaimedAmount(
-          claimer,
-          poolIds[0]
-        )
-        let secondPoolClaimedAmount: BigNumber | undefined = undefined
-        if (poolIds[1]) {
-          secondPoolClaimedAmount = await dPoolContract.userClaimedAmount(
-            claimer,
-            poolIds[1]
-          )
-        }
-        // pool 1 is claimed?
-        let flag = basePoolClaimedAmount.eq(claimers[index].baseTokenAmount)
-
-        if (secondPoolClaimedAmount) {
-          // pool 2 is claimed?
-          flag = secondPoolClaimedAmount.eq(claimers[index].secondTokenAmount!)
-        }
-        return flag
-      },
-      [poolIds, dPoolContract, claimers]
+    const [shouldClaimAmount, setShouldClaimAmount] = useState<BigNumber>(
+      claimer.amount
     )
+
+    const getClaimedAmount = useCallback(async () => {
+      if (!dPoolContract) return
+      const claimedAmount = await dPoolContract.userClaimedAmount(
+        claimer.address,
+        poolId
+      )
+      const _shouldClaimAmount = claimer.amount.sub(claimedAmount)
+      setShouldClaimAmount(_shouldClaimAmount)
+    }, [dPoolContract, claimer])
+    useEffect(() => {
+      getClaimedAmount()
+    }, [getClaimedAmount])
+
     const claim = useCallback(async () => {
-      if (!dPoolContract || !poolIds || !chainId) return
+      if (!dPoolContract || !poolId || !chainId) return
       setClaimState(ActionState.ING)
       try {
-        const claimSinglePoolRes = await dPoolContract.claim(
-          poolIds,
-          new Array(poolIds.length).fill(index)
-        )
+        const claimSinglePoolRes = await dPoolContract.claim(poolId)
         const transactionResponse: ContractReceipt =
           await claimSinglePoolRes.wait()
         setClaimedTx(transactionResponse.transactionHash)
@@ -439,39 +393,44 @@ export default function PoolDetail() {
         toast.error(`${err}`)
         setClaimState(ActionState.FAILED)
       }
-    }, [dPoolContract, chainId])
+    }, [dPoolContract, chainId, poolId])
 
-    useEffect(() => {
-      getIsClaimed(claimer.address, index).then(setIsClaimed)
-    }, [getIsClaimed, claimer, index])
     const isClaimer = claimer.address.toLowerCase() === account?.toLowerCase()
-    if (isClaimed) {
+    if (shouldClaimAmount.eq(0)) {
       return <div className="text-gray-500">Received</div>
     }
-    if (!isClaimed && isClaimer) {
-      return (
-        <RenderActionButton
-          state={claimState}
-          stateMsgMap={{
-            [ActionState.WAIT]: 'Claim',
-            [ActionState.ING]: 'Claiming',
-            [ActionState.SUCCESS]: 'Claimed',
-            [ActionState.FAILED]: 'Claim failed.Try again',
-          }}
-          tx={claimedTx}
-          onClick={() => claim()}
-          waitClass="text-gray-200 bg-green-500 border-green-500 text-center rounded-2xl px-2"
-        />
-      )
-    } else {
-      return <div className="text-gray-500">Wait</div>
-    }
+
+    return (
+      <>
+        <td className="font-medium text-lg">
+          {utils.formatUnits(shouldClaimAmount, tokenMeta?.decimals)}
+        </td>
+        <td>
+          {isClaimer && poolMeta.state === PoolState.Funded ? (
+            <RenderActionButton
+              state={claimState}
+              stateMsgMap={{
+                [ActionState.WAIT]: 'Claim',
+                [ActionState.ING]: 'Claiming',
+                [ActionState.SUCCESS]: 'Claimed',
+                [ActionState.FAILED]: 'Claim failed.Try again',
+              }}
+              tx={claimedTx}
+              onClick={() => claim()}
+              waitClass="text-gray-200 bg-green-500 border-green-500 text-center rounded-2xl px-2"
+            />
+          ) : (
+            <div className="text-gray-500">Wait Receive</div>
+          )}
+        </td>
+      </>
+    )
   }
 
-  function ClaimerRow(props: { claimer: Claimer; index: number }) {
+  function ClaimerRow(props: { claimer: TableRow; index: number }) {
     const { claimer, index } = props
     return (
-      <tr key={claimer.address} className="hover:bg-gray-100 py-2 px-4">
+      <tr key={claimer.address} className="py-2 px-4">
         <td className="text-gray-500 text-center">
           {claimer.address.toLowerCase() === account?.toLowerCase() ? (
             <span className="text-xs bg-green-500 text-white px-2 rounded-lg cursor-default">
@@ -482,31 +441,21 @@ export default function PoolDetail() {
           )}
         </td>
         <td className="">{claimer.address}</td>
-        <td className="font-medium text-lg">
-          {utils.formatUnits(claimer.baseTokenAmount, baseTokenMeta?.decimals)}
-        </td>
-        {claimer.secondTokenAmount ? (
-          <td className="font-medium text-lg">
-            {utils.formatUnits(
-              claimer.secondTokenAmount,
-              secondTokenMeta?.decimals
-            )}
-          </td>
-        ) : null}
-        <td>
-          <RenderClaim claimer={claimer} index={index} />
-        </td>
+
+        <RenderClaim claimer={claimer} index={index} />
       </tr>
     )
   }
+  if (!poolId) return <p>poolId not found</p>
+  if (!poolMeta) return null
   return (
     <div className="flex justify-center">
       <div className="w-full break-all flex flex-1 flex-col items-center">
         <div className=" my-5 text-xl font-medium flex cursor-pointer">
-          {poolDetail.name}
+          {poolMeta?.name}
           <RenderState
-            state={poolDetail.state}
-            title={PoolState[poolDetail.state]}
+            state={poolMeta?.state}
+            title={PoolState[poolMeta.state]}
           />
         </div>
 
@@ -515,17 +464,12 @@ export default function PoolDetail() {
             <tr>
               <td></td>
               <td>ADDRESS</td>
-              <td>{baseTokenMeta?.symbol}</td>
-              {secondTokenMeta ? <td>{secondTokenMeta?.symbol}</td> : null}
-              {poolDetail?.state === PoolState.Funded &&
-              Date.now() / 1000 > poolDetail.startTime ? (
-                <td>STATUS</td>
-              ) : null}
+              <td>{tokenMeta?.symbol}</td>
             </tr>
           </thead>
 
           <tbody>
-            {claimers.map((claimer, index) => (
+            {poolList.map((claimer, index) => (
               <ClaimerRow
                 key={claimer.address}
                 claimer={claimer}
@@ -540,33 +484,21 @@ export default function PoolDetail() {
             <div>Remaining Amount</div>
             <div className="flex-1 border-b border-gray-500 border-dotted"></div>
             <div>
-              <div>
-                {utils.formatUnits(
-                  poolDetail.baseRemainingTokenAmount,
-                  baseTokenMeta?.decimals
-                )}
-                <span className="ml-1">{baseTokenMeta?.symbol}</span>
-              </div>
-              {poolDetail.secondRemainingTokenAmount ? (
-                <div>
-                  {utils.formatUnits(
-                    poolDetail.secondRemainingTokenAmount,
-                    secondTokenMeta?.decimals
-                  )}
-                  <span className="ml-1">{secondTokenMeta?.symbol}</span>
-                </div>
-              ) : null}
+              {utils.formatUnits(
+                poolMeta.totalAmount.sub(poolMeta.claimedAmount),
+                tokenMeta?.decimals
+              )}
             </div>
           </div>
           <div className="flex h-6 w-full justify-between items-center">
             <div>Start Date</div>
             <div className="flex-1 border-b border-gray-500 border-dotted"></div>
-            <div>{format(new Date(poolDetail.startTime * 1000), 'Pp')}</div>
+            <div>{format(new Date(poolMeta.startTime * 1000), 'Pp')}</div>
           </div>
           <div className="flex h-6 w-full justify-between items-center">
             <div>End Date</div>
             <div className="flex-1  border-b border-gray-500 border-dotted"></div>
-            <div>{format(new Date(poolDetail.deadline * 1000), 'Pp')}</div>
+            <div>{format(new Date(poolMeta.deadline * 1000), 'Pp')}</div>
           </div>
         </section>
 

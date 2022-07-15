@@ -122,7 +122,7 @@ function PoolSetting(props: {
         </section>
       )}
 
-      {distributionType === DistributionType.Push && !isFundNow && (
+      {distributionType === DistributionType.Pull && !isFundNow && (
         <section className="flex w-full flex-col justify-between  my-2 border border-gray-400 px-2 py-4">
           <div className="flex flex-1 items-center">
             <label className="italic mr-2">Distributor:</label>

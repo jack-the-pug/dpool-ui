@@ -13,7 +13,7 @@ interface TProfileProps {
   profileKey: string
   onRemove: (index: number) => void
   onChange: (index: number, profile: PoolRow) => void
-  repeateAddress: string | undefined
+  repeatedAddress: string | undefined
   isPercentMode: boolean
   parsedTokenAmounts: BigNumber[][]
   tokenMetaList: TokenMeta[]
@@ -30,7 +30,7 @@ export function Profile(props: TProfileProps) {
     tokenMetaList,
     isPercentMode,
     userInputTotal,
-    repeateAddress,
+    repeatedAddress: repeatedAddress,
   } = props
 
   const [address, setAddress] = useState<string>(_profile.address)
@@ -53,10 +53,10 @@ export function Profile(props: TProfileProps) {
     submit()
   }, [inputAmount])
 
-  const [fouceInputNumber, setFouceInputNumber] = useState(-1)
+  const [focusInputNumber, setFocusInputNumber] = useState(-1)
 
   const onAddressBlur = useCallback(() => {
-    setFouceInputNumber(-1)
+    setFocusInputNumber(-1)
     if (!isAddress(address)) {
       return
     }
@@ -64,7 +64,7 @@ export function Profile(props: TProfileProps) {
   }, [address, inputAmount, submit])
 
   const onAmountBlur = useCallback(() => {
-    setFouceInputNumber(-1)
+    setFocusInputNumber(-1)
   }, [inputAmount, submit])
 
   const addressBookName = useMemo(() => {
@@ -77,12 +77,12 @@ export function Profile(props: TProfileProps) {
     if (!address) return
     if (!isAddress(address)) return 'Invalid address'
     if (
-      repeateAddress &&
-      repeateAddress.toLowerCase() === address.toLowerCase()
+      repeatedAddress &&
+      repeatedAddress.toLowerCase() === address.toLowerCase()
     )
       return 'Addresses cannot be duplicated'
     return
-  }, [address, repeateAddress])
+  }, [address, repeatedAddress])
 
   return (
     <form className="flex h-12">
@@ -91,19 +91,19 @@ export function Profile(props: TProfileProps) {
       </div>
       <div
         className={`${
-          fouceInputNumber === 1 ? 'bg-gray-100' : 'bg-neutral-200'
+          focusInputNumber === 1 ? 'bg-gray-100' : 'bg-neutral-200'
         } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-1 flex-col  justify-center`}
         style={{ minWidth: '380px' }}
       >
         <input
           className={`${
-            fouceInputNumber === 1 ? 'bg-gray-100' : 'bg-neutral-200'
+            focusInputNumber === 1 ? 'bg-gray-100' : 'bg-neutral-200'
           } outline-none focus:outline-none px-2 bg-neutral-200`}
           placeholder="address"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           onBlur={onAddressBlur}
-          onFocus={() => setFouceInputNumber(1)}
+          onFocus={() => setFocusInputNumber(1)}
           key={props.profileKey + 'address'}
           name="address"
         />
@@ -124,13 +124,13 @@ export function Profile(props: TProfileProps) {
 
       <div
         className={`${
-          fouceInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
+          focusInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
         } border border-solid border-r-0 border-b-0 border-gray-400 flex justify-between items-center px-2 w-80`}
       >
         <div className="flex flex-col">
           <input
             className={`${
-              fouceInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
+              focusInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
             } outline-none :focus:outline-none  bg-neutral-200`}
             placeholder="amount"
             key={props.profileKey + 'amount'}
@@ -139,7 +139,7 @@ export function Profile(props: TProfileProps) {
             min={0}
             onBlur={onAmountBlur}
             onChange={(e) => setInputAmount(e.target.value)}
-            onFocus={() => setFouceInputNumber(2)}
+            onFocus={() => setFocusInputNumber(2)}
           />
           {isPercentMode ? (
             <div className="text-xs text-gray-500">
