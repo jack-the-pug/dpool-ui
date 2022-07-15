@@ -21,7 +21,6 @@ enum ApproveType {
 }
 const { useChainId } = metaMaskHooks
 
-// TODO:BUG: all token are approved. But approvedToken.current.size not equal tokens.length
 export default function ApproveTokens(props: {
   tokens: {
     address: string
@@ -32,13 +31,12 @@ export default function ApproveTokens(props: {
   const { dPoolAddress } = useDPoolAddress()
 
   const { tokens, setIsTokensApproved } = props
-  const approvedToken = useRef<Set<string>>(new Set())
-  console.log('approvedToken.current.size', approvedToken.current.size)
+  const [approvedTokens, setApprovedTokens] = useState<string[]>([])
   useEffect(() => {
-    if (approvedToken.current.size === tokens.length) {
+    if (approvedTokens.length === tokens.length) {
       setIsTokensApproved(true)
     }
-  }, [approvedToken.current.size, tokens.length])
+  }, [approvedTokens.length, tokens.length])
 
   if (!dPoolAddress) return null
   return (
@@ -50,9 +48,12 @@ export default function ApproveTokens(props: {
           dPoolAddress={dPoolAddress}
           approveAmount={token.amount}
           onApproved={() => {
-            approvedToken.current.add(token.address)
-
-            console.log(token.address, 'approved')
+            if (!approvedTokens.includes(token.address.toLowerCase())) {
+              setApprovedTokens([
+                ...approvedTokens,
+                token.address.toLowerCase(),
+              ])
+            }
           }}
         />
       ))}
@@ -120,7 +121,6 @@ export function ApproveToken(props: ApproveTokenProps) {
   }, [approveState, shouldApproveAmount, token, tokenMeta])
 
   useEffect(() => {
-    console.log('isApproved', isApproved)
     if (isApproved) {
       onApproved()
     }
