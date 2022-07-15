@@ -1,4 +1,4 @@
-import { BigNumber, FixedNumber, utils } from 'ethers'
+import { BigNumber, utils } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { IconoirDeleteCircledOutline } from '../../components/icon'

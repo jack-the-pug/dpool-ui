@@ -1,5 +1,5 @@
 import { BigNumber, ContractReceipt, ethers } from 'ethers'
-import { useCallback, useMemo } from 'react'
+import { useCallback } from 'react'
 import { hooks as metaMaskHooks } from '../../../connectors/metaMask'
 import useDPoolFactory from '../../../hooks/useDPoolFactory'
 import { chains, dPoolFactoryABI } from '../../../constants'
@@ -9,8 +9,7 @@ import { useState } from 'react'
 import { DPoolFactoryEvent } from '../../../type'
 import useDPoolAddress from '../../../hooks/useDPoolAddress'
 import { AddressLink } from '../../../components/hash'
-import { toast, useToast } from 'react-toastify'
-import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 const { useChainId, useAccount } = metaMaskHooks
 
@@ -18,10 +17,9 @@ export default function dPoolFactory() {
   const account = useAccount()
   const chainId = useChainId()
   const dPoolFactory = useDPoolFactory()
-  const navigate = useNavigate()
   const { dPoolAddress, setDPoolAddress, getDPoolAddressByAccount } =
     useDPoolAddress()
-  const [retrievePoolMsg, setRetrivePoolMsg] =
+  const [retrievePoolMsg, setRetrievePoolMsg] =
     useState<string>('Retrieve dPool')
   const [createDPoolState, setCreateDPoolState] = useState<ActionState>(
     ActionState.WAIT
@@ -69,7 +67,7 @@ export default function dPoolFactory() {
     }
     const address = await getDPoolAddressByAccount(account)
     if (!address || !isAddress(address) || BigNumber.from(address).eq(0)) {
-      setRetrivePoolMsg('Pool Not Found')
+      setRetrievePoolMsg('Pool Not Found')
       return
     } else {
       setTempDPoolAddress(address)

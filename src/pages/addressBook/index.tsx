@@ -1,7 +1,6 @@
 import { utils } from 'ethers'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { MaterialSymbolsAdd } from '../../components/icon'
-import { PoolRow } from '../../type/index'
 import SetProfile from './SetProfile'
 export interface AddressBookItem {
   address: string

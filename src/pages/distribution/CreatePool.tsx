@@ -13,7 +13,7 @@ import {
 import { isLegalPoolRow } from '../../utils/verify'
 import PoolSetting from './PoolSetting'
 import { Profile } from './ProfileForm'
-import TokensSelect from './PoolHeader'
+import PoolHeader from './PoolHeader'
 import CreatePoolConfirm from './CreatePoolConfirm'
 import useTokenMeta from '../../hooks/useTokenMeta'
 
@@ -24,6 +24,7 @@ import { toast } from 'react-toastify'
 import DPoolFactory from './dPoolFactory/index'
 import { isAddress } from 'ethers/lib/utils'
 import { Pool } from '../pool/PoolDetail'
+
 import { formatCurrencyAmount, parsed2NumberString } from '../../utils/number'
 
 export type TPoolRow = PoolRow & {
@@ -246,6 +247,7 @@ export default function PoolsList() {
   // batchCreate callData
   const createPoolCallData: PoolCreateCallData[] | null = useMemo(() => {
     if (!tokenMetaList[0] || repeatedAddress || !account) return null
+    if (!isOwner) return null
     const { isFundNow, date } = poolConfig
     const distributor = isAddress(poolConfig.distributor)
       ? poolConfig.distributor
@@ -431,7 +433,7 @@ export default function PoolsList() {
               Amount
             </div>
             <div>
-              <TokensSelect
+              <PoolHeader
                 tokenMetaList={tokenMetaList}
                 setTokenMetaList={setTokenMetaList}
                 tableHeaderInputList={tableHeaderInputList}

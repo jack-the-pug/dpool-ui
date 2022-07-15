@@ -327,7 +327,6 @@ export function PoolDetail({ poolId }: { poolId: string }) {
               successClaimedAddress.push(parseLog.args[1])
             }
           })
-
         getPoolDetail()
       } catch (err) {
         err = typeof err === 'object' ? JSON.stringify(err) : err
@@ -499,6 +498,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
                 poolMeta.totalAmount.sub(poolMeta.claimedAmount),
                 tokenMeta
               )}
+              <span className="ml-1 text-gray-500">{tokenMeta?.symbol}</span>
             </div>
           </div>
           <div className="flex h-6 w-full justify-between items-center">

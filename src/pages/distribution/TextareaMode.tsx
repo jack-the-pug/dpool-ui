@@ -1,5 +1,5 @@
-import { BigNumber, utils } from 'ethers'
-import React, { useCallback } from 'react'
+import { BigNumber } from 'ethers'
+import { useCallback } from 'react'
 import { TokenMeta } from '../../type'
 import { formatCurrencyAmount } from '../../utils/number'
 

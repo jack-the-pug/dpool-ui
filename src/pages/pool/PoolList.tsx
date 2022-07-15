@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { Link } from 'react-router-dom'
 import { DPoolLocalStorageMeta } from '../../type'
@@ -29,7 +29,6 @@ export default function PoolList() {
         pool.chainId === chainId
       )
     })
-    console.log('formatPoolList', formatPoolList)
     setPoolList(formatPoolList)
     setIsLoading(false)
   }, [chainId, dPoolAddress, dPoolContract])

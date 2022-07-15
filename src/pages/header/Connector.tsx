@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-
 import { hooks as metaMaskHooks, metaMask } from '../../connectors/metaMask'
 
-const { useAccount, useProvider, useChainId, useIsActive } = metaMaskHooks
+const { useAccount, useIsActive } = metaMaskHooks
 
 export default function Connector() {
-  const chainId = useChainId()
   const account = useAccount()
   const isActive = useIsActive()
 

@@ -1,5 +1,5 @@
 import { format } from 'date-fns'
-import { BigNumber, ContractReceipt, ethers, utils } from 'ethers'
+import { BigNumber, ContractReceipt, ethers } from 'ethers'
 import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import Action, { ActionState } from '../../components/action'
@@ -8,7 +8,6 @@ import { EosIconsBubbleLoading, ZondiconsClose } from '../../components/icon'
 import useDPool from '../../hooks/useDPool'
 import {
   DPoolEvent,
-  DPoolLocalStorageMeta,
   PoolCreateCallData as PoolCreateCallData,
   PoolCreator,
   PoolRow,
@@ -23,11 +22,6 @@ import { dPoolABI } from '../../constants'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import ApproveTokens from '../../components/token/ApproveTokens'
 import { formatCurrencyAmount } from '../../utils/number'
-
-type TPoolRow = Omit<
-  PoolRow & { secondParsedTokenAmount?: BigNumber },
-  'name' | 'userInputAmount'
->
 
 interface PoolMeta {
   name: string

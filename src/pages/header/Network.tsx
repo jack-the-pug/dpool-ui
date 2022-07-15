@@ -8,7 +8,6 @@ import { EosIconsBubbleLoading } from '../../components/icon'
 const { useChainId, useProvider } = metaMaskHooks
 export default function NetworkAction() {
   const chainId = useChainId()
-  const provider = useProvider()
   const [isSwitchChain, setIsSwitchChain] = useState(false)
   const [loading, setLoading] = useState<boolean>(false)
   const chainName = useMemo(() => {
@@ -19,14 +18,12 @@ export default function NetworkAction() {
   }, [chainId])
   const { connector } = useWeb3React()
 
-  // copy from https://github.com/NoahZinsmeister/web3-react/blob/main/packages/example-next/components/ConnectWithSelect.tsx
   const switchChain = useCallback(
     async (desiredChainId: number) => {
       if (desiredChainId === chainId) return
       if (desiredChainId === -1 && chainId !== undefined) return
       setLoading(true)
       if (connector instanceof Network) {
-        console.log('chainid add')
         await connector.activate(
           desiredChainId === -1 ? undefined : desiredChainId
         )
@@ -38,12 +35,6 @@ export default function NetworkAction() {
             : getAddChainParameters(desiredChainId)
         )
       }
-      // connector
-      //   .activate(getAddChainParameters(desiredChainId))
-      //   ?.then((res: any) => {
-      //     console.log('res', res)
-      //   })
-      //   .catch((err: any) => console.error('err', err))
       setLoading(false)
       setIsSwitchChain(false)
     },
