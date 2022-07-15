@@ -1,22 +1,20 @@
 import { BigNumber, ethers, utils } from 'ethers'
-import { isAddress } from 'ethers/lib/utils'
-import React, {
+import {
   Dispatch,
   SetStateAction,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from 'react'
 import Action, { ActionState } from '../action'
-import { EosIconsBubbleLoading } from '../icon'
 import { useApproveToken } from '../../hooks/useApproveToken'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import useTokenMeta from '../../hooks/useTokenMeta'
 import { TokenMeta } from '../../type'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
+
 enum ApproveType {
   LIMIT = 'LIMIT',
   MAX = 'MAX',
@@ -45,7 +43,7 @@ export default function ApproveTokens(props: {
   if (!dPoolAddress) return null
   return (
     <div className="flex flex-col gap-4">
-      {tokens.map((token, index) => (
+      {tokens.map((token) => (
         <ApproveToken
           key={token.address}
           token={token.address}
@@ -149,8 +147,8 @@ export function ApproveToken(props: ApproveTokenProps) {
           state={approveState}
           stateMsgMap={{
             [ActionState.WAIT]: `Approve`,
-            [ActionState.ING]: `Approveing`,
-            [ActionState.FAILED]: `Fiald.Try again`,
+            [ActionState.ING]: `Approving`,
+            [ActionState.FAILED]: `Failed. Try again`,
             [ActionState.SUCCESS]: `Approved`,
           }}
           onClick={handleApprove}

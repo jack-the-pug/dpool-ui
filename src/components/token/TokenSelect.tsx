@@ -1,15 +1,12 @@
-import { BigNumber, Contract, ethers, utils } from 'ethers'
+import { BigNumber, utils } from 'ethers'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
-import { ESC20ABI } from '../../constants'
 import { Dialog } from '../dialog'
 import { EosIconsBubbleLoading, ZondiconsClose } from '../icon'
 import useTokenMeta from '../../hooks/useTokenMeta'
 import { TokenMeta as TTokenMeta } from '../../type'
 import { chains } from '../../constants'
-import useSignerOrProvider from '../../hooks/useSignOrProvider'
 
-import { toast } from 'react-toastify'
 import { isAddress } from 'ethers/lib/utils'
 import { useBalance } from '../../hooks/useBalance'
 interface TTokenSelectProps {

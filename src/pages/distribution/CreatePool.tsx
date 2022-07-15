@@ -15,7 +15,6 @@ import PoolSetting from './PoolSetting'
 import { Profile } from './ProfileForm'
 import TokensSelect from './PoolHeader'
 import CreatePoolConfirm from './CreatePoolConfirm'
-import { Pool } from '../pool/PoolDetail'
 import useTokenMeta from '../../hooks/useTokenMeta'
 
 import TextareaMode from './TextareaMode'
@@ -41,7 +40,7 @@ export interface PoolConfig {
   date: [number, number]
 }
 
-const creatPoolEmptyItem = (): TPoolRow => ({
+const createPoolEmptyItem = (): TPoolRow => ({
   address: '',
   userInputAmount: '',
   key: Date.now(),
@@ -93,7 +92,7 @@ export default function PoolsList() {
       (token) => token && setTokenMetaList([token])
     )
   }, [chainId])
-  const [poolList, setPoolList] = useState<TPoolRow[]>([creatPoolEmptyItem()])
+  const [poolList, setPoolList] = useState<TPoolRow[]>([createPoolEmptyItem()])
 
   const isPercentMode = useMemo(() => {
     return !!tableHeaderInputList[0] && !isNaN(Number(tableHeaderInputList[0]))
@@ -196,7 +195,7 @@ export default function PoolsList() {
   //     poolRows.push({
   //       address: claimers[i],
   //       parsedTokenAmount: baseTokenAmounts[i],
-  //       // TODO: get token deciamls
+  //       // TODO: get token decimals
   //       userInputAmount: utils.formatUnits(baseTokenAmounts[i], 18),
   //       key: claimers[i],
   //     })
@@ -225,7 +224,7 @@ export default function PoolsList() {
 
   const scrollToViewDiv = useRef<HTMLDivElement | null>()
   const addEmptyProfile = useCallback(() => {
-    setPoolList([...poolList, creatPoolEmptyItem()])
+    setPoolList([...poolList, createPoolEmptyItem()])
     scrollToViewDiv.current?.scrollIntoView({
       behavior: 'smooth',
       block: 'center',
@@ -236,7 +235,7 @@ export default function PoolsList() {
   const removeItemFromPool = useCallback(
     (index: number) => {
       if (poolList.length === 1) {
-        setPoolList([creatPoolEmptyItem()])
+        setPoolList([createPoolEmptyItem()])
         return
       }
       const newPool = [...poolList]
@@ -252,7 +251,7 @@ export default function PoolsList() {
     })
   }
   // check repeated address
-  const repeateAddress = useMemo(() => {
+  const repeatedAddress = useMemo(() => {
     const addressMap: Map<string, number> = new Map()
     for (let i = 0; i < poolList.length; i++) {
       const row = poolList[i]
@@ -268,7 +267,7 @@ export default function PoolsList() {
 
   // batchCreate callData
   const createPoolCallData: PoolCreateCallData[] | null = useMemo(() => {
-    if (!tokenMetaList[0] || repeateAddress) return null
+    if (!tokenMetaList[0] || repeatedAddress) return null
     const { isFundNow, date } = poolConfig
     const distributor = poolConfig.distributor
     const _pool = poolList.filter((row) => isLegalPoolRow(row))
@@ -319,7 +318,7 @@ export default function PoolsList() {
     tokenMetaList,
     parsedTokenAmountsTotal,
     tableHeaderInputList,
-    repeateAddress,
+    repeatedAddress,
   ])
   const tokenTotalAmounts = useMemo(() => {
     if (!createPoolCallData) return
@@ -399,7 +398,7 @@ export default function PoolsList() {
       }
       _poolList.push(item)
     }
-    setPoolList(() => (poolList.length ? _poolList : [creatPoolEmptyItem()]))
+    setPoolList(() => (poolList.length ? _poolList : [createPoolEmptyItem()]))
   }, [textarea, isPercentMode, poolList])
 
   const [confirmVisible, setConfirmVisible] = useState<boolean>(false)
@@ -479,7 +478,7 @@ export default function PoolsList() {
                 index={index}
                 onRemove={removeItemFromPool}
                 onChange={onPoolItemChange}
-                repeateAddress={repeateAddress}
+                repeatedAddress={repeatedAddress}
                 parsedTokenAmounts={parsedTokenAmounts}
                 isPercentMode={isPercentMode}
                 tokenMetaList={tokenMetaList}

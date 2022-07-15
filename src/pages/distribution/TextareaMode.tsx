@@ -53,7 +53,7 @@ export default function TextareaMode(props: TextareaModeProp) {
         placeholder="0x314ab97b76e39d63c78d5c86c2daf8eaa306b182 3.141592
                      0x271bffabd0f79b8bd4d7a1c245b7ec5b576ea98a,2.7182
                      0x141ca95b6177615fb1417cf70e930e102bf8f584=1.41421"
-        className="relative w-full h-32 leading-8 bg-neutral-200 overflow-hidden resize-none p-2 outline-none foucs:outline-none"
+        className="relative w-full h-32 leading-8 bg-neutral-200 overflow-hidden resize-none p-2 outline-none focus:outline-none"
         onChange={onTextareaChange}
         onKeyUp={onKeyUp}
       ></textarea>
