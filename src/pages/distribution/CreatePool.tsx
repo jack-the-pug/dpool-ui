@@ -23,6 +23,7 @@ import { toast } from 'react-toastify'
 
 import DPoolFactory from './dPoolFactory/index'
 import { isAddress } from 'ethers/lib/utils'
+import { Pool } from '../pool/PoolDetail'
 
 export type TPoolRow = PoolRow & {
   key?: number | string
@@ -174,53 +175,28 @@ export default function PoolsList() {
   const [isTextareaMode, setIsTextareaMode] = useState(false)
 
   // distribute pool again
-  // const initPool = useCallback(async () => {
-  //   const poolDetail = localStorage.getItem('distributeAgainData')
-  //   if (!poolDetail) return
-
-  //   const poolDetailData = JSON.parse(poolDetail) as Pool
-
-  //   const {
-  //     claimers,
-  //     baseToken: _baseToken,
-  //     baseTokenAmounts,
-  //     secondToken: _secondToken,
-  //     secondTokenAmounts,
-  //   } = poolDetailData
-  //   const baseToken: TokenMeta = (await getToken(_baseToken))!
-  //   const poolRows: TPoolRow[] = []
-  //   const tokenList = [baseToken]
-
-  //   for (let i = 0; i < claimers.length; i++) {
-  //     poolRows.push({
-  //       address: claimers[i],
-  //       parsedTokenAmount: baseTokenAmounts[i],
-  //       // TODO: get token decimals
-  //       userInputAmount: utils.formatUnits(baseTokenAmounts[i], 18),
-  //       key: claimers[i],
-  //     })
-  //   }
-  //   if (_secondToken && secondTokenAmounts) {
-  //     const secondToken = (await getToken(_secondToken))!
-  //     const secondTokenTotalAmount = parseFloat(
-  //       utils.formatUnits(
-  //         secondTokenAmounts.reduce(
-  //           (pre, cur) => pre.add(cur),
-  //           BigNumber.from(0)
-  //         ),
-  //         secondToken.decimals
-  //       )
-  //     )
-  //     tokenList.push(secondToken)
-  //     setSecondTokenTotalAmount(secondTokenTotalAmount)
-  //   }
-  //   setTokenMetaList(tokenList as TokenMetaList)
-  //   setPoolList(poolRows)
-  //   localStorage.removeItem('distributeAgainData')
-  // }, [])
-  // useEffect(() => {
-  //   initPool()
-  // }, [])
+  const initPool = useCallback(async () => {
+    const poolDetail = localStorage.getItem('distributeAgainData')
+    if (!poolDetail) return
+    const poolDetailData = JSON.parse(poolDetail) as Pool
+    const { claimers, amounts, token } = poolDetailData
+    const tokenMeta: TokenMeta = (await getToken(token))!
+    const poolRows: TPoolRow[] = []
+    const tokenList = [tokenMeta]
+    for (let i = 0; i < claimers.length; i++) {
+      poolRows.push({
+        address: claimers[i],
+        userInputAmount: utils.formatUnits(amounts[i], tokenMeta.decimals),
+        key: claimers[i],
+      })
+    }
+    setTokenMetaList(tokenList)
+    setPoolList(poolRows)
+    localStorage.removeItem('distributeAgainData')
+  }, [])
+  useEffect(() => {
+    initPool()
+  }, [])
 
   const scrollToViewDiv = useRef<HTMLDivElement | null>()
   const addEmptyProfile = useCallback(() => {

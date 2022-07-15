@@ -5,7 +5,6 @@ import {
   BasePool,
   DPoolEvent,
   GetPoolRes,
-  PoolRow,
   PoolState,
   TokenMeta,
 } from '../../type'
