@@ -22,6 +22,7 @@ import useTokenMeta from '../../hooks/useTokenMeta'
 import ApproveTokens, {
   ApproveToken,
 } from '../../components/token/ApproveTokens'
+import { formatCurrencyAmount } from '../../utils/number'
 
 export type Pool = BasePool & {
   state: PoolState
@@ -35,30 +36,41 @@ export interface TableRow {
 const { useAccount, useChainId, useProvider } = metaMaskHooks
 const contractIface = new ethers.utils.Interface(dPoolABI)
 
+const stateMsg = {
+  [PoolState.Initialized]: 'Initialized',
+  [PoolState.Funded]: 'Funded',
+  [PoolState.None]: 'None',
+  [PoolState.Closed]: 'Closed',
+}
 const stateColorMap = {
   [PoolState.Initialized]: '#6B7280',
   [PoolState.Funded]: '#34D399',
   [PoolState.None]: '#DC2626',
   [PoolState.Closed]: '#6B7280',
 }
+
 function RenderState({ state, title }: { state: PoolState; title: string }) {
   const colorClass = useMemo(() => stateColorMap[state], [state])
   return (
-    <div className="relative">
-      <div
-        className={`w-2 h-2 rounded-full cursor-pointer`}
-        title={title}
-        style={{ background: colorClass }}
-      ></div>
-      {state === PoolState.Funded ? (
+    <div className="flex">
+      <div className="ml-2 text-gray-500">{stateMsg[state]}</div>
+      <div className="relative">
         <div
-          className="w-2 h-2 absolute left-0 top-0 rounded-full cursor-pointer animate-ping "
+          className={`w-2 h-2 rounded-full cursor-pointer`}
+          title={title}
           style={{ background: colorClass }}
         ></div>
-      ) : null}
+        {state === PoolState.Funded ? (
+          <div
+            className="w-2 h-2 absolute left-0 top-0 rounded-full cursor-pointer animate-ping "
+            style={{ background: colorClass }}
+          ></div>
+        ) : null}
+      </div>
     </div>
   )
 }
+
 export default function PoolDetailList() {
   const { poolIds: _poolIds } = useParams()
   const poolIds = useMemo((): string[] => {
@@ -402,7 +414,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
     return (
       <>
         <td className="font-medium text-lg">
-          {utils.formatUnits(shouldClaimAmount, tokenMeta?.decimals)}
+          {formatCurrencyAmount(shouldClaimAmount, tokenMeta)}
         </td>
         <td>
           {isClaimer && poolMeta.state === PoolState.Funded ? (
@@ -419,7 +431,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
               waitClass="text-gray-200 bg-green-500 border-green-500 text-center rounded-2xl px-2"
             />
           ) : (
-            <div className="text-gray-500">Wait Receive</div>
+            <div className="text-gray-500">Unclaimed</div>
           )}
         </td>
       </>
@@ -481,11 +493,11 @@ export function PoolDetail({ poolId }: { poolId: string }) {
         <section className="text-xs w-full flex flex-col gap-4">
           <div className="flex h-6 w-full justify-between items-center ">
             <div>Remaining Amount</div>
-            <div className="flex-1 border-b border-gray-500 border-dotted"></div>
+            <div className="flex-1 border-b border-gray-500 border-dotted mx-2"></div>
             <div>
-              {utils.formatUnits(
+              {formatCurrencyAmount(
                 poolMeta.totalAmount.sub(poolMeta.claimedAmount),
-                tokenMeta?.decimals
+                tokenMeta
               )}
             </div>
           </div>

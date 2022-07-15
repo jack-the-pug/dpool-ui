@@ -3,8 +3,7 @@ import { isAddress } from 'ethers/lib/utils'
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { IconoirDeleteCircledOutline } from '../../components/icon'
 import { PoolRow, TokenMeta } from '../../type/index'
-import { addKilobits } from '../../utils/number'
-import { parsed2NumberString } from '../../utils/verify'
+import { formatCurrencyAmount, parsed2NumberString } from '../../utils/number'
 import { TPoolRow } from './CreatePool'
 
 interface TProfileProps {
@@ -125,7 +124,7 @@ export function Profile(props: TProfileProps) {
       <div
         className={`${
           focusInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
-        } border border-solid border-r-0 border-b-0 border-gray-400 flex justify-between items-center px-2 w-80`}
+        } border border-solid border-r-0 border-b-0 border-gray-400 flex justify-between items-center px-2 w-80 overflow-hidden`}
       >
         <div className="flex flex-col">
           <input
@@ -141,7 +140,7 @@ export function Profile(props: TProfileProps) {
             onChange={(e) => setInputAmount(e.target.value)}
             onFocus={() => setFocusInputNumber(2)}
           />
-          {isPercentMode ? (
+          {isPercentMode && userInputTotal.gt(0) ? (
             <div className="text-xs text-gray-500">
               {utils
                 .parseUnits(
@@ -157,23 +156,16 @@ export function Profile(props: TProfileProps) {
         </div>
         {isPercentMode ? (
           <div className="text-xs text-gray-500">
-            {Number(
-              utils.formatUnits(
-                parsedTokenAmounts[0][index].toString(),
-                tokenMetaList[0]?.decimals
-              )
-            ).toFixed(2)}
+            {formatCurrencyAmount(
+              parsedTokenAmounts[0][index],
+              tokenMetaList[0]
+            )}
           </div>
         ) : null}
       </div>
       {tokenMetaList[1] ? (
-        <div className="border border-solid text-gray-500 cursor-not-allowed bg-neutral-200 border-r-0 border-b-0 border-gray-400 flex justify-between items-center px-2 w-60">
-          {Number(
-            utils.formatUnits(
-              parsedTokenAmounts[1][index].toString(),
-              tokenMetaList[1]?.decimals
-            )
-          ).toFixed(2)}
+        <div className="border border-solid text-gray-500 cursor-not-allowed bg-neutral-200 border-r-0 border-b-0 border-gray-400 flex justify-between items-center px-2 w-80">
+          {formatCurrencyAmount(parsedTokenAmounts[1][index], tokenMetaList[1])}
         </div>
       ) : null}
       <div

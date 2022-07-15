@@ -10,7 +10,7 @@ import {
   PoolCreator,
   TokenMeta,
 } from '../../type/index'
-import { isLegalPoolRow, parsed2NumberString } from '../../utils/verify'
+import { isLegalPoolRow } from '../../utils/verify'
 import PoolSetting from './PoolSetting'
 import { Profile } from './ProfileForm'
 import TokensSelect from './PoolHeader'
@@ -24,6 +24,7 @@ import { toast } from 'react-toastify'
 import DPoolFactory from './dPoolFactory/index'
 import { isAddress } from 'ethers/lib/utils'
 import { Pool } from '../pool/PoolDetail'
+import { formatCurrencyAmount, parsed2NumberString } from '../../utils/number'
 
 export type TPoolRow = PoolRow & {
   key?: number | string
@@ -154,6 +155,7 @@ export default function PoolsList() {
     return tokenAmounts
   }, [tokenMetaList, tableHeaderInputList, poolList, isPercentMode])
 
+  // This total maybe have accuracy loss
   const parsedTokenAmountsTotal = useMemo(() => {
     return parsedTokenAmounts.map((amounts) =>
       amounts.reduce((pre, cur) => pre.add(cur), BigNumber.from(0))
@@ -300,10 +302,10 @@ export default function PoolsList() {
     repeatedAddress,
   ])
 
+  // Total token amount of processed accuracy losses
   const tokenTotalAmounts = useMemo(() => {
     if (!createPoolCallData) return
     const totalAmount: BigNumber[] = []
-    console.log('callData', createPoolCallData)
     createPoolCallData.forEach((data) =>
       totalAmount.push(
         data[PoolCreator.Amounts].reduce(
@@ -327,7 +329,6 @@ export default function PoolsList() {
     if (distributionType === DistributionType.Pull) {
       if (endTime <= startTime) return 'end time must be after the start time '
       const nowTime = Math.round(Date.now() / 1000)
-      console.log('nowTime', startTime, nowTime)
       if (nowTime >= startTime) return 'start time must in future'
     }
 
@@ -484,7 +485,7 @@ export default function PoolsList() {
             {tokenTotalAmounts &&
               tokenTotalAmounts.map((amount, index) => (
                 <div key={'token-' + index}>
-                  {utils.formatUnits(amount, tokenMetaList[index]?.decimals)}
+                  {formatCurrencyAmount(amount, tokenMetaList[index])}
                   <span className="ml-1 text-gray-500">
                     {tokenMetaList[index]?.symbol}
                   </span>

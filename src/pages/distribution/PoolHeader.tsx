@@ -30,26 +30,22 @@ export default function PoolTableHeader(props: {
     <div className="flex items-center">
       {tokens.map((token, index) => (
         <div
-          className={`${
-            index === 0 ? 'w-80' : 'w-60'
-          } flex items-center justify-between cursor-pointer  border-r border-gray-400`}
+          className={`w-80 flex items-center justify-between cursor-pointer  border-r border-gray-400`}
           key={index}
         >
-          <div>
-            <input
-              value={tableHeaderInputList[index]}
-              placeholder="Total amount"
-              type="number"
-              min={0}
-              onChange={(e) => {
-                const value = e.target.value
-                const list = [...tableHeaderInputList]
-                list[index] = value
-                setTableHeaderInputList(list)
-              }}
-              className="w-40 outline-none :focus:outline-none px-2 bg-neutral-200"
-            />
-          </div>
+          <input
+            value={tableHeaderInputList[index]}
+            placeholder="Total amount"
+            type="number"
+            min={0}
+            onChange={(e) => {
+              const value = e.target.value
+              const list = [...tableHeaderInputList]
+              list[index] = value
+              setTableHeaderInputList(list)
+            }}
+            className="flex-1 outline-none :focus:outline-none px-2 bg-neutral-200"
+          />
           <TokenSelect
             tokenMeta={token}
             setTokenMeta={(token) => setTokenMetaByIndex(token, index)}

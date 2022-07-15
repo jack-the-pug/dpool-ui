@@ -1,18 +1,37 @@
-/**
- *  eg: input:     10000000.99
- *      output:  10,000,000.99
- */
+import { BigNumber, utils } from 'ethers'
+import { TokenMeta } from '../type'
 
-export const addKilobits = (
-  n: number | string,
-  fixedDigit?: number
-): string => {
-  if (!n || typeof n !== 'number') n = 0
-  let strN: string = n.toString()
-  if (fixedDigit) {
-    strN = n.toFixed(fixedDigit)
+export function parsed2NumberString(
+  str: string | number | null | undefined
+): string {
+  if (!str) return '0'
+  const parsedNumber = Number(str)
+  return isNaN(parsedNumber) ? '0' : str.toString()
+}
+
+const kilobitsReg = /\B(?=(\d{3})+(?!\d))/g
+export const formatCurrencyAmount = (
+  amount: BigNumber,
+  tokenMeta?: TokenMeta,
+  formatLen: number = 2
+) => {
+  const readableAmount = utils.formatUnits(
+    amount,
+    tokenMeta ? tokenMeta.decimals : 18
+  )
+
+  const [integer, _fractional] = readableAmount.split('.')
+  let fractional = ''
+  if (_fractional) {
+    let zeroLen = 0
+    for (let i = 0; i < _fractional.length; i++) {
+      if (_fractional[i] === '0') {
+        zeroLen++
+      } else {
+        break
+      }
+    }
+    fractional = _fractional.substring(0, zeroLen + formatLen)
   }
-  const [intPart, deciPart] = strN.toString().split('.')
-  const localN = parseInt(intPart).toLocaleString()
-  return deciPart ? `${localN}.${deciPart}` : localN
+  return `${integer.replace(kilobitsReg, ',')}.${fractional}`
 }

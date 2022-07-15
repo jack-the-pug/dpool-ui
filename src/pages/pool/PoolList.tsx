@@ -24,8 +24,12 @@ export default function PoolList() {
       localStorage.getItem('localPoolMetaList') || '[]'
     ).filter((pool: DPoolLocalStorageMeta) => {
       if (!dPoolAddress) return true
-      return pool.dPoolAddress.toLowerCase() === dPoolAddress.toLowerCase()
+      return (
+        pool.dPoolAddress.toLowerCase() === dPoolAddress.toLowerCase() &&
+        pool.chainId === chainId
+      )
     })
+    console.log('formatPoolList', formatPoolList)
     setPoolList(formatPoolList)
     setIsLoading(false)
   }, [chainId, dPoolAddress, dPoolContract])
@@ -38,12 +42,13 @@ export default function PoolList() {
       const ListInDPoolContract = Array(id.toNumber())
         .fill(0)
         .map((_, index) => ({
-          poolId: `${index + 1}`,
+          poolIds: [`${index + 1}`],
           name: `Distribution Pool`,
           creator: '',
           chainId,
           dPoolAddress,
         }))
+
       setPoolList(ListInDPoolContract)
       setIsLoading(false)
     })
@@ -56,10 +61,12 @@ export default function PoolList() {
     <div className="flex flex-col w-full break-all  flex-1  items-center">
       {poolList.length ? (
         poolList.map((pool, index) => {
+          if (!pool.poolIds) return null
+          const ids = pool.poolIds.join(',')
           return (
             <Link
-              key={pool.poolId}
-              to={pool.poolId}
+              key={ids}
+              to={ids}
               className="flex px-4 py-1 hover:bg-gray-100 hover:scale-110 transition-all ease-in-out rounded-sm"
             >
               <div className="mr-4 text-gray-500">{index + 1}</div>

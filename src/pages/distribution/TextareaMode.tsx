@@ -1,6 +1,7 @@
 import { BigNumber, utils } from 'ethers'
 import React, { useCallback } from 'react'
 import { TokenMeta } from '../../type'
+import { formatCurrencyAmount } from '../../utils/number'
 
 interface TextareaModeProp {
   textarea: string
@@ -67,7 +68,7 @@ export default function TextareaMode(props: TextareaModeProp) {
           >
             {cols.map((amount, rowIndex) => (
               <div key={`${rowIndex}-${colIndex}`}>
-                {utils.formatUnits(amount, tokenMetaList[colIndex].decimals)}
+                {formatCurrencyAmount(amount, tokenMetaList[colIndex])}
               </div>
             ))}
           </div>

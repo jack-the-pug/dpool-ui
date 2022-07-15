@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router-dom'
 import { dPoolABI } from '../../constants'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import ApproveTokens from '../../components/token/ApproveTokens'
+import { formatCurrencyAmount } from '../../utils/number'
 
 type TPoolRow = Omit<
   PoolRow & { secondParsedTokenAmount?: BigNumber },
@@ -36,7 +37,7 @@ interface PoolMeta {
 }
 interface UIDataRow {
   address: string
-  amounts: string[]
+  amounts: BigNumber[]
 }
 
 interface CreatePoolConfirmProps {
@@ -142,29 +143,24 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     // table list
     return poolMeta.claimers.map((address, row) => ({
       address,
-      amounts: callData.map((pool, poolIndex) =>
-        utils.formatUnits(
-          pool[PoolCreator.Amounts][row],
-          tokenMetaList[poolIndex].decimals
-        )
-      ),
+      amounts: callData.map((pool) => pool[PoolCreator.Amounts][row]),
     }))
   }, [poolMeta, tokenMetaList, callData])
 
   const onCreateSuccess = useCallback(
     (ids: string[]) => {
       if (!poolMeta || !chainId || !account || !dPoolAddress) return
-      const poolList = ids.map((id) => ({
+      const localPoolMeta = {
         name: poolMeta.name,
         creator: account,
         dPoolAddress,
         chainId,
-        poolId: id,
-      }))
+        poolIds: ids,
+      }
       const localPoolMetaList = JSON.parse(
         localStorage.getItem('localPoolMetaList') || '[]'
       )
-      localPoolMetaList.push(...poolList)
+      localPoolMetaList.push(localPoolMeta)
       localStorage.setItem(
         'localPoolMetaList',
         JSON.stringify(localPoolMetaList)
@@ -217,7 +213,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       })
       const singleCreateResponse: ContractReceipt =
         await singleCreateRequest.wait()
-      console.log('singleCreateResponse', singleCreateResponse)
       const { transactionHash, logs: _logs } = singleCreateResponse
       const logs = _logs.filter((log) =>
         BigNumber.from(log.address).eq(dPoolAddress)
@@ -227,7 +222,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
 
         if (logJson.name === DPoolEvent.Created) {
           const poolId = logJson.args['poolId'].toString()
-
           setPoolIds([poolId])
           onCreateSuccess([poolId])
           return transactionHash
@@ -388,7 +382,10 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
             <div className="flex gap-2">
               {row.amounts.map((amount, i) => (
                 <div key={`${amount}-${i}`} className="flex">
-                  <div className="text-right flex-1"> {amount}</div>
+                  <div className="text-right flex-1">
+                    {' '}
+                    {formatCurrencyAmount(amount, tokenMetaList[i])}
+                  </div>
                   <span className="opacity-0 ml-1">
                     {tokenMetaList[i].symbol}
                   </span>
@@ -407,11 +404,22 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           {tokenTotalAmounts.map((total, index) => (
             <div key={tokenMetaList[index].address} className="flex">
               <div className="text-right flex-1">
-                {utils.formatUnits(total, tokenMetaList[index].decimals)}
+                {formatCurrencyAmount(total, tokenMetaList[index])}
               </div>
               <span className="ml-1 text-gray-500">
                 {tokenMetaList[index].symbol}
               </span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex justify-between my-2">
+        <div>Balance</div>
+        <div className="flex gap-2">
+          {tokenMetaList.map((tokenMeta) => (
+            <div>
+              {formatCurrencyAmount(tokenMeta.balance, tokenMeta)}{' '}
+              <span className="ml-1 text-gray-500">{tokenMeta.symbol}</span>
             </div>
           ))}
         </div>

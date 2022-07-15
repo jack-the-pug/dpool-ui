@@ -72,7 +72,7 @@ export enum DPoolEvent {
 
 export interface DPoolLocalStorageMeta {
   name: string
-  poolId: string
+  poolIds: string[]
   chainId: number
   dPoolAddress: string
   creator: string
