@@ -87,7 +87,7 @@ export default function TokenSelect(props: TTokenSelectProps) {
     <>
       <div
         onClick={() => setDialogVisible(true)}
-        className="cursor-pointer h-full  border-1 border-gray-400 border-offset-white px-2"
+        className="cursor-pointer h-full px-2"
       >
         {tokenMeta ? tokenMeta.symbol : '...'}
       </div>
@@ -114,7 +114,7 @@ export default function TokenSelect(props: TTokenSelectProps) {
                 placeholder="Address"
                 style={{ width: '380px' }}
               />
-              <div>
+              <div className="divide-solid ">
                 {tokenList.map((token) => (
                   <div
                     key={token.address}

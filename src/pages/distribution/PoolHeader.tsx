@@ -44,7 +44,7 @@ export default function PoolTableHeader(props: {
               list[index] = value
               setTableHeaderInputList(list)
             }}
-            className="flex-1 outline-none :focus:outline-none px-2 my-1 bg-neutral-200"
+            className="flex-1 outline-none focus:outline-none  px-2 my-1 bg-neutral-200"
           />
           <TokenSelect
             tokenMeta={token}
@@ -53,7 +53,10 @@ export default function PoolTableHeader(props: {
           />
         </div>
       ))}
-      <div className="flex justify-center px-2">
+      <div
+        className="flex justify-center"
+        style={{ width: 'calc(3rem - 2px)' }}
+      >
         {tokens.length === 2 ? (
           <IconoirDeleteCircledOutline
             onClick={() => {
@@ -64,7 +67,7 @@ export default function PoolTableHeader(props: {
         ) : null}
         {tokens.length === 1 && (
           <MaterialSymbolsAdd
-            className="flex-1 cursor-pointer"
+            className="cursor-pointer"
             onClick={() => {
               setTokens([tokens[0], tokens[0]])
             }}

@@ -337,6 +337,7 @@ export default function PoolsList() {
 
   const textarea2poolList = useCallback(() => {
     const textByRow = textarea.split('\n')
+    console.log('textarea')
     const _poolList: TPoolRow[] = []
     for (let i = 0; i < textByRow.length; i++) {
       const text = textByRow[i]
@@ -360,8 +361,9 @@ export default function PoolsList() {
       }
       _poolList.push(item)
     }
-    poolList.length
-      ? setPoolList(poolList)
+
+    poolList.length > 0
+      ? setPoolList(_poolList)
       : setPoolList([createPoolEmptyItem()])
   }, [textarea, poolList])
 
@@ -433,26 +435,22 @@ export default function PoolsList() {
       </div>
 
       <div className="w-full">
-        <div className="flex  w-full  justify-between font-medium text-lg border border-solid  border-b-0 border-gray-400">
-          {/* <div>Name</div> */}
-          <div
-            className="flex flex-1 justify-center items-center text-center"
-            style={{ width: '26.25rem' }}
-          >
-            <div className="text-sm  px-2">Address</div>
+        <div className="flex  w-full  justify-between  text-base ">
+          <div className="flex flex-1 justify-center items-center text-center  border border-solid  border-b-0 border-r-0 border-gray-400">
+            <div className="w-10"></div>
+            <div className="w-96">Address</div>
           </div>
-          <div className="flex flex-col border-l border-gray-400">
-            <div className="text-center text-sm border-b border-gray-400 py-1">
+          <div className="flex flex-col border border-b-0 border-gray-400">
+            <div className="text-center border-b border-gray-400 py-1">
               Amount
             </div>
-            <div className="">
-              <PoolHeader
-                tokenMetaList={tokenMetaList}
-                setTokenMetaList={setTokenMetaList}
-                tableHeaderInputList={tableHeaderInputList}
-                setTableHeaderInputList={setTableHeaderInputList}
-              />
-            </div>
+
+            <PoolHeader
+              tokenMetaList={tokenMetaList}
+              setTokenMetaList={setTokenMetaList}
+              tableHeaderInputList={tableHeaderInputList}
+              setTableHeaderInputList={setTableHeaderInputList}
+            />
           </div>
         </div>
         {isTextareaMode ? (
@@ -483,12 +481,16 @@ export default function PoolsList() {
           </div>
         )}
 
-        <div
-          onClick={() => addEmptyProfile()}
-          className="w-full cursor-cell flex items-center justify-center h-8 border border-dashed  border-gray-500"
-        >
-          <MaterialSymbolsAdd className="flex-1" />
-        </div>
+        {isTextareaMode ? (
+          <div className="w-full border-t border-gray-400"></div>
+        ) : (
+          <div
+            onClick={() => addEmptyProfile()}
+            className="w-full cursor-cell flex items-center justify-center h-8 border border-dashed  border-gray-500"
+          >
+            <MaterialSymbolsAdd className="flex-1" />
+          </div>
+        )}
       </div>
 
       <PoolSetting poolConfig={poolConfig} setPoolConfig={setPoolConfig} />

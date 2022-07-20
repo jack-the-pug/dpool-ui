@@ -400,9 +400,9 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               <div className="text-right flex-1">
                 {formatCurrencyAmount(total, tokenMetaList[index])}
               </div>
-              <span className="ml-1 text-gray-500">
+              <div className="ml-1 text-gray-500">
                 {tokenMetaList[index].symbol}
-              </span>
+              </div>
             </div>
           ))}
         </div>
@@ -411,9 +411,9 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         <div>Balance</div>
         <div className="flex gap-2">
           {tokenMetaList.map((tokenMeta) => (
-            <div>
-              {formatCurrencyAmount(tokenMeta.balance, tokenMeta)}{' '}
-              <span className="ml-1 text-gray-500">{tokenMeta.symbol}</span>
+            <div className="flex">
+              <div>{formatCurrencyAmount(tokenMeta.balance, tokenMeta)}</div>
+              <div className="ml-1 text-gray-500">{tokenMeta.symbol}</div>
             </div>
           ))}
         </div>

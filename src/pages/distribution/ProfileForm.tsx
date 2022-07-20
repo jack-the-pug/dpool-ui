@@ -87,18 +87,19 @@ export function Profile(props: TProfileProps) {
 
   return (
     <form className="flex h-12">
-      <div className="w-10 text-black border border-solid border-r-0 border-b-0  border-gray-400 outline-none  px-2 flex items-center">
+      <div className="text-black border border-solid border-r-0 border-b-0  border-gray-400 outline-none  text-center flex justify-center items-center w-10">
         {index + 1}
       </div>
       <div
         className={`${
           focusInputNumber === 1 ? 'bg-gray-100' : 'bg-neutral-200'
-        } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-1 flex-col  justify-center w-96`}
+        } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-center`}
+        style={{ width: 'calc(24rem + 1px)' }}
       >
         <input
           className={`${
             focusInputNumber === 1 ? 'bg-gray-100' : 'bg-neutral-200'
-          } outline-none focus:outline-none px-2 bg-neutral-200`}
+          } outline-none focus:outline-none px-2 bg-neutral-200 text-sm`}
           placeholder="address"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
@@ -111,7 +112,7 @@ export function Profile(props: TProfileProps) {
         {(addressBookName || addressErrorMsg) && (
           <div className="flex w-full flex-row px-2">
             {addressBookName ? (
-              <div className="text-xs px-2 font-thin italic text-gray-500">
+              <div className="text-xs font-thin italic text-gray-500">
                 {addressBookName}
               </div>
             ) : null}
@@ -127,12 +128,12 @@ export function Profile(props: TProfileProps) {
       <div
         className={`${
           focusInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
-        } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-between items-center px-2 w-80 overflow-hidden`}
+        } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-between items-center px-2  w-80 overflow-hidden`}
       >
         <input
           className={`${
             focusInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
-          } w-full outline-none :focus:outline-none  bg-neutral-200 items-end ${
+          } w-full outline-none :focus:outline-none   bg-neutral-200 items-end ${
             isPercentMode ? 'h-3/5' : 'h-full'
           }`}
           placeholder="amount"
@@ -173,7 +174,7 @@ export function Profile(props: TProfileProps) {
         </div>
       ) : null}
       <div
-        className={`border px-2 justify-center font-medium text-lg  cursor-pointer border-solid  border-b-0 border-gray-400 outline-none :focus:outline-none  flex items-center`}
+        className={`w-12 justify-center  cursor-pointer border  border-b-0 border-gray-400 m-0 flex items-center`}
       >
         <IconoirDeleteCircledOutline onClick={() => onRemove(index)} />
       </div>
