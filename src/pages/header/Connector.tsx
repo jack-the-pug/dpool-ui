@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
 import { hooks as metaMaskHooks, metaMask } from '../../connectors/metaMask'
 
 const { useAccount, useIsActive } = metaMaskHooks
@@ -11,6 +12,10 @@ export default function Connector() {
   const [isAddressHover, setIsAddressHover] = useState<boolean>(false)
 
   const connect = useCallback(() => {
+    if (!metaMask.provider) {
+      toast.error('Please install metamask')
+      return
+    }
     metaMask
       .activate()
       .then(() => {
