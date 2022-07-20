@@ -255,9 +255,17 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       }
     }
   }, [dPoolContract, dPoolAddress, callData, nativeTokenValue])
+  const isBalanceEnough = useMemo(() => {
+    for (let i = 0; i < tokenTotalAmounts.length; i++) {
+      const amount = tokenTotalAmounts[i]
+      const balance = tokenMetaList[i].balance
+      if (balance.lt(amount)) return false
+    }
+    return true
+  }, [tokenTotalAmounts, tokenMetaList])
 
   const submit = useCallback(async () => {
-    if (!poolMeta) return
+    if (!poolMeta || !isBalanceEnough) return
     setCreatePoolState(ActionState.ING)
     const poolLength = callData.length
     let tx: string | undefined
@@ -292,6 +300,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     onCreateSuccess,
     singleCreate,
     poolIds,
+    isBalanceEnough,
   ])
 
   const routerToPoolDetail = useCallback(() => {
@@ -344,8 +353,11 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               : `Distribution Success`,
         }}
         tx={createTx}
-        onClick={submit}
+        onClick={isBalanceEnough ? submit : () => {}}
         onSuccess={routerToPoolDetail}
+        waitClass={
+          isBalanceEnough ? 'text-black' : 'text-gray-500 cursor-not-allowed'
+        }
         successClass="w-full"
         failedClass="w-full"
       ></Action>
@@ -354,7 +366,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
   if (!poolMeta || !poolMeta.length) return null
   return (
     <Dialog visible={visible} onClose={onClosePage}>
-      <h1 className="flex justify-between items-center">
+      <h1 className="flex justify-between items-center cur">
         <span></span>
         <div className="font-medium font-xl">{poolMeta.name}</div>
         <ZondiconsClose onClick={onClosePage} className="cursor-pointer" />
@@ -410,9 +422,17 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       <div className="flex justify-between my-2">
         <div>Balance</div>
         <div className="flex gap-2">
-          {tokenMetaList.map((tokenMeta) => (
+          {tokenMetaList.map((tokenMeta, index) => (
             <div className="flex">
-              <div>{formatCurrencyAmount(tokenMeta.balance, tokenMeta)}</div>
+              <div
+                className={`${
+                  tokenMeta.balance.lt(tokenTotalAmounts[index])
+                    ? 'text-red-500'
+                    : ''
+                }`}
+              >
+                {formatCurrencyAmount(tokenMeta.balance, tokenMeta)}
+              </div>
               <div className="ml-1 text-gray-500">{tokenMeta.symbol}</div>
             </div>
           ))}
