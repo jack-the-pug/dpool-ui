@@ -354,11 +354,6 @@ export function PoolDetail({ poolId }: { poolId: string }) {
   function RenderClaim(props: { claimer: TableRow; index: number }) {
     const { claimer, index } = props
     if (!poolMeta) return null
-    const { startTime, deadline } = poolMeta
-    const nowTime = Date.now() / 1000
-    if (nowTime <= startTime || nowTime >= deadline) {
-      return null
-    }
     const [claimState, setClaimState] = useState<ActionState>(ActionState.WAIT)
     const [claimedTx, setClaimedTx] = useState<string>()
     const [shouldClaimAmount, setShouldClaimAmount] = useState<BigNumber>(
