@@ -231,7 +231,7 @@ export default function PoolsList() {
       ? poolConfig.distributor
       : account
     const _pool = poolList.filter((row) => isLegalPoolRow(row))
-    if (_pool.length === 0) return null
+    if (_pool.length !== parsedTokenAmounts[0].length) return null
 
     // address must be unique
     const poolAddressMap = new Map()
@@ -277,6 +277,7 @@ export default function PoolsList() {
     poolList,
     account,
     tokenMetaList,
+    parsedTokenAmounts,
     parsedTokenAmountsTotal,
     tableHeaderInputList,
     repeatedAddress,
