@@ -483,8 +483,8 @@ export function PoolDetail({ poolId }: { poolId: string }) {
             ))}
           </tbody>
         </table>
-        <div className="w-full border-b h-6 border-gray-500 border-dotted mt-8 mb-7"></div>
-        <section className="text-xs w-full flex flex-col gap-4">
+
+        <section className="text-xs w-full flex flex-col gap-4 mt-20">
           <div className="flex h-6 w-full justify-between items-center ">
             <div>Remaining Amount</div>
             <div className="flex-1 border-b border-gray-500 border-dotted mx-2"></div>
@@ -498,12 +498,12 @@ export function PoolDetail({ poolId }: { poolId: string }) {
           </div>
           <div className="flex h-6 w-full justify-between items-center">
             <div>Start Date</div>
-            <div className="flex-1 border-b border-gray-500 border-dotted"></div>
+            <div className="flex-1 border-b border-gray-500 border-dotted mx-2"></div>
             <div>{format(new Date(poolMeta.startTime * 1000), 'Pp')}</div>
           </div>
           <div className="flex h-6 w-full justify-between items-center">
             <div>End Date</div>
-            <div className="flex-1  border-b border-gray-500 border-dotted"></div>
+            <div className="flex-1  border-b border-gray-500 border-dotted mx-2"></div>
             <div>{format(new Date(poolMeta.deadline * 1000), 'Pp')}</div>
           </div>
         </section>
