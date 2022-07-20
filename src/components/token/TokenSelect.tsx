@@ -1,34 +1,33 @@
-import { BigNumber, Contract, ethers, utils } from 'ethers'
+import { BigNumber, utils } from 'ethers'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { hooks as metaMaskHooks } from '../../../connectors/metaMask'
-import { ESC20ABI } from '../../../constants'
-import { Dialog } from '../../../components/dialog'
-import { EosIconsBubbleLoading, ZondiconsClose } from '../../../components/icon'
-import useTokenMeta from '../../../hooks/useTokenMeta'
-import { TokenMeta as TTokenMeta } from '../../../type'
-import { chains } from '../../../constants'
-import useSignerOrProvider from '../../../hooks/useSignOrProvider'
-import { useBalance } from '../../../hooks/useBalance'
-import { toast } from 'react-toastify'
+import { hooks as metaMaskHooks } from '../../connectors/metaMask'
+import { Dialog } from '../dialog'
+import { EosIconsBubbleLoading, ZondiconsClose } from '../icon'
+import useTokenMeta from '../../hooks/useTokenMeta'
+import { TokenMeta as TTokenMeta } from '../../type'
+import { chains } from '../../constants'
+
 import { isAddress } from 'ethers/lib/utils'
+import { useBalance } from '../../hooks/useBalance'
 interface TTokenSelectProps {
   tokenMeta: TTokenMeta | undefined
   setTokenMeta: (tokenMeta: TTokenMeta) => void
+  dialogDefaultOpen?: boolean
 }
 const { useProvider, useChainId, useAccount } = metaMaskHooks
 export default function TokenSelect(props: TTokenSelectProps) {
-  const { tokenMeta, setTokenMeta } = props
+  const { tokenMeta, setTokenMeta, dialogDefaultOpen = false } = props
   const { tokenList: sourceTokenList, getToken, setToken } = useTokenMeta()
   const provider = useProvider()
   const chainId = useChainId()
   const account = useAccount()
-  const nativeTokenBalance = useBalance(provider, account)
+  const nativeTokenBalance = useBalance(account)
   const [loading, setLoading] = useState<boolean>(false)
-  const [dialogVisible, setDialogVisible] = useState<boolean>(false)
+  const [dialogVisible, setDialogVisible] = useState<boolean>(dialogDefaultOpen)
   const [tokenAddress, setTokenAddress] = useState<string>()
 
   const nativeTokenMeta = useMemo(() => {
-    if (!chainId || !chains[chainId]) return null
+    if (!chainId || !chains[chainId] || !nativeTokenBalance) return null
     const nativeToken: TTokenMeta = {
       address: '0x0000000000000000000000000000000000000000',
       decimals: chains[chainId].decimals,
@@ -85,13 +84,13 @@ export default function TokenSelect(props: TTokenSelectProps) {
     })
   }, [tokenAddress, account, chainId])
   return (
-    <div className="justify-right flex">
-      <span
+    <>
+      <div
         onClick={() => setDialogVisible(true)}
-        className="cursor-pointer bg-white ring-1 ring-gray-400  shadow-inner ring-offset-white px-2"
+        className="cursor-pointer h-full px-2"
       >
-        {tokenMeta ? tokenMeta.symbol : 'Select Token'}
-      </span>
+        {tokenMeta ? tokenMeta.symbol : '...'}
+      </div>
       <Dialog visible={dialogVisible} onClose={() => setDialogVisible(false)}>
         <div className="flex flex-col" style={{ minWidth: '380px' }}>
           <h1 className="flex justify-between items-center ">
@@ -115,7 +114,7 @@ export default function TokenSelect(props: TTokenSelectProps) {
                 placeholder="Address"
                 style={{ width: '380px' }}
               />
-              <div>
+              <div className="divide-solid ">
                 {tokenList.map((token) => (
                   <div
                     key={token.address}
@@ -142,6 +141,6 @@ export default function TokenSelect(props: TTokenSelectProps) {
           )}
         </div>
       </Dialog>
-    </div>
+    </>
   )
 }

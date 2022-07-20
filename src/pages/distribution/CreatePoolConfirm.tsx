@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
-import { BigNumber, ContractReceipt, ethers, utils } from 'ethers'
-import { useCallback, useMemo, useState, useEffect } from 'react'
+import { BigNumber, ContractReceipt, ethers } from 'ethers'
+import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import Action, { ActionState } from '../../components/action'
 import { Dialog } from '../../components/dialog'
@@ -8,39 +8,36 @@ import { EosIconsBubbleLoading, ZondiconsClose } from '../../components/icon'
 import useDPool from '../../hooks/useDPool'
 import {
   DPoolEvent,
-  DPoolLocalStorageMeta,
   PoolCreateCallData as PoolCreateCallData,
   PoolCreator,
   PoolRow,
   TokenMeta,
 } from '../../type'
-import { addKilobits } from '../../utils/number'
 import { DistributionType, PoolConfig } from './CreatePool'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { isAddress } from 'ethers/lib/utils'
 import { AddressBookItem } from '../addressBook'
 import { useNavigate } from 'react-router-dom'
 import { dPoolABI } from '../../constants'
-import { useApproveToken } from '../../hooks/useApproveToken'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
-import ApproveToken from './Token/ApproveToken'
-
-type TPoolRow = Omit<PoolRow & { secondTokenAmount?: number }, 'name'>
+import ApproveTokens from '../../components/token/ApproveTokens'
+import { formatCurrencyAmount } from '../../utils/number'
 
 interface PoolMeta {
   name: string
-  pool: TPoolRow[]
+  claimers: string[]
   length: number
-  baseTokenTotal: string
-  secondTokenTotal?: string
   config: Omit<PoolConfig, 'distributionType'>
+}
+interface UIDataRow {
+  address: string
+  amounts: BigNumber[]
 }
 
 interface CreatePoolConfirmProps {
   visible: boolean
   setVisible: (v: boolean) => void
-  baseTokenMeta: TokenMeta
-  secondTokenMeta: TokenMeta | undefined
+  tokenMetaList: TokenMeta[]
   callData: readonly PoolCreateCallData[]
   distributionType: DistributionType
 }
@@ -49,14 +46,8 @@ const { useAccount, useChainId } = metaMaskHooks
 const dPoolInterface = new ethers.utils.Interface(dPoolABI)
 
 export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
-  const {
-    visible,
-    setVisible,
-    baseTokenMeta,
-    callData,
-    secondTokenMeta,
-    distributionType,
-  } = props
+  const { visible, setVisible, callData, distributionType, tokenMetaList } =
+    props
   const { dPoolAddress } = useDPoolAddress()
   const chainId = useChainId()
   const account = useAccount()
@@ -66,6 +57,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
 
   const [poolIds, setPoolIds] = useState<string[]>([])
 
+  const [isTokensApproved, setIsTokensApproved] = useState<boolean>(false)
   const [createPoolState, setCreatePoolState] = useState<ActionState>(
     ActionState.WAIT
   )
@@ -92,9 +84,8 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     const len = claimers.length
     const poolMeta: PoolMeta = {
       name: baseCallData[PoolCreator.Name],
-      pool: [],
+      claimers,
       length: len,
-      baseTokenTotal: '0',
       config: {
         isFundNow: baseCallData[PoolCreator.isFundNow],
         date: [
@@ -104,44 +95,22 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         distributor: baseCallData[PoolCreator.Distributor],
       },
     }
-    const amounts = baseCallData[PoolCreator.Amounts]
-    poolMeta.baseTokenTotal = utils.formatUnits(
-      amounts.reduce(
-        (sum, cur) => sum.add(BigNumber.from(cur)),
-        BigNumber.from(0)
-      ),
-      baseTokenMeta.decimals
-    )
+    return poolMeta
+  }, [callData])
 
-    const _pool: TPoolRow[] = []
-    for (let i = 0; i < len; i++) {
-      const row: TPoolRow = {
-        address: claimers[i],
-        baseTokenAmount: parseFloat(
-          utils.formatUnits(amounts[i], baseTokenMeta.decimals)
-        ),
-      }
-      _pool.push(row)
-    }
-    if (secondTokenMeta) {
-      const secondCallData = callData[1]
-      const amounts = secondCallData[PoolCreator.Amounts]
-      poolMeta.secondTokenTotal = utils.formatUnits(
-        amounts.reduce(
-          (sum, cur) => sum.add(BigNumber.from(cur)),
+  const tokenTotalAmounts = useMemo(() => {
+    const totalAmount: BigNumber[] = []
+    console.log('callData', callData)
+    callData.forEach((data) =>
+      totalAmount.push(
+        data[PoolCreator.Amounts].reduce(
+          (sum, cur) => sum.add(cur),
           BigNumber.from(0)
         )
       )
-      _pool.forEach(
-        (row, index) =>
-          (row.secondTokenAmount = parseFloat(
-            utils.formatUnits(amounts[index], secondTokenMeta.decimals)
-          ))
-      )
-    }
-    poolMeta.pool = _pool
-    return poolMeta
-  }, [callData, baseTokenMeta, secondTokenMeta])
+    )
+    return totalAmount
+  }, [callData])
 
   const nativeTokenValue = useMemo((): string => {
     if (!poolMeta) return '0'
@@ -151,40 +120,37 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       distributionType === DistributionType.Push
     )
       return '0'
-    let value = BigNumber.from(0)
-    if (BigNumber.from(baseTokenMeta.address).eq(0)) {
-      value = value.add(
-        utils.parseUnits(poolMeta.baseTokenTotal, baseTokenMeta.decimals)
-      )
-    }
-    if (secondTokenMeta && BigNumber.from(secondTokenMeta.address).eq(0)) {
-      value = value.add(
-        utils.parseUnits(
-          poolMeta.secondTokenTotal || '0',
-          secondTokenMeta.decimals
-        )
-      )
-    }
-    return value.toString()
-  }, [poolMeta, baseTokenMeta, secondTokenMeta])
 
-  const [baseTokenApproveState, setBaseTokenApproveState] =
-    useState<ActionState>(ActionState.WAIT)
-  const [secondTokenApproveState, setSecondTokenApproveState] =
-    useState<ActionState>(ActionState.WAIT)
+    return tokenMetaList
+      .reduce(
+        (sum, token, index) =>
+          BigNumber.from(token.address).eq(0)
+            ? sum.add(tokenTotalAmounts[index])
+            : sum,
+        BigNumber.from(0)
+      )
+      .toString()
+  }, [poolMeta, tokenMetaList])
+
+  const renderUIData = useMemo((): UIDataRow[] => {
+    if (!poolMeta) return []
+    // table list
+    return poolMeta.claimers.map((address, row) => ({
+      address,
+      amounts: callData.map((pool) => pool[PoolCreator.Amounts][row]),
+    }))
+  }, [poolMeta, tokenMetaList, callData])
 
   const onCreateSuccess = useCallback(
     (ids: string[]) => {
       if (!poolMeta || !chainId || !account || !dPoolAddress) return
-
-      const localPoolMeta: DPoolLocalStorageMeta = {
+      const localPoolMeta = {
         name: poolMeta.name,
         creator: account,
         dPoolAddress,
         chainId,
         poolIds: ids,
       }
-
       const localPoolMetaList = JSON.parse(
         localStorage.getItem('localPoolMetaList') || '[]'
       )
@@ -235,6 +201,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
   const singleCreate = useCallback(
     async (callData: PoolCreateCallData): Promise<string | undefined> => {
       if (!dPoolContract || !dPoolAddress) return
+      console.log('dPoolContract', dPoolContract)
       const singleCreateRequest = await dPoolContract.create(callData, {
         value: nativeTokenValue,
       })
@@ -249,7 +216,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
 
         if (logJson.name === DPoolEvent.Created) {
           const poolId = logJson.args['poolId'].toString()
-
           setPoolIds([poolId])
           onCreateSuccess([poolId])
           return transactionHash
@@ -289,9 +255,17 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       }
     }
   }, [dPoolContract, dPoolAddress, callData, nativeTokenValue])
+  const isBalanceEnough = useMemo(() => {
+    for (let i = 0; i < tokenTotalAmounts.length; i++) {
+      const amount = tokenTotalAmounts[i]
+      const balance = tokenMetaList[i].balance
+      if (balance.lt(amount)) return false
+    }
+    return true
+  }, [tokenTotalAmounts, tokenMetaList])
 
   const submit = useCallback(async () => {
-    if (!poolMeta) return
+    if (!poolMeta || !isBalanceEnough) return
     setCreatePoolState(ActionState.ING)
     const poolLength = callData.length
     let tx: string | undefined
@@ -311,7 +285,10 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         setCreateTx(tx)
       }
     } catch (err: any) {
-      toast.error(`${typeof err === 'object' ? err.reason || JSON.stringify(err) : err}`)
+      console.log('err', err)
+      toast.error(
+        `${typeof err === 'object' ? err.reason || JSON.stringify(err) : err}`
+      )
       setCreatePoolState(ActionState.FAILED)
     }
   }, [
@@ -323,6 +300,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     onCreateSuccess,
     singleCreate,
     poolIds,
+    isBalanceEnough,
   ])
 
   const routerToPoolDetail = useCallback(() => {
@@ -340,13 +318,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       setVisible(false)
     }
   }, [createPoolState, setVisible])
-  useEffect(() => {
-    if (!account) return
-    if (poolMeta?.config.distributor.toLowerCase() !== account.toLowerCase()) {
-      setBaseTokenApproveState(ActionState.SUCCESS)
-      setSecondTokenApproveState(ActionState.SUCCESS)
-    }
-  }, [account, poolMeta])
+
   function CreateAction() {
     const waitApproved = (
       <div className="flex items-center">
@@ -354,13 +326,11 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         Waiting for approval
       </div>
     )
-
-    if (baseTokenApproveState !== ActionState.SUCCESS) {
+    if (
+      !isTokensApproved &&
+      poolMeta?.config.distributor.toLowerCase() === account?.toLowerCase()
+    )
       return waitApproved
-    }
-    if (secondTokenMeta && secondTokenApproveState !== ActionState.SUCCESS) {
-      return waitApproved
-    }
     return (
       <Action
         state={createPoolState}
@@ -383,91 +353,94 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               : `Distribution Success`,
         }}
         tx={createTx}
-        onClick={submit}
+        onClick={isBalanceEnough ? submit : () => {}}
         onSuccess={routerToPoolDetail}
+        waitClass={
+          isBalanceEnough ? 'text-black' : 'text-gray-500 cursor-not-allowed'
+        }
         successClass="w-full"
         failedClass="w-full"
       ></Action>
     )
   }
-  if (!poolMeta || !poolMeta.pool.length) return null
-
+  if (!poolMeta || !poolMeta.length) return null
   return (
     <Dialog visible={visible} onClose={onClosePage}>
-      <h1 className="flex justify-between items-center">
+      <h1 className="flex justify-between items-center cur">
         <span></span>
         <div className="font-medium font-xl">{poolMeta.name}</div>
         <ZondiconsClose onClick={onClosePage} className="cursor-pointer" />
       </h1>
+
       <div className="border-b border-black border-dotted w-full my-2"></div>
+
       <div className="font-mono">
-        <div>
-          {poolMeta?.pool.map((row, index) => (
-            <div
-              key={row.address + index}
-              className={`grid ${
-                secondTokenMeta ? 'grid-cols-4' : 'grid-cols-3'
-              } gap-4 my-4 justify-between`}
-            >
-              <div className="col-span-2 flex items-center">
-                {row.address}{' '}
-                {getAddressName(row.address) ? (
-                  <div className="text-xs font-thin italic text-gray-500">
-                    {`(${getAddressName(row.address)})`}
+        {renderUIData.map((row) => (
+          <div className="flex gap-4 my-1 justify-between">
+            <div key={row.address} className="">
+              {row.address}{' '}
+              {getAddressName(row.address) ? (
+                <span className="text-gray-500 italic text-xs">
+                  {`(${getAddressName(row.address)})`}{' '}
+                </span>
+              ) : null}
+            </div>
+            <div className="flex gap-2">
+              {row.amounts.map((amount, i) => (
+                <div key={`${amount}-${i}`} className="flex">
+                  <div className="text-right flex-1">
+                    {' '}
+                    {formatCurrencyAmount(amount, tokenMetaList[i])}
                   </div>
-                ) : null}
-              </div>
-              <div className="flex-1 flex justify-end">
-                <div className="flex-1 flex justify-end">
-                  {addKilobits(row.baseTokenAmount, 3)}
+                  <span className="opacity-0 ml-1">
+                    {tokenMetaList[i].symbol}
+                  </span>
                 </div>
-                <div className="w-16"></div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="border-b border-black border-dotted w-full my-2"></div>
+      <div className="flex justify-between my-2">
+        <div className="flex">
+          Total: <div>{renderUIData.length} Recipient(s)</div>
+        </div>
+        <div className="flex gap-2">
+          {tokenTotalAmounts.map((total, index) => (
+            <div key={tokenMetaList[index].address} className="flex">
+              <div className="text-right flex-1">
+                {formatCurrencyAmount(total, tokenMetaList[index])}
               </div>
-              {row.secondTokenAmount && (
-                <div className="text-right flex">
-                  <div className="flex-1">
-                    {addKilobits(row.secondTokenAmount, 3)}
-                  </div>
-                  <div className="w-16"></div>
-                </div>
-              )}
+              <div className="ml-1 text-gray-500">
+                {tokenMetaList[index].symbol}
+              </div>
             </div>
           ))}
         </div>
-        <div className=" border-b border-black border-dotted w-full my-2"></div>
-        <div
-          className={`grid ${
-            secondTokenMeta ? 'grid-cols-4' : 'grid-cols-3'
-          } gap-4 w-full  my-4 justify-between items-center`}
-        >
-          <div className="flex items-center col-span-2">
-            Total: <span>{poolMeta.length} Recipient(s)</span>
-          </div>
-
-          <div className="flex-1 flex justify-end">
-            <div className="flex-1 flex justify-end">
-              {addKilobits(parseFloat(poolMeta.baseTokenTotal), 3)}
-            </div>
-            <div className="w-16 text-left pl-2 text-gray-500 italic">
-              {baseTokenMeta.symbol}
-            </div>
-          </div>
-          {poolMeta.secondTokenTotal && secondTokenMeta && (
-            <div className="text-right flex">
-              <div className="flex-1">
-                {addKilobits(parseFloat(poolMeta.secondTokenTotal), 3)}
+      </div>
+      <div className="flex justify-between my-2">
+        <div>Balance</div>
+        <div className="flex gap-2">
+          {tokenMetaList.map((tokenMeta, index) => (
+            <div className="flex">
+              <div
+                className={`${
+                  tokenMeta.balance.lt(tokenTotalAmounts[index])
+                    ? 'text-red-500'
+                    : ''
+                }`}
+              >
+                {formatCurrencyAmount(tokenMeta.balance, tokenMeta)}
               </div>
-              <div className="w-16 text-left pl-2 text-gray-500 italic">
-                {secondTokenMeta.symbol}
-              </div>
+              <div className="ml-1 text-gray-500">{tokenMeta.symbol}</div>
             </div>
-          )}
+          ))}
         </div>
       </div>
-
       <div className="">
-        {poolMeta.config.distributor.toLowerCase() !==
-        account?.toLowerCase() ? (
+        {poolMeta.config.distributor &&
+        poolMeta.config.distributor.toLowerCase() !== account?.toLowerCase() ? (
           <div className="flex justify-between my-4">
             <div>Distributor</div>
             <div>{poolMeta.config.distributor}</div>
@@ -494,39 +467,17 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         )}
       </div>
       {poolMeta.config.distributor.toLowerCase() === account?.toLowerCase() ? (
-        <div className="flex justify-between mb-2 mt-6">
-          <div className="flex">
-            <div className="ml-1 flex flex-col gap-2 ">
-              {/* exclude native token */}
-              {dPoolAddress ? (
-                <ApproveToken
-                  dPoolAddress={dPoolAddress}
-                  tokenAddress={baseTokenMeta.address}
-                  approveState={baseTokenApproveState}
-                  setApproveState={setBaseTokenApproveState}
-                  approveAmount={utils.parseUnits(
-                    poolMeta.baseTokenTotal,
-                    baseTokenMeta.decimals
-                  )}
-                />
-              ) : null}
-              {secondTokenMeta && dPoolAddress ? (
-                <ApproveToken
-                  dPoolAddress={dPoolAddress}
-                  tokenAddress={secondTokenMeta.address}
-                  approveState={secondTokenApproveState}
-                  setApproveState={setSecondTokenApproveState}
-                  approveAmount={utils.parseUnits(
-                    poolMeta.secondTokenTotal!,
-                    secondTokenMeta.decimals
-                  )}
-                />
-              ) : null}
-            </div>
-          </div>
+        <div className="mt-4">
+          <ApproveTokens
+            tokens={tokenMetaList.map((token, index) => ({
+              address: token.address,
+              amount: tokenTotalAmounts[index],
+            }))}
+            setIsTokensApproved={setIsTokensApproved}
+          />
         </div>
       ) : null}
-      <div className="flex flex-col justify-between mt-12">
+      <div className="flex flex-col justify-between mt-6">
         <CreateAction />
         <div className="flex justify-center text-gray-500 text-sm my-2">
           <div>Pay {poolMeta.config.isFundNow ? 'Now' : 'Later'}</div>

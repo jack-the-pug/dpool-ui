@@ -23,7 +23,8 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "6",
-    "react-toastify": "^9.0.3"
+    "react-toastify": "^9.0.3",
+    "recoil": "^0.7.4"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",

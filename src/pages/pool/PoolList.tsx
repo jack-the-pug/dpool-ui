@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { Link } from 'react-router-dom'
 import { DPoolLocalStorageMeta } from '../../type'
@@ -24,11 +24,15 @@ export default function PoolList() {
       localStorage.getItem('localPoolMetaList') || '[]'
     ).filter((pool: DPoolLocalStorageMeta) => {
       if (!dPoolAddress) return true
-      return pool.dPoolAddress.toLowerCase() === dPoolAddress.toLowerCase()
+      return (
+        pool.dPoolAddress.toLowerCase() === dPoolAddress.toLowerCase() &&
+        pool.chainId === chainId
+      )
     })
     setPoolList(formatPoolList)
     setIsLoading(false)
   }, [chainId, dPoolAddress, dPoolContract])
+
   const getPoolFromContract = useCallback(() => {
     if (!dPoolContract || !chainId || !dPoolAddress) return
     setIsLoading(true)
@@ -43,6 +47,7 @@ export default function PoolList() {
           chainId,
           dPoolAddress,
         }))
+
       setPoolList(ListInDPoolContract)
       setIsLoading(false)
     })
@@ -55,12 +60,12 @@ export default function PoolList() {
     <div className="flex flex-col w-full break-all  flex-1  items-center">
       {poolList.length ? (
         poolList.map((pool, index) => {
-          console.log('pool', pool)
-          const strPoolIds = pool.poolIds.join(',')
+          if (!pool.poolIds) return null
+          const ids = pool.poolIds.join(',')
           return (
             <Link
-              key={strPoolIds}
-              to={strPoolIds}
+              key={ids}
+              to={ids}
               className="flex px-4 py-1 hover:bg-gray-100 hover:scale-110 transition-all ease-in-out rounded-sm"
             >
               <div className="mr-4 text-gray-500">{index + 1}</div>

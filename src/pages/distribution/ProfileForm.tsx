@@ -1,17 +1,22 @@
+import { BigNumber, utils } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { IconoirDeleteCircledOutline } from '../../components/icon'
-import { PoolRow } from '../../type/index'
-import { addKilobits } from '../../utils/number'
+import { PoolRow, TokenMeta } from '../../type/index'
+import { formatCurrencyAmount, parsed2NumberString } from '../../utils/number'
+import { TPoolRow } from './CreatePool'
 
 interface TProfileProps {
-  profile: PoolRow
+  profile: TPoolRow
   index: number
   profileKey: string
   onRemove: (index: number) => void
   onChange: (index: number, profile: PoolRow) => void
-  hasSecondToken: boolean
-  secondTokenAmounts: number[] | undefined
+  repeatedAddress: string | undefined
+  isPercentMode: boolean
+  parsedTokenAmounts: BigNumber[][]
+  tokenMetaList: TokenMeta[]
+  userInputTotal: BigNumber
 }
 
 export function Profile(props: TProfileProps) {
@@ -20,135 +25,156 @@ export function Profile(props: TProfileProps) {
     onChange,
     index,
     profile: _profile,
-    hasSecondToken,
-    secondTokenAmounts,
+    parsedTokenAmounts,
+    tokenMetaList,
+    isPercentMode,
+    userInputTotal,
+    repeatedAddress: repeatedAddress,
   } = props
 
   const [address, setAddress] = useState<string>(_profile.address)
-  const [amount, setAmount] = useState<number>(_profile.baseTokenAmount || 0)
+  const [inputAmount, setInputAmount] = useState<string>(
+    _profile.userInputAmount
+  )
   const addressBookObj = useMemo(
     () => JSON.parse(localStorage.getItem('ADDRESS_BOOK') || '{}'),
     []
   )
+
   const submit = useCallback(() => {
     const profile = { ..._profile }
     profile.address = address
-    profile.baseTokenAmount = amount
+    profile.userInputAmount = inputAmount
     onChange(index, profile)
-  }, [address, amount, index, _profile])
+  }, [onChange, address, inputAmount])
 
-  const [fouceInputNumber, setFouceInputNumber] = useState(-1)
-  const [addressErrorMsg, setAddressErrorMsg] = useState('')
-  const onAddressBlur = useCallback(() => {
-    setFouceInputNumber(-1)
-    if (!isAddress(address)) {
-      return
-    }
-    setAddressErrorMsg('')
-    submit()
-  }, [address, amount, submit])
-
-  // const [nameErrorMsg, setNameErrorMsg] = useState('')
-  // const onNameBlur = useCallback(() => {
-  //   setFouceInputNumber(-1)
-  //   if (!profile.name) {
-  //     setNameErrorMsg('Required')
-  //     return
-  //   }
-  //   setNameErrorMsg('')
-  //   submit()
-  // }, [profile.name])
-
-  const [amountErrorMsg, setAmountErrorMsg] = useState('')
-  const onAmountBlur = useCallback(() => {
-    setFouceInputNumber(-1)
-    if (!amount) {
-      setAmountErrorMsg('Required')
-      return
-    }
-    setAmountErrorMsg('')
-    submit()
-  }, [amount, address, submit])
-  const [addressBookName, setAddressBookName] = useState<string>('')
   useEffect(() => {
-    if (!address) {
-      setAddressErrorMsg('')
-      setAddressBookName('')
+    submit()
+  }, [inputAmount])
+
+  const [focusInputNumber, setFocusInputNumber] = useState(-1)
+
+  const onAddressBlur = useCallback(() => {
+    setFocusInputNumber(-1)
+    if (!isAddress(address)) {
       return
     }
-    console.log('address', address, addressBookObj)
-    if (!isAddress(address)) {
-      setAddressBookName('')
-      setAddressErrorMsg('Invalid Address')
-    } else if (addressBookObj[address.toLowerCase()]) {
-      const name = addressBookObj[address.toLowerCase()].name
-      console.log('name', name)
-      setAddressBookName(name)
-    }
-  }, [address, addressBookObj])
+    submit()
+  }, [address, inputAmount, submit])
+
+  const onAmountBlur = useCallback(() => {
+    setFocusInputNumber(-1)
+  }, [inputAmount, submit])
+
+  const addressBookName = useMemo(() => {
+    if (!isAddress(address)) return
+    const profile = addressBookObj[address.toLowerCase()]
+    if (!profile || typeof profile !== 'object') return
+    return profile.name
+  }, [addressBookObj, address])
+
+  const addressErrorMsg = useMemo(() => {
+    if (!address && inputAmount) return 'Please enter address'
+    if (!address) return
+    if (!isAddress(address)) return 'Invalid address'
+    if (
+      repeatedAddress &&
+      repeatedAddress.toLowerCase() === address.toLowerCase()
+    )
+      return 'Addresses cannot be duplicated'
+    return
+  }, [address, repeatedAddress, inputAmount])
+
   return (
     <form className="flex h-12">
-      <div className="w-10 text-black border border-solid border-r-0 border-b-0  border-gray-400 outline-none  px-2 flex items-center">
+      <div className="text-black border border-solid border-r-0 border-b-0  border-gray-400 outline-none  text-center flex justify-center items-center w-10">
         {index + 1}
       </div>
       <div
         className={`${
-          fouceInputNumber === 1 ? 'bg-gray-100' : 'bg-neutral-200'
-        } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-1 flex-col  justify-center`}
-        style={{ minWidth: '380px' }}
+          focusInputNumber === 1 ? 'bg-gray-100' : 'bg-neutral-200'
+        } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-center`}
+        style={{ width: 'calc(24rem + 1px)' }}
       >
         <input
           className={`${
-            fouceInputNumber === 1 ? 'bg-gray-100' : 'bg-neutral-200'
-          } outline-none focus:outline-none px-2 bg-neutral-200`}
+            focusInputNumber === 1 ? 'bg-gray-100' : 'bg-neutral-200'
+          } outline-none focus:outline-none px-2 bg-neutral-200 text-sm`}
           placeholder="address"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           onBlur={onAddressBlur}
-          onFocus={() => setFouceInputNumber(1)}
+          onFocus={() => setFocusInputNumber(1)}
           key={props.profileKey + 'address'}
           name="address"
         />
-        {addressBookName ? (
-          <span className="text-xs px-2 font-thin italic text-gray-500">
-            {addressBookName}
-          </span>
-        ) : null}
-        {addressErrorMsg ? (
-          <div className="text-red-500 text-xs px-2">{addressErrorMsg}</div>
-        ) : null}
+
+        {(addressBookName || addressErrorMsg) && (
+          <div className="flex w-full flex-row px-2">
+            {addressBookName ? (
+              <div className="text-xs font-thin italic text-gray-500">
+                {addressBookName}
+              </div>
+            ) : null}
+            {addressErrorMsg ? (
+              <div className="text-red-500 text-xs px-2 self-end flex-grow flex-1 text-right">
+                {addressErrorMsg}
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
+
       <div
         className={`${
-          fouceInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
-        } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-center px-2 w-60`}
+          focusInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
+        } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-between items-center px-2  w-80 overflow-hidden`}
       >
         <input
           className={`${
-            fouceInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
-          } outline-none :focus:outline-none px-2 bg-neutral-200`}
+            focusInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
+          } w-full outline-none :focus:outline-none   bg-neutral-200 items-end ${
+            isPercentMode ? 'h-3/5' : 'h-full'
+          }`}
           placeholder="amount"
           key={props.profileKey + 'amount'}
           type="number"
-          value={amount}
+          value={inputAmount}
           min={0}
-          onChange={(e) => setAmount(e.target.valueAsNumber)}
           onBlur={onAmountBlur}
-          onFocus={() => setFouceInputNumber(2)}
+          onChange={(e) => setInputAmount(e.target.value)}
+          onFocus={() => setFocusInputNumber(2)}
         />
-        {amountErrorMsg ? (
-          <div className="text-red-500 text-xs px-2">{amountErrorMsg}</div>
+
+        {isPercentMode ? (
+          <div className="flex flex-1 justify-between w-full items-center">
+            <div className="text-xs text-gray-500">
+              {utils
+                .parseUnits(
+                  parsed2NumberString(inputAmount),
+                  tokenMetaList[0]?.decimals
+                )
+                .mul(10000) // Retain two decimal places
+                .div(userInputTotal)
+                .toNumber() / 100}
+              %
+            </div>
+            <div className="text-xs text-gray-500 cursor-not-allowed">
+              {formatCurrencyAmount(
+                parsedTokenAmounts[0][index],
+                tokenMetaList[0]
+              )}
+            </div>
+          </div>
         ) : null}
       </div>
-      {hasSecondToken && secondTokenAmounts && (
-        <div
-          className={`w-60 cursor-not-allowed text-gray-500 border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-center px-2`}
-        >
-          {secondTokenAmounts[index]}
+      {tokenMetaList[1] ? (
+        <div className="border border-solid text-gray-500 cursor-not-allowed bg-neutral-200 border-r-0 border-b-0 border-gray-400 flex justify-between items-center px-2 w-80">
+          {formatCurrencyAmount(parsedTokenAmounts[1][index], tokenMetaList[1])}
         </div>
-      )}
+      ) : null}
       <div
-        className={`border px-2 justify-center font-medium text-lg  cursor-pointer border-solid  border-b-0 border-gray-400 outline-none :focus:outline-none  flex items-center`}
+        className={`w-12 justify-center  cursor-pointer border  border-b-0 border-gray-400 m-0 flex items-center`}
       >
         <IconoirDeleteCircledOutline onClick={() => onRemove(index)} />
       </div>

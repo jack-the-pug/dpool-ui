@@ -21,6 +21,7 @@ specifiers:
   react-dom: ^18.0.0
   react-router-dom: '6'
   react-toastify: ^9.0.3
+  recoil: ^0.7.4
   tailwindcss: ^3.0.24
   typescript: ^4.6.3
   vite: ^2.9.9
@@ -42,6 +43,7 @@ dependencies:
   react-dom: 18.1.0_react@18.1.0
   react-router-dom: 6.3.0_react-dom@18.1.0+react@18.1.0
   react-toastify: 9.0.3_react-dom@18.1.0+react@18.1.0
+  recoil: 0.7.4_react-dom@18.1.0+react@18.1.0
 
 devDependencies:
   '@types/react': 18.0.9
@@ -1790,6 +1792,10 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
+  /hamt_plus/1.0.2:
+    resolution: {integrity: sha512-t2JXKaehnMb9paaYA7J0BX8QQAY8lwfQ9Gjf4pg/mk4krt+cmwmU652HOoWonf+7+EQV97ARPMhhVgU1ra2GhA==}
+    dev: false
+
   /has-flag/3.0.0:
     resolution: {integrity: sha1-tdRU3CGZriJWmfNGfloH87lVuv0=}
     engines: {node: '>=4'}
@@ -2200,6 +2206,23 @@ packages:
     dependencies:
       picomatch: 2.3.1
     dev: true
+
+  /recoil/0.7.4_react-dom@18.1.0+react@18.1.0:
+    resolution: {integrity: sha512-sCXvQGMfSprkNU4ZRkJV4B0qFQSURJMgsICqY1952WRlg66NMwYqi6n67vhnhn0qw4zHU1gHXJuMvRDaiRNFZw==}
+    peerDependencies:
+      react: '>=16.13.1'
+      react-dom: '*'
+      react-native: '*'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+      react-native:
+        optional: true
+    dependencies:
+      hamt_plus: 1.0.2
+      react: 18.1.0
+      react-dom: 18.1.0_react@18.1.0
+    dev: false
 
   /regenerator-runtime/0.13.9:
     resolution: {integrity: sha512-p3VT+cOEgxFsRRA9X4lkI1E+k2/CtnKtU4gcxyaCUreilL/vqI6CdZ3wxVUx3UOUg+gnUOQQcRI7BmSI656MYA==}

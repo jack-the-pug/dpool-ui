@@ -9,9 +9,17 @@ export function isEmptyObject(obj: { [key: string]: any }): boolean {
   return true
 }
 
+export function parsed2NumberString(
+  str: string | number | null | undefined
+): string {
+  if (!str) return '0'
+  const parsedNumber = Number(str)
+  return isNaN(parsedNumber) ? '0' : parsedNumber.toString()
+}
+
 export function isLegalPoolRow(profile: PoolRow): boolean {
   if (!profile) return false
-  if (typeof profile.baseTokenAmount !== 'number') return false
-  if (profile.baseTokenAmount <= 0) return false
+  const amount = profile.userInputAmount
+  if (!amount || isNaN(Number(amount))) return false
   return utils.isAddress(profile.address)
 }

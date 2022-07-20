@@ -30,7 +30,7 @@ export function Dialog(props: TDialogProps) {
     <>
       {visible ? (
         <div
-          className="fixed w-screen h-screen top-0 left-0 opacity-40"
+          className="fixed w-screen h-screen top-0 left-0 opacity-40 z-30"
           style={{ background: 'rgba(0,0,0,0.8)' }}
           onClick={() => onClose?.()}
         ></div>

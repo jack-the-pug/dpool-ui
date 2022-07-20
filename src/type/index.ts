@@ -2,8 +2,7 @@ import { BigNumber } from 'ethers'
 
 export interface PoolRow {
   address: string
-  baseTokenAmount: number
-  name: string
+  userInputAmount: string
 }
 
 export interface TokenMeta {
@@ -36,9 +35,9 @@ export type PoolCreateCallData = [
   string, // name
   string, // token
   string, // distributor
-  boolean, // escrow
-  string[], // claimer
-  string[], // amount
+  boolean, // isEscrow
+  string[], // claimers
+  BigNumber[], // amounts
   number, // startTime
   number // deadline
 ]
@@ -51,7 +50,6 @@ export interface BasePool {
   distributor: string
   token: string
   name: string
-  owner: string
   startTime: number
   deadline: number
   escrowedAmount: BigNumber

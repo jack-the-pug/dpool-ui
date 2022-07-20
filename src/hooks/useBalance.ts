@@ -1,23 +1,14 @@
-import { Web3ReactHooks } from "@web3-react/core"
-import { BigNumber, utils } from "ethers"
-import { useState, useEffect } from "react"
-
-export function useBalance(
-    provider: ReturnType<Web3ReactHooks['useProvider']>,
-    account?: string,
-  ): BigNumber | undefined {
-    const [balance, setBalance] = useState<BigNumber | undefined>()
-    useEffect(() => {
-      if (provider && account) {
-        let stale = false
-        provider.getBalance(account).then(b => {
-            setBalance(b)
-        })
-        return () => {
-          stale = true
-          setBalance(undefined)
-        }
-      }
-    }, [provider, account])
-    return balance
-  }
+import { BigNumber, utils } from 'ethers'
+import { useState, useEffect } from 'react'
+import { hooks as metaMaskHooks } from '../connectors/metaMask'
+const { useProvider } = metaMaskHooks
+export function useBalance(account: string | undefined): BigNumber | undefined {
+  const provider = useProvider()
+  const [balance, setBalance] = useState<BigNumber>()
+  useEffect(() => {
+    if (provider && account) {
+      provider.getBalance(account).then(setBalance)
+    }
+  }, [provider, account])
+  return balance
+}

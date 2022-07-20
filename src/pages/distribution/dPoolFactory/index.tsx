@@ -1,5 +1,5 @@
 import { BigNumber, ContractReceipt, ethers } from 'ethers'
-import { useCallback, useMemo } from 'react'
+import { useCallback } from 'react'
 import { hooks as metaMaskHooks } from '../../../connectors/metaMask'
 import useDPoolFactory from '../../../hooks/useDPoolFactory'
 import { chains, dPoolFactoryABI } from '../../../constants'
@@ -19,7 +19,8 @@ export default function dPoolFactory() {
   const dPoolFactory = useDPoolFactory()
   const { dPoolAddress, setDPoolAddress, getDPoolAddressByAccount } =
     useDPoolAddress()
-  const [retrievePoolMsg, setRetrivePoolMsg] = useState<string>('Retrieve dPool')
+  const [retrievePoolMsg, setRetrievePoolMsg] =
+    useState<string>('Retrieve dPool')
   const [createDPoolState, setCreateDPoolState] = useState<ActionState>(
     ActionState.WAIT
   )
@@ -56,18 +57,17 @@ export default function dPoolFactory() {
   }, [dPoolFactory, account, chainId])
 
   const findMyPool = useCallback(async () => {
-    if (!dPoolFactory) {
-      toast.error(`Unsupported chain: ${chainId}`)
-      return
-    }
     if (!account || !isAddress(account) || !chainId) {
       toast.error(`Please connect your wallet first`)
       return
     }
+    if (!dPoolFactory) {
+      toast.error(`Unsupported chain: ${chainId}`)
+      return
+    }
     const address = await getDPoolAddressByAccount(account)
-    console.log('address', address)
     if (!address || !isAddress(address) || BigNumber.from(address).eq(0)) {
-      setRetrivePoolMsg('Pool Not Found')
+      setRetrievePoolMsg('Pool Not Found')
       return
     } else {
       setTempDPoolAddress(address)
@@ -78,10 +78,13 @@ export default function dPoolFactory() {
     return (
       <div className="flex flex-col items-center">
         <p>
-          Congrats! Your dedicated dPool contract is deployed: <AddressLink address={tempDPoolAddress} />
+          Congrats! Your dedicated dPool contract is deployed:{' '}
+          <AddressLink address={tempDPoolAddress} />
         </p>
         <div
-          onClick={() => setDPoolAddress(tempDPoolAddress)}
+          onClick={() => {
+            setDPoolAddress(tempDPoolAddress)
+          }}
           className="text-green-500 cursor-pointer border-b border-green-500 my-4"
         >
           Get started -&gt;

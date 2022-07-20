@@ -13,14 +13,23 @@ import {
 import { isLegalPoolRow } from '../../utils/verify'
 import PoolSetting from './PoolSetting'
 import { Profile } from './ProfileForm'
-import TokensSelect, { TokenMetaList } from './Token'
+import PoolHeader from './PoolHeader'
 import CreatePoolConfirm from './CreatePoolConfirm'
-import { Pool } from '../pool/PoolDetail'
 import useTokenMeta from '../../hooks/useTokenMeta'
 
 import TextareaMode from './TextareaMode'
+import useDPoolAddress from '../../hooks/useDPoolAddress'
+import { toast } from 'react-toastify'
 
-export type TPoolRow = PoolRow & { key?: number | string }
+import DPoolFactory from './dPoolFactory/index'
+import { isAddress } from 'ethers/lib/utils'
+import { Pool } from '../pool/PoolDetail'
+
+import { formatCurrencyAmount, parsed2NumberString } from '../../utils/number'
+
+export type TPoolRow = PoolRow & {
+  key?: number | string
+}
 
 export enum DistributionType {
   Pull = 'pull',
@@ -34,11 +43,10 @@ export interface PoolConfig {
   date: [number, number]
 }
 
-const creatPoolEmptyItem = () => ({
-  name: '',
+const createPoolEmptyItem = (): TPoolRow => ({
   address: '',
-  baseTokenAmount: 0,
-  key: Date.now(),
+  userInputAmount: '',
+  key: `${Date.now()}-${Math.random()}`,
 })
 
 const { useAccount, useChainId } = metaMaskHooks
@@ -46,14 +54,89 @@ const { useAccount, useChainId } = metaMaskHooks
 export default function PoolsList() {
   usePageClose()
   const account = useAccount()
+  const chainId = useChainId()
   const { getToken } = useTokenMeta()
-  const [tokenMetaList, setTokenMetaList] = useState<TokenMetaList>([undefined])
-  const [poolName, setPoolName] = useState<string>('Distribution')
-  const [poolList, setPoolList] = useState<TPoolRow[]>([creatPoolEmptyItem()])
-  const [textarea, setTextarea] = useState<string>('')
+  const { isOwner, dPoolAddress } = useDPoolAddress()
+  const [dPoolFactoryVisible, setDPoolFactoryVisible] = useState<boolean>(false)
 
-  const baseTokenMeta = useMemo(() => tokenMetaList[0], [tokenMetaList[0]])
-  const secondTokenMeta = useMemo(() => tokenMetaList[1], [tokenMetaList[1]])
+  const [poolName, setPoolName] = useState<string>('Distribution')
+  const [tableHeaderInputList, setTableHeaderInputList] = useState<string[]>([])
+  const [tokenMetaList, setTokenMetaList] = useState<TokenMeta[]>([])
+  // setDefault token
+  useEffect(() => {
+    getToken('0x0000000000000000000000000000000000000000').then(
+      (token) => token && setTokenMetaList([token])
+    )
+  }, [chainId])
+  const [poolList, setPoolList] = useState<TPoolRow[]>([createPoolEmptyItem()])
+
+  const isPercentMode = useMemo(() => {
+    return !!tableHeaderInputList[0] && !isNaN(Number(tableHeaderInputList[0]))
+  }, [tableHeaderInputList[0]])
+
+  const userInputTotal: BigNumber = useMemo(
+    () =>
+      poolList.reduce(
+        (pre, cur) =>
+          pre.add(
+            utils.parseUnits(
+              parsed2NumberString(cur.userInputAmount),
+              tokenMetaList[0]?.decimals
+            )
+          ),
+        BigNumber.from(0)
+      ),
+    [poolList, tokenMetaList[0]]
+  )
+
+  const parsedTokenAmounts: BigNumber[][] = useMemo(() => {
+    /**
+     *  first column:
+     *  tableHeaderInputList[0] has value ? percent mode : amount mode
+     *  amount mode: user input number is token amount
+     *  percent mode: user input number is percentage.   ActualTokenNumber = inputNumber / sumOfEachRowInputNumber * tableHeaderInputList[0]
+     */
+    const baseAmountTotal = utils.parseUnits(
+      parsed2NumberString(tableHeaderInputList[0]),
+      tokenMetaList[0]?.decimals
+    )
+    const tokenAmounts = Array(tokenMetaList.length)
+    tokenAmounts[0] = poolList.map((row) => {
+      const baseAmount = utils.parseUnits(
+        parsed2NumberString(row.userInputAmount),
+        tokenMetaList[0]?.decimals
+      )
+      return isPercentMode && userInputTotal.gt(0)
+        ? baseAmount.mul(baseAmountTotal).div(userInputTotal)
+        : baseAmount
+    })
+    // if has second token
+    if (tokenMetaList[1]) {
+      const totalAmount = utils.parseUnits(
+        parsed2NumberString(tableHeaderInputList[1]),
+        tokenMetaList[1].decimals
+      )
+      tokenAmounts[1] = poolList.map((row) => {
+        const baseAmount = utils.parseUnits(
+          parsed2NumberString(row.userInputAmount),
+          tokenMetaList[0]?.decimals
+        )
+        return userInputTotal.gt(0)
+          ? baseAmount.mul(totalAmount).div(userInputTotal)
+          : BigNumber.from(0)
+      })
+    }
+    return tokenAmounts
+  }, [tokenMetaList, tableHeaderInputList, poolList, isPercentMode])
+
+  // This total maybe have accuracy loss
+  const parsedTokenAmountsTotal = useMemo(() => {
+    return parsedTokenAmounts.map((amounts) =>
+      amounts.reduce((pre, cur) => pre.add(cur), BigNumber.from(0))
+    )
+  }, [parsedTokenAmounts])
+
+  const [textarea, setTextarea] = useState<string>('')
   const [poolConfig, setPoolConfig] = useState<PoolConfig>({
     isFundNow: true,
     distributionType: DistributionType.Push,
@@ -65,119 +148,40 @@ export default function PoolsList() {
   })
 
   const [errMsg, setErrMsg] = useState<string>('')
-
   const [isTextareaMode, setIsTextareaMode] = useState(false)
-
-  const baseTotalAmount: BigNumber = useMemo(() => {
-    if (!baseTokenMeta || !baseTokenMeta.decimals) return BigNumber.from(0)
-    return poolList.reduce((pre: BigNumber, cur) => {
-      if (!cur.baseTokenAmount) return pre
-      return pre.add(
-        BigNumber.from(
-          utils.parseUnits(
-            cur.baseTokenAmount.toString(),
-            baseTokenMeta.decimals
-          )
-        )
-      )
-    }, BigNumber.from(0))
-  }, [poolList, baseTokenMeta])
-  const [secondTokenAmounts, setSecondTokenAmounts] = useState<number[]>([])
-  const [secondTokenTotalAmount, setSecondTokenTotalAmount] =
-    useState<number>(0)
-
-  // add new token
-  function onAddTokenCallBack() {
-    setSecondTokenTotalAmount(
-      Number(utils.formatUnits(baseTotalAmount, baseTokenMeta?.decimals))
-    )
-    const amounts = poolList.map((col) => col.baseTokenAmount)
-    setSecondTokenAmounts(amounts)
-  }
-  // remove token
-  function onRemoveTokenCallBack() {
-    setSecondTokenAmounts([])
-  }
 
   // distribute pool again
   const initPool = useCallback(async () => {
     const poolDetail = localStorage.getItem('distributeAgainData')
     if (!poolDetail) return
     const poolDetailData = JSON.parse(poolDetail) as Pool
-    const {
-      claimers,
-      baseToken: _baseToken,
-      baseTokenAmounts,
-      secondToken: _secondToken,
-      secondTokenAmounts,
-    } = poolDetailData
-    const baseToken: TokenMeta = (await getToken(_baseToken))!
+    const { claimers, amounts, token } = poolDetailData
+    const tokenMeta: TokenMeta = (await getToken(token))!
     const poolRows: TPoolRow[] = []
-    const tokenList = [baseToken]
+    const tokenList = [tokenMeta]
     for (let i = 0; i < claimers.length; i++) {
       poolRows.push({
         address: claimers[i],
-        baseTokenAmount: parseFloat(
-          utils.formatUnits(baseTokenAmounts[i], baseToken.decimals)
-        ),
-        name: '',
+        userInputAmount: utils.formatUnits(amounts[i], tokenMeta.decimals),
         key: claimers[i],
       })
     }
-    if (_secondToken && secondTokenAmounts) {
-      const secondToken = (await getToken(_secondToken))!
-      const secondTokenTotalAmount = parseFloat(
-        utils.formatUnits(
-          secondTokenAmounts.reduce(
-            (pre, cur) => pre.add(cur),
-            BigNumber.from(0)
-          ),
-          secondToken.decimals
-        )
-      )
-      tokenList.push(secondToken)
-      setSecondTokenTotalAmount(secondTokenTotalAmount)
+    setTokenMetaList(tokenList)
+    if (poolRows.length) {
+      setPoolList(poolRows)
+    } else {
+      setPoolList([createPoolEmptyItem()])
     }
-    setTokenMetaList(tokenList as TokenMetaList)
-    setPoolList(poolRows)
+
     localStorage.removeItem('distributeAgainData')
   }, [])
   useEffect(() => {
     initPool()
   }, [])
 
-  useEffect(() => {
-    if (!baseTokenMeta || !secondTokenMeta) return
-    const amounts = poolList.map((col) => {
-      if (baseTotalAmount.eq(0)) return 0
-      const formatBaseAmount = utils.parseUnits(
-        col.baseTokenAmount.toString(),
-        baseTokenMeta.decimals
-      )
-      const formatSecontTokenTotoalAmount = utils.parseUnits(
-        secondTokenTotalAmount ? secondTokenTotalAmount.toString() : '0',
-        secondTokenMeta.decimals
-      )
-
-      const value = formatBaseAmount
-        .mul(formatSecontTokenTotoalAmount)
-        .div(baseTotalAmount)
-
-      return parseFloat(utils.formatUnits(value, secondTokenMeta.decimals))
-    })
-
-    setSecondTokenAmounts(amounts)
-  }, [
-    secondTokenTotalAmount,
-    poolList,
-    baseTotalAmount,
-    baseTokenMeta,
-    secondTokenMeta,
-  ])
-
   const scrollToViewDiv = useRef<HTMLDivElement | null>()
   const addEmptyProfile = useCallback(() => {
-    setPoolList([...poolList, creatPoolEmptyItem()])
+    setPoolList([...poolList, createPoolEmptyItem()])
     scrollToViewDiv.current?.scrollIntoView({
       behavior: 'smooth',
       block: 'center',
@@ -188,7 +192,7 @@ export default function PoolsList() {
   const removeItemFromPool = useCallback(
     (index: number) => {
       if (poolList.length === 1) {
-        setPoolList([creatPoolEmptyItem()])
+        setPoolList([createPoolEmptyItem()])
         return
       }
       const newPool = [...poolList]
@@ -197,80 +201,108 @@ export default function PoolsList() {
     },
     [poolList]
   )
-
   const onPoolItemChange = (index: number, profile: TPoolRow) => {
     setPoolList((_pool) => {
       _pool[index] = { ...profile }
       return [..._pool]
     })
   }
+  // check repeated address
+  const repeatedAddress = useMemo(() => {
+    const addressMap: Map<string, number> = new Map()
+    for (let i = 0; i < poolList.length; i++) {
+      const row = poolList[i]
+      if (!isAddress(row.address)) continue
+      const n = addressMap.get(row.address.toLowerCase()) || 1
+      if (n > 1) {
+        return row.address
+      }
+      addressMap.set(row.address.toLowerCase(), n + 1)
+    }
+    return
+  }, [poolList])
 
   // batchCreate callData
   const createPoolCallData: PoolCreateCallData[] | null = useMemo(() => {
-    if (!baseTokenMeta || !account) return null
+    if (!tokenMetaList[0] || repeatedAddress || !account) return null
+    if (!isOwner) return null
     const { isFundNow, date } = poolConfig
-    const distributor = poolConfig.distributor || account
+    const distributor = isAddress(poolConfig.distributor)
+      ? poolConfig.distributor
+      : account
     const _pool = poolList.filter((row) => isLegalPoolRow(row))
-    if (_pool.length === 0) return null
-    const poolAddressMap = new Map()
-    _pool.forEach((row) => poolAddressMap.set(row.address, row))
-    const pool = Array.from(poolAddressMap.values())
+    if (_pool.length !== parsedTokenAmounts[0].length) return null
 
+    // address must be unique
+    const poolAddressMap = new Map()
+    _pool.forEach((row) => poolAddressMap.set(row.address.toLowerCase(), row))
+
+    const pool: TPoolRow[] = Array.from(poolAddressMap.values())
+
+    // dPool contract need sort by address.
     pool.sort((a, b) => (a.address > b.address ? 1 : -1))
     const claimer = pool.map((row) => row.address)
-    const baseAmounts = pool.map((row) =>
-      utils
-        .parseUnits(row.baseTokenAmount.toString(), baseTokenMeta.decimals)
-        .toString()
-    )
-    const [startTime, endTime] = date
-    const callData: PoolCreateCallData[] = []
-    const baseCallData: PoolCreateCallData = [
-      poolName,
-      baseTokenMeta.address,
-      distributor,
-      isFundNow,
-      claimer,
-      baseAmounts,
-      startTime,
-      endTime,
-    ]
-    callData.push(baseCallData)
 
-    // if have second token
-    if (secondTokenMeta && secondTokenAmounts) {
-      const _secondTokenAmounts = secondTokenAmounts.map((amount) =>
-        utils.parseUnits(amount.toString(), secondTokenMeta.decimals).toString()
-      )
-      const secondCallData: PoolCreateCallData = [
+    const [startTime, endTime] = date
+
+    // one token. one pool.
+    const callDataList: PoolCreateCallData[] = []
+    for (let i = 0; i < tokenMetaList.length; i++) {
+      const amounts = parsedTokenAmounts[i]
+      // if table have header.should handle accuracy loss. Rest token give to first address
+      if (tableHeaderInputList[i] && !isNaN(Number(tableHeaderInputList[i]))) {
+        const totalAmount = utils.parseUnits(
+          tableHeaderInputList[i],
+          tokenMetaList[i].decimals
+        )
+        const diff = totalAmount.sub(parsedTokenAmountsTotal[i])
+        amounts[0] = amounts[0].add(diff)
+      }
+      const callData: PoolCreateCallData = [
         poolName,
-        secondTokenMeta.address,
+        tokenMetaList[i].address,
         distributor,
         isFundNow,
         claimer,
-        _secondTokenAmounts,
+        amounts,
         startTime,
         endTime,
       ]
-      callData.push(secondCallData)
+      callDataList.push(callData)
     }
-
-    return callData
+    return callDataList
   }, [
-    account,
     poolConfig,
     poolName,
     poolList,
-    baseTokenMeta,
-    secondTokenMeta,
-    secondTokenAmounts,
+    account,
+    tokenMetaList,
+    parsedTokenAmounts,
+    parsedTokenAmountsTotal,
+    tableHeaderInputList,
+    repeatedAddress,
   ])
+
+  // Total token amount of processed accuracy losses
+  const tokenTotalAmounts = useMemo(() => {
+    if (!createPoolCallData) return
+    const totalAmount: BigNumber[] = []
+    createPoolCallData.forEach((data) =>
+      totalAmount.push(
+        data[PoolCreator.Amounts].reduce(
+          (sum, cur) => sum.add(cur),
+          BigNumber.from(0)
+        )
+      )
+    )
+    return totalAmount
+  }, [createPoolCallData])
 
   const callDataCheck = useMemo(() => {
     if (!createPoolCallData) return
-    const { isFundNow, distributionType } = poolConfig
+    if (!isOwner) return
+    const { distributionType } = poolConfig
     const callData = createPoolCallData[0]
-
     const claimer = callData[PoolCreator.Claimers]
     const amounts = callData[PoolCreator.Amounts]
     const startTime = callData[PoolCreator.StartTime]
@@ -282,55 +314,86 @@ export default function PoolsList() {
     }
 
     if (!claimer.length || !amounts.length) return 'no claimers'
-    setErrMsg('')
     return true
-  }, [createPoolCallData, poolConfig])
+  }, [createPoolCallData, poolConfig, isOwner])
 
   useEffect(() => {
     if (!callDataCheck) return
     if (typeof callDataCheck === 'string') {
       setErrMsg(callDataCheck)
+    } else {
+      setErrMsg('')
     }
   }, [callDataCheck])
 
   /**
-   * textarea.table Mode switch.
-   *
+   * textarea,table Mode switch.
    */
   const poolList2textarea = useCallback(() => {
     const textarea = poolList.filter(isLegalPoolRow).reduce((pre, cur) => {
-      return `${pre}${cur.address},${cur.baseTokenAmount}\n`
+      return `${pre}${cur.address},${cur.userInputAmount}\n`
     }, '')
     setTextarea(textarea)
   }, [poolList])
+
   const textarea2poolList = useCallback(() => {
     const textByRow = textarea.split('\n')
-    const poolList: TPoolRow[] = []
+    console.log('textarea')
+    const _poolList: TPoolRow[] = []
     for (let i = 0; i < textByRow.length; i++) {
       const text = textByRow[i]
       const maybeRowMetaList = [
         text.split(':'),
         text.split(' '),
         text.split(','),
+        text.split('='),
       ]
       const rowMeta = maybeRowMetaList.find((item) => item.length === 2)
       if (!rowMeta) continue
       const [address, baseAmount] = rowMeta
-      let baseTokenAmount = parseFloat(baseAmount)
-      if (isNaN(baseTokenAmount)) {
-        baseTokenAmount = 0
+      let amount = Number(baseAmount)
+      if (isNaN(amount)) {
+        amount = 0
       }
-      const item = {
+      const item: TPoolRow = {
         address,
-        baseTokenAmount: baseTokenAmount,
-        name: '',
-        key: `${Date.now()}-${i}`,
+        userInputAmount: amount.toString(),
+        key: `${Date.now()}-${Math.random()}`,
       }
-      poolList.push(item)
+      _poolList.push(item)
     }
 
-    setPoolList(() => (poolList.length ? poolList : [creatPoolEmptyItem()]))
-  }, [textarea])
+    poolList.length > 0
+      ? setPoolList(_poolList)
+      : setPoolList([createPoolEmptyItem()])
+  }, [textarea, poolList])
+
+  useEffect(() => {
+    setDPoolFactoryVisible(() => !dPoolAddress)
+  }, [dPoolAddress])
+  useEffect(() => {
+    if (!isOwner) {
+      toast.warning(
+        ({ closeToast }) => (
+          <div>
+            <p className="break-normal">
+              You are not the owner of this dPool contract.
+            </p>
+            <span
+              className="text-green-500"
+              onClick={() => {
+                closeToast!()
+                setDPoolFactoryVisible(true)
+              }}
+            >
+              Create your own dPool -&gt;
+            </span>
+          </div>
+        ),
+        { autoClose: false }
+      )
+    }
+  }, [isOwner])
 
   const [confirmVisible, setConfirmVisible] = useState<boolean>(false)
   const onConfirm = useCallback(() => {
@@ -338,7 +401,9 @@ export default function PoolsList() {
     setConfirmVisible(true)
   }, [callDataCheck])
 
-  return (
+  return dPoolFactoryVisible ? (
+    <DPoolFactory />
+  ) : (
     <div className="flex flex-col items-center justify-center">
       <div className="w-full flex justify-center items-center">
         <input
@@ -369,42 +434,35 @@ export default function PoolsList() {
           Plain Text
         </span>
       </div>
-      {isTextareaMode ? (
-        <TextareaMode
-          textarea={textarea}
-          setTextarea={setTextarea}
-          tokenMetaList={tokenMetaList}
-          setTokenMetaList={setTokenMetaList}
-          onAddTokenCallBack={onAddTokenCallBack}
-          onRemoveTokenCallBack={onRemoveTokenCallBack}
-          secondTokenTotalAmount={secondTokenTotalAmount}
-          setSecondTokenTotalAmount={setSecondTokenTotalAmount}
-          secondTokenAmounts={secondTokenAmounts}
-          textarea2poolList={textarea2poolList}
-        />
-      ) : (
-        <div className="w-full">
-          <div className="flex  w-full  justify-between font-medium text-lg border border-solid  border-b-0 border-gray-400">
-            {/* <div>Name</div> */}
-            <div className="flex flex-1 justify-center items-center text-center ">
-              <div className="text-sm">Address</div>
-            </div>
-            <div className="flex flex-col border-l border-gray-400">
-              <div className="text-center text-sm border-b border-gray-400">
-                Amount
-              </div>
-              <div>
-                <TokensSelect
-                  tokenMetaList={tokenMetaList}
-                  setTokenMetaList={setTokenMetaList}
-                  onAddTokenCallBack={onAddTokenCallBack}
-                  onRemoveTokenCallBack={onRemoveTokenCallBack}
-                  secondTokenTotalAmount={secondTokenTotalAmount}
-                  setSecondTokenTotalAmount={setSecondTokenTotalAmount}
-                />
-              </div>
-            </div>
+
+      <div className="w-full">
+        <div className="flex  w-full  justify-between  text-base ">
+          <div className="flex flex-1 justify-center items-center text-center  border border-solid  border-b-0 border-r-0 border-gray-400">
+            <div className="w-10"></div>
+            <div className="w-96">Address</div>
           </div>
+          <div className="flex flex-col border border-b-0 border-gray-400">
+            <div className="text-center border-b border-gray-400 py-1">
+              Amount
+            </div>
+
+            <PoolHeader
+              tokenMetaList={tokenMetaList}
+              setTokenMetaList={setTokenMetaList}
+              tableHeaderInputList={tableHeaderInputList}
+              setTableHeaderInputList={setTableHeaderInputList}
+            />
+          </div>
+        </div>
+        {isTextareaMode ? (
+          <TextareaMode
+            textarea={textarea}
+            setTextarea={setTextarea}
+            textarea2poolList={textarea2poolList}
+            parsedTokenAmounts={parsedTokenAmounts}
+            tokenMetaList={tokenMetaList}
+          />
+        ) : (
           <div className="w-full">
             {poolList.map((p, index) => (
               <Profile
@@ -414,41 +472,43 @@ export default function PoolsList() {
                 index={index}
                 onRemove={removeItemFromPool}
                 onChange={onPoolItemChange}
-                hasSecondToken={!!secondTokenMeta}
-                secondTokenAmounts={secondTokenAmounts}
+                repeatedAddress={repeatedAddress}
+                parsedTokenAmounts={parsedTokenAmounts}
+                isPercentMode={isPercentMode}
+                tokenMetaList={tokenMetaList}
+                userInputTotal={userInputTotal}
               />
             ))}
           </div>
+        )}
+
+        {isTextareaMode ? (
+          <div className="w-full border-t border-gray-400"></div>
+        ) : (
           <div
             onClick={() => addEmptyProfile()}
             className="w-full cursor-cell flex items-center justify-center h-8 border border-dashed  border-gray-500"
           >
             <MaterialSymbolsAdd className="flex-1" />
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
       <PoolSetting poolConfig={poolConfig} setPoolConfig={setPoolConfig} />
 
       <div className="w-full mt-5 flex justify-between items-center">
         <div className="flex items-baseline">
           Total:
           <div className="flex flex-col font-medium mx-2">
-            <div>
-              {baseTokenMeta
-                ? utils.formatUnits(
-                    baseTotalAmount.toString(),
-                    baseTokenMeta.decimals
-                  )
-                : 0}
-              <span className="ml-2">{baseTokenMeta?.symbol}</span>
-            </div>
-
-            {secondTokenMeta && (
-              <div>
-                {secondTokenMeta ? secondTokenTotalAmount : 0}
-                <span className="ml-2">{secondTokenMeta?.symbol}</span>
-              </div>
-            )}
+            {tokenTotalAmounts &&
+              tokenTotalAmounts.map((amount, index) => (
+                <div key={'token-' + index}>
+                  {formatCurrencyAmount(amount, tokenMetaList[index])}
+                  <span className="ml-1 text-gray-500">
+                    {tokenMetaList[index]?.symbol}
+                  </span>
+                </div>
+              ))}
           </div>
         </div>
         <div>
@@ -467,13 +527,12 @@ export default function PoolsList() {
       </div>
 
       <div ref={(el) => (scrollToViewDiv.current = el)} className="h-20"></div>
-      {createPoolCallData && baseTokenMeta && confirmVisible ? (
+      {createPoolCallData && confirmVisible ? (
         <CreatePoolConfirm
           visible={confirmVisible}
           setVisible={setConfirmVisible}
           callData={createPoolCallData}
-          baseTokenMeta={baseTokenMeta}
-          secondTokenMeta={secondTokenMeta}
+          tokenMetaList={tokenMetaList}
           distributionType={poolConfig.distributionType}
         />
       ) : null}
