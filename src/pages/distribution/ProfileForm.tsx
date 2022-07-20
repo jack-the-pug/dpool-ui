@@ -67,12 +67,14 @@ export function Profile(props: TProfileProps) {
   }, [inputAmount, submit])
 
   const addressBookName = useMemo(() => {
-    if (isAddress(address) && addressBookObj[address.toLowerCase()]) {
-      return addressBookObj[address.toLowerCase()].name
-    }
+    if (!isAddress(address)) return
+    const profile = addressBookObj[address.toLowerCase()]
+    if (!profile || typeof profile !== 'object') return
+    return profile.name
   }, [addressBookObj, address])
 
   const addressErrorMsg = useMemo(() => {
+    if (!address && inputAmount) return 'Please enter address'
     if (!address) return
     if (!isAddress(address)) return 'Invalid address'
     if (
@@ -81,7 +83,7 @@ export function Profile(props: TProfileProps) {
     )
       return 'Addresses cannot be duplicated'
     return
-  }, [address, repeatedAddress])
+  }, [address, repeatedAddress, inputAmount])
 
   return (
     <form className="flex h-12">
@@ -91,8 +93,7 @@ export function Profile(props: TProfileProps) {
       <div
         className={`${
           focusInputNumber === 1 ? 'bg-gray-100' : 'bg-neutral-200'
-        } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-1 flex-col  justify-center`}
-        style={{ minWidth: '380px' }}
+        } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-1 flex-col  justify-center w-96`}
       >
         <input
           className={`${
@@ -108,14 +109,16 @@ export function Profile(props: TProfileProps) {
         />
 
         {(addressBookName || addressErrorMsg) && (
-          <div className="flex gap-4">
+          <div className="flex w-full flex-row px-2">
             {addressBookName ? (
-              <span className="text-xs px-2 font-thin italic text-gray-500">
+              <div className="text-xs px-2 font-thin italic text-gray-500">
                 {addressBookName}
-              </span>
+              </div>
             ) : null}
             {addressErrorMsg ? (
-              <div className="text-red-500 text-xs px-2">{addressErrorMsg}</div>
+              <div className="text-red-500 text-xs px-2 self-end flex-grow flex-1 text-right">
+                {addressErrorMsg}
+              </div>
             ) : null}
           </div>
         )}
@@ -124,42 +127,43 @@ export function Profile(props: TProfileProps) {
       <div
         className={`${
           focusInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
-        } border border-solid border-r-0 border-b-0 border-gray-400 flex justify-between items-center px-2 w-80 overflow-hidden`}
+        } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-between items-center px-2 w-80 overflow-hidden`}
       >
-        <div className="flex flex-col">
-          <input
-            className={`${
-              focusInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
-            } outline-none :focus:outline-none  bg-neutral-200`}
-            placeholder="amount"
-            key={props.profileKey + 'amount'}
-            type="number"
-            value={inputAmount}
-            min={0}
-            onBlur={onAmountBlur}
-            onChange={(e) => setInputAmount(e.target.value)}
-            onFocus={() => setFocusInputNumber(2)}
-          />
-          {isPercentMode && userInputTotal.gt(0) ? (
+        <input
+          className={`${
+            focusInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
+          } w-full outline-none :focus:outline-none  bg-neutral-200 items-end ${
+            isPercentMode ? 'h-3/5' : 'h-full'
+          }`}
+          placeholder="amount"
+          key={props.profileKey + 'amount'}
+          type="number"
+          value={inputAmount}
+          min={0}
+          onBlur={onAmountBlur}
+          onChange={(e) => setInputAmount(e.target.value)}
+          onFocus={() => setFocusInputNumber(2)}
+        />
+
+        {isPercentMode ? (
+          <div className="flex flex-1 justify-between w-full items-center">
             <div className="text-xs text-gray-500">
               {utils
                 .parseUnits(
                   parsed2NumberString(inputAmount),
                   tokenMetaList[0]?.decimals
                 )
-                .mul(10000)
+                .mul(10000) // Retain two decimal places
                 .div(userInputTotal)
                 .toNumber() / 100}
               %
             </div>
-          ) : null}
-        </div>
-        {isPercentMode ? (
-          <div className="text-xs text-gray-500">
-            {formatCurrencyAmount(
-              parsedTokenAmounts[0][index],
-              tokenMetaList[0]
-            )}
+            <div className="text-xs text-gray-500 cursor-not-allowed">
+              {formatCurrencyAmount(
+                parsedTokenAmounts[0][index],
+                tokenMetaList[0]
+              )}
+            </div>
           </div>
         ) : null}
       </div>

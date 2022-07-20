@@ -46,7 +46,7 @@ export interface PoolConfig {
 const createPoolEmptyItem = (): TPoolRow => ({
   address: '',
   userInputAmount: '',
-  key: Date.now(),
+  key: `${Date.now()}-${Math.random()}`,
 })
 
 const { useAccount, useChainId } = metaMaskHooks
@@ -58,33 +58,6 @@ export default function PoolsList() {
   const { getToken } = useTokenMeta()
   const { isOwner, dPoolAddress } = useDPoolAddress()
   const [dPoolFactoryVisible, setDPoolFactoryVisible] = useState<boolean>(false)
-
-  useEffect(() => {
-    setDPoolFactoryVisible(() => !dPoolAddress)
-  }, [dPoolAddress])
-  useEffect(() => {
-    if (!isOwner) {
-      toast.warning(
-        ({ closeToast }) => (
-          <div>
-            <p className="break-normal">
-              You are not the owner of this dPool contract.
-            </p>
-            <span
-              className="text-green-500"
-              onClick={() => {
-                closeToast!()
-                setDPoolFactoryVisible(true)
-              }}
-            >
-              Create your own dPool -&gt;
-            </span>
-          </div>
-        ),
-        { autoClose: false }
-      )
-    }
-  }, [isOwner])
 
   const [poolName, setPoolName] = useState<string>('Distribution')
   const [tableHeaderInputList, setTableHeaderInputList] = useState<string[]>([])
@@ -194,7 +167,12 @@ export default function PoolsList() {
       })
     }
     setTokenMetaList(tokenList)
-    setPoolList(poolRows)
+    if (poolRows.length) {
+      setPoolList(poolRows)
+    } else {
+      setPoolList([createPoolEmptyItem()])
+    }
+
     localStorage.removeItem('distributeAgainData')
   }, [])
   useEffect(() => {
@@ -253,11 +231,11 @@ export default function PoolsList() {
       ? poolConfig.distributor
       : account
     const _pool = poolList.filter((row) => isLegalPoolRow(row))
-    if (_pool.length !== poolList.length) return null
+    if (_pool.length === 0) return null
 
     // address must be unique
     const poolAddressMap = new Map()
-    _pool.forEach((row) => poolAddressMap.set(row.address, row))
+    _pool.forEach((row) => poolAddressMap.set(row.address.toLowerCase(), row))
 
     const pool: TPoolRow[] = Array.from(poolAddressMap.values())
 
@@ -335,7 +313,6 @@ export default function PoolsList() {
     }
 
     if (!claimer.length || !amounts.length) return 'no claimers'
-    setErrMsg('')
     return true
   }, [createPoolCallData, poolConfig, isOwner])
 
@@ -343,6 +320,8 @@ export default function PoolsList() {
     if (!callDataCheck) return
     if (typeof callDataCheck === 'string') {
       setErrMsg(callDataCheck)
+    } else {
+      setErrMsg('')
     }
   }, [callDataCheck])
 
@@ -355,6 +334,7 @@ export default function PoolsList() {
     }, '')
     setTextarea(textarea)
   }, [poolList])
+
   const textarea2poolList = useCallback(() => {
     const textByRow = textarea.split('\n')
     const _poolList: TPoolRow[] = []
@@ -376,18 +356,48 @@ export default function PoolsList() {
       const item: TPoolRow = {
         address,
         userInputAmount: amount.toString(),
-        key: `${Date.now()}-${i}`,
+        key: `${Date.now()}-${Math.random()}`,
       }
       _poolList.push(item)
     }
-    setPoolList(() => (poolList.length ? _poolList : [createPoolEmptyItem()]))
-  }, [textarea, isPercentMode, poolList])
+    poolList.length
+      ? setPoolList(poolList)
+      : setPoolList([createPoolEmptyItem()])
+  }, [textarea, poolList])
+
+  useEffect(() => {
+    setDPoolFactoryVisible(() => !dPoolAddress)
+  }, [dPoolAddress])
+  useEffect(() => {
+    if (!isOwner) {
+      toast.warning(
+        ({ closeToast }) => (
+          <div>
+            <p className="break-normal">
+              You are not the owner of this dPool contract.
+            </p>
+            <span
+              className="text-green-500"
+              onClick={() => {
+                closeToast!()
+                setDPoolFactoryVisible(true)
+              }}
+            >
+              Create your own dPool -&gt;
+            </span>
+          </div>
+        ),
+        { autoClose: false }
+      )
+    }
+  }, [isOwner])
 
   const [confirmVisible, setConfirmVisible] = useState<boolean>(false)
   const onConfirm = useCallback(() => {
     if (typeof callDataCheck !== 'boolean') return
     setConfirmVisible(true)
   }, [callDataCheck])
+
   return dPoolFactoryVisible ? (
     <DPoolFactory />
   ) : (
@@ -425,14 +435,17 @@ export default function PoolsList() {
       <div className="w-full">
         <div className="flex  w-full  justify-between font-medium text-lg border border-solid  border-b-0 border-gray-400">
           {/* <div>Name</div> */}
-          <div className="flex flex-1 justify-center items-center text-center ">
-            <div className="text-sm">Address</div>
+          <div
+            className="flex flex-1 justify-center items-center text-center"
+            style={{ width: '26.25rem' }}
+          >
+            <div className="text-sm  px-2">Address</div>
           </div>
           <div className="flex flex-col border-l border-gray-400">
-            <div className="text-center text-sm border-b border-gray-400">
+            <div className="text-center text-sm border-b border-gray-400 py-1">
               Amount
             </div>
-            <div>
+            <div className="">
               <PoolHeader
                 tokenMetaList={tokenMetaList}
                 setTokenMetaList={setTokenMetaList}

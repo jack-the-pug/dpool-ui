@@ -10,6 +10,7 @@ export function parsed2NumberString(
 }
 
 const kilobitsReg = /\B(?=(\d{3})+(?!\d))/g
+
 export const formatCurrencyAmount = (
   amount: BigNumber,
   tokenMeta?: TokenMeta,

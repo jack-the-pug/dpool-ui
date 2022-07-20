@@ -84,13 +84,13 @@ export default function TokenSelect(props: TTokenSelectProps) {
     })
   }, [tokenAddress, account, chainId])
   return (
-    <div className="justify-right flex">
-      <span
+    <>
+      <div
         onClick={() => setDialogVisible(true)}
-        className="cursor-pointer bg-white ring-1 ring-gray-400  shadow-inner ring-offset-white px-2"
+        className="cursor-pointer h-full  border-1 border-gray-400 border-offset-white px-2"
       >
         {tokenMeta ? tokenMeta.symbol : '...'}
-      </span>
+      </div>
       <Dialog visible={dialogVisible} onClose={() => setDialogVisible(false)}>
         <div className="flex flex-col" style={{ minWidth: '380px' }}>
           <h1 className="flex justify-between items-center ">
@@ -141,6 +141,6 @@ export default function TokenSelect(props: TTokenSelectProps) {
           )}
         </div>
       </Dialog>
-    </div>
+    </>
   )
 }
