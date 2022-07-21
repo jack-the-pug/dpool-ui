@@ -1,79 +1,113 @@
-import { utils } from 'ethers'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { MaterialSymbolsAdd } from '../../components/icon'
 import SetProfile from './SetProfile'
-export interface AddressBookItem {
-  address: string
-  name: string
-}
+import {
+  AddressBookRow,
+  getBook,
+  updateBookRow,
+  deleteBookRow,
+} from '../../stores/addressBook'
+import { toast } from 'react-toastify'
+import TextareaMode from './TextareaMode'
+import { isAddress } from 'ethers/lib/utils'
+const createEmptyRow = () => ({
+  name: '',
+  address: '',
+  id: '',
+})
 
 export default function AddressBook() {
-  const [addressBook, setAddressBook] = useState<AddressBookItem[]>([])
+  const [addressBook, setAddressBook] = useState<AddressBookRow[]>([
+    createEmptyRow(),
+  ])
 
-  useEffect(() => {
-    if (addressBook.length === 0) return
-    const addressBookObj: { [key: string]: AddressBookItem } = {}
-    addressBook.forEach((profile: AddressBookItem) => {
-      if (!utils.isAddress(profile.address)) return
-      addressBookObj[profile.address.toLowerCase()] = profile
+  const [isTextMode, setIsTextMode] = useState<boolean>(false)
+
+  const getAddressBook = () => {
+    getBook().then((res) => {
+      if (res.length) {
+        console.log('localDb', res)
+        setAddressBook(res)
+      }
     })
-    localStorage.setItem('ADDRESS_BOOK', JSON.stringify(addressBookObj))
-  }, [addressBook])
-
-  const addressBookObj = useMemo(
-    () => JSON.parse(localStorage.getItem('ADDRESS_BOOK') || '{}'),
-    []
-  )
-
+  }
   useEffect(() => {
-    const addressBook: AddressBookItem[] = Object.values(addressBookObj)
-    const books =
-      addressBook && addressBook.length
-        ? addressBook
-        : [{ name: '', address: '' }]
-    setAddressBook(books)
-  }, [addressBookObj])
+    getAddressBook()
+  }, [])
 
   const addEmptyProfile = useCallback(() => {
-    setAddressBook([...addressBook, { name: '', address: '' }])
+    setAddressBook([...addressBook, createEmptyRow()])
   }, [addressBook])
 
   const onSetProfile = useCallback(
-    (profile: AddressBookItem, index: number) => {
-      setAddressBook((_addressBook) => {
-        _addressBook[index] = { ...profile }
-        return [..._addressBook]
-      })
+    async (profile: AddressBookRow, index: number) => {
+      const preProfile = addressBook[index]
+      if (preProfile && isAddress(preProfile.address)) {
+        await deleteBookRow(preProfile.address)
+      }
+      updateBookRow({ ...profile, id: profile.address.toLowerCase() })
+        .then(() => getAddressBook())
+        .catch(() => toast.error('Duplicate Addresses'))
     },
     [addressBook]
   )
-  const onRemoveProfile = useCallback(
-    (index: number) => {
-      const _addressBook = [...addressBook]
-      _addressBook.splice(index, 1)
 
-      setAddressBook(_addressBook)
+  const onRemoveProfile = useCallback(
+    (address: string) => {
+      deleteBookRow(address).then(() => getAddressBook())
     },
     [addressBook]
   )
 
   return (
     <div className="w-full flex flex-1 flex-col items-center">
-      {addressBook.map((profile, index) => (
-        <SetProfile
-          key={profile.address + Math.random()}
-          profile={profile}
-          setProfile={onSetProfile}
-          index={index}
-          onRemove={onRemoveProfile}
-        />
-      ))}
-      <div
-        onClick={() => addEmptyProfile()}
-        className="flex w-full items-center justify-center h-8 border cursor-pointer  border-dashed  border-gray-500 rounded-bl-sm rounded-br-sm"
-      >
-        <MaterialSymbolsAdd className="flex-1" />
+      <div className="w-full">
+        <div className="flex flex-row items-center mb-2 w-full">
+          <span className={`${isTextMode ? 'opacity-30' : 'text-green-500'}`}>
+            Table View
+          </span>
+          <label className="switch mx-2">
+            <input
+              onChange={(e) => {
+                setIsTextMode(e.target.checked)
+              }}
+              type="checkbox"
+              checked={isTextMode}
+            />
+            <span className="slider rounded-lg"></span>
+          </label>
+
+          <span className={`${isTextMode ? 'text-green-500' : 'opacity-30'}`}>
+            Plain Text
+          </span>
+        </div>
       </div>
+
+      {isTextMode ? (
+        <TextareaMode
+          addressBook={addressBook}
+          setAddressBook={setAddressBook}
+        />
+      ) : (
+        <div>
+          {addressBook.map((profile, index) => (
+            <SetProfile
+              key={profile.address + Math.random()}
+              profile={profile}
+              setProfile={onSetProfile}
+              index={index}
+              onRemove={onRemoveProfile}
+            />
+          ))}
+
+          <div
+            onClick={() => addEmptyProfile()}
+            className="flex w-full items-center justify-center h-8 border cursor-pointer  border-dashed  border-gray-500 rounded-bl-sm rounded-br-sm"
+          >
+            <MaterialSymbolsAdd className="flex-1" />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -362,8 +362,7 @@ export default function PoolsList() {
       }
       _poolList.push(item)
     }
-
-    poolList.length > 0
+    _poolList.length > 0
       ? setPoolList(_poolList)
       : setPoolList([createPoolEmptyItem()])
   }, [textarea, poolList])

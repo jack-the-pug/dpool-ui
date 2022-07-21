@@ -23,6 +23,7 @@ import ApproveTokens, {
   ApproveToken,
 } from '../../components/token/ApproveTokens'
 import { formatCurrencyAmount } from '../../utils/number'
+import useAddressBook from '../../hooks/useAddressBook'
 
 export type Pool = BasePool & {
   state: PoolState
@@ -97,7 +98,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
   const navigate = useNavigate()
   const { dPoolAddress, isOwner } = useDPoolAddress()
   const { getToken } = useTokenMeta()
-
+  const { addressName } = useAddressBook()
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const account = useAccount()
   const chainId = useChainId()
@@ -445,7 +446,14 @@ export function PoolDetail({ poolId }: { poolId: string }) {
             index + 1
           )}
         </td>
-        <td className="">{claimer.address}</td>
+        <td className="">
+          {claimer.address}
+          {addressName(claimer.address) ? (
+            <span className="text-sm text-gray-500 px-1">
+              ({addressName(claimer.address)})
+            </span>
+          ) : null}
+        </td>
 
         <RenderClaim claimer={claimer} index={index} />
       </tr>

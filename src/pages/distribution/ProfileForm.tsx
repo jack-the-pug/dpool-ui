@@ -2,6 +2,7 @@ import { BigNumber, utils } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { IconoirDeleteCircledOutline } from '../../components/icon'
+import useAddressBook from '../../hooks/useAddressBook'
 import { PoolRow, TokenMeta } from '../../type/index'
 import { formatCurrencyAmount, parsed2NumberString } from '../../utils/number'
 import { TPoolRow } from './CreatePool'
@@ -31,7 +32,7 @@ export function Profile(props: TProfileProps) {
     userInputTotal,
     repeatedAddress: repeatedAddress,
   } = props
-
+  const { addressName } = useAddressBook()
   const [address, setAddress] = useState<string>(_profile.address)
   const [inputAmount, setInputAmount] = useState<string>(
     _profile.userInputAmount
@@ -65,13 +66,6 @@ export function Profile(props: TProfileProps) {
   const onAmountBlur = useCallback(() => {
     setFocusInputNumber(-1)
   }, [inputAmount, submit])
-
-  const addressBookName = useMemo(() => {
-    if (!isAddress(address)) return
-    const profile = addressBookObj[address.toLowerCase()]
-    if (!profile || typeof profile !== 'object') return
-    return profile.name
-  }, [addressBookObj, address])
 
   const addressErrorMsg = useMemo(() => {
     if (!address && inputAmount) return 'Please enter address'
@@ -109,11 +103,11 @@ export function Profile(props: TProfileProps) {
           name="address"
         />
 
-        {(addressBookName || addressErrorMsg) && (
+        {(addressName(address) || addressErrorMsg) && (
           <div className="flex w-full flex-row px-2">
-            {addressBookName ? (
+            {addressName(address) ? (
               <div className="text-xs font-thin italic text-gray-500">
-                {addressBookName}
+                {addressName(address)}
               </div>
             ) : null}
             {addressErrorMsg ? (
