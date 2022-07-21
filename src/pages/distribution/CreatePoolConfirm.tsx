@@ -15,13 +15,11 @@ import {
 } from '../../type'
 import { DistributionType, PoolConfig } from './CreatePool'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
-import { isAddress } from 'ethers/lib/utils'
 import { useNavigate } from 'react-router-dom'
 import { dPoolABI } from '../../constants'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import ApproveTokens from '../../components/token/ApproveTokens'
 import { formatCurrencyAmount } from '../../utils/number'
-import { AddressBookRow } from '../../stores/addressBook'
 import useAddressBook from '../../hooks/useAddressBook'
 
 interface PoolMeta {

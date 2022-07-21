@@ -14,9 +14,9 @@ specifiers:
   '@web3-react/walletconnect': 8.0.34-beta.0
   autoprefixer: ^10.4.7
   date-fns: ^2.28.0
-  dexie: ^3.2.2
   dialog-polyfill: ^0.5.6
   ethers: ^5.6.9
+  idb-keyval: ^6.2.0
   postcss: ^8.4.13
   react: ^18.0.0
   react-dom: ^18.0.0
@@ -24,7 +24,7 @@ specifiers:
   react-toastify: ^9.0.3
   recoil: ^0.7.4
   tailwindcss: ^3.0.24
-  typescript: ^4.6.3
+  typescript: 4.7.4
   vite: ^2.9.9
   vite-plugin-replace: ^0.1.1
   vitest: ^0.16.0
@@ -38,9 +38,9 @@ dependencies:
   '@web3-react/types': 8.0.19-beta.0_react@18.1.0
   '@web3-react/walletconnect': 8.0.34-beta.0_04e83cc38a780e86ebd6f0a08dd1e532
   date-fns: 2.28.0
-  dexie: 3.2.2
   dialog-polyfill: 0.5.6
   ethers: 5.6.9
+  idb-keyval: 6.2.0
   react: 18.1.0
   react-dom: 18.1.0_react@18.1.0
   react-router-dom: 6.3.0_react-dom@18.1.0+react@18.1.0
@@ -55,7 +55,7 @@ devDependencies:
   autoprefixer: 10.4.7_postcss@8.4.13
   postcss: 8.4.13
   tailwindcss: 3.0.24
-  typescript: 4.6.4
+  typescript: 4.7.4
   vite: 2.9.9
   vite-plugin-replace: 0.1.1_vite@2.9.9
   vitest: 0.16.0
@@ -1394,11 +1394,6 @@ packages:
       minimist: 1.2.6
     dev: true
 
-  /dexie/3.2.2:
-    resolution: {integrity: sha512-q5dC3HPmir2DERlX+toCBbHQXW5MsyrFqPFcovkH9N2S/UW/H3H5AWAB6iEOExeraAu+j+zRDG+zg/D7YhH0qg==}
-    engines: {node: '>=6.0'}
-    dev: false
-
   /dialog-polyfill/0.5.6:
     resolution: {integrity: sha512-ZbVDJI9uvxPAKze6z146rmfUZjBqNEwcnFTVamQzXH+svluiV7swmVIGr7miwADgfgt1G2JQIytypM9fbyhX4w==}
     dev: false
@@ -1834,6 +1829,12 @@ packages:
       hash.js: 1.1.7
       minimalistic-assert: 1.0.1
       minimalistic-crypto-utils: 1.0.1
+    dev: false
+
+  /idb-keyval/6.2.0:
+    resolution: {integrity: sha512-uw+MIyQn2jl3+hroD7hF8J7PUviBU7BPKWw4f/ISf32D4LoGu98yHjrzWWJDASu9QNrX10tCJqk9YY0ClWm8Ng==}
+    dependencies:
+      safari-14-idb-fix: 3.0.0
     dev: false
 
   /ieee754/1.2.1:
@@ -2272,6 +2273,10 @@ packages:
       queue-microtask: 1.2.3
     dev: true
 
+  /safari-14-idb-fix/3.0.0:
+    resolution: {integrity: sha512-eBNFLob4PMq8JA1dGyFn6G97q3/WzNtFK4RnzT1fnLq+9RyrGknzYiM/9B12MnKAxuj1IXr7UKYtTNtjyKMBog==}
+    dev: false
+
   /safe-buffer/5.1.2:
     resolution: {integrity: sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==}
 
@@ -2412,8 +2417,8 @@ packages:
       is-typedarray: 1.0.0
     dev: false
 
-  /typescript/4.6.4:
-    resolution: {integrity: sha512-9ia/jWHIEbo49HfjrLGfKbZSuWo9iTMwXO+Ca3pRsSpbsMbc7/IU8NKdCZVRRBafVPGnoJeFL76ZOAA84I9fEg==}
+  /typescript/4.7.4:
+    resolution: {integrity: sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ==}
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: true

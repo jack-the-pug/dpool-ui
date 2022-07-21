@@ -1,5 +1,4 @@
-import Dexie, { Table } from 'dexie'
-
+import { values, get, del, set, setMany } from 'idb-keyval'
 export interface AddressBookRow {
   address: string
   name: string
@@ -7,36 +6,30 @@ export interface AddressBookRow {
   index: number
 }
 
-class AddressBook extends Dexie {
-  addressBook!: Table<AddressBookRow>
-  constructor() {
-    super('addressBook')
-    this.version(1).stores({
-      addressBook: '&id, &address, name, &index',
-    })
-  }
-}
-
-export const db = new AddressBook()
-
 export const getBookRow = async (id: string) => {
-  return await db.addressBook.where('id').equals(id.toLowerCase()).first()
+  return await get(id.toLowerCase())
 }
 
 export const updateBookRow = async (meta: AddressBookRow) => {
   const row = { ...meta }
   console.log('updateBookRow', row)
-  return await db.addressBook.put(row)
+  return await set(row.id.toLowerCase(), row)
 }
 
 export const deleteBookRow = async (id: string) => {
-  return await db.addressBook.delete(id.toLowerCase())
+  return await del(id.toLowerCase())
 }
 
 export const getBook = async () => {
-  return await db.addressBook.toCollection().sortBy('index')
+  const val = await values()
+  val.sort((a, b) => a.index - b.index)
+  return val
 }
 
 export const bulkAdd = async (rows: AddressBookRow[]) => {
-  return await db.addressBook.bulkPut(rows)
+  const list = rows.map((row): [string, AddressBookRow] => [
+    row.id.toLowerCase(),
+    row,
+  ])
+  return setMany(list)
 }
