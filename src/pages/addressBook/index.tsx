@@ -55,7 +55,9 @@ export default function AddressBook() {
 
   const onRemoveProfile = useCallback(
     (address: string) => {
-      deleteBookRow(address).then(() => getAddressBook())
+      deleteBookRow(address)
+        .then(() => getAddressBook())
+        .catch(console.log)
     },
     [addressBook]
   )

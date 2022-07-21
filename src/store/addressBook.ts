@@ -20,7 +20,7 @@ class AddressBook extends Dexie {
 export const db = new AddressBook()
 
 export const getBookRow = async (id: string) => {
-  return await db.addressBook.where('id').equals(id).first()
+  return await db.addressBook.where('id').equals(id.toLowerCase()).first()
 }
 
 export const updateBookRow = async (meta: AddressBookRow) => {
@@ -30,7 +30,7 @@ export const updateBookRow = async (meta: AddressBookRow) => {
 }
 
 export const deleteBookRow = async (id: string) => {
-  return await db.addressBook.delete(id)
+  return await db.addressBook.delete(id.toLowerCase())
 }
 
 export const getBook = async () => {
