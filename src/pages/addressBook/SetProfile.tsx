@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { IconoirDeleteCircledOutline } from '../../components/icon'
 import useAddressBook from '../../hooks/useAddressBook'
-import { AddressBookRow } from '../../stores/addressBook'
+import { AddressBookRow } from '../../store/addressBook'
 
 export default function SetProfile(props: {
   index: number
@@ -30,7 +30,9 @@ export default function SetProfile(props: {
         address,
         name,
         id: profile.id,
+        index: index,
       }
+
       setProfile(_profile, index)
     },
     [address, name, setProfile]

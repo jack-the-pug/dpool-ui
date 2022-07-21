@@ -6,19 +6,20 @@ import {
   getBook,
   updateBookRow,
   deleteBookRow,
-} from '../../stores/addressBook'
+} from '../../store/addressBook'
 import { toast } from 'react-toastify'
 import TextareaMode from './TextareaMode'
 import { isAddress } from 'ethers/lib/utils'
-const createEmptyRow = () => ({
+const createEmptyRow = (index: number) => ({
   name: '',
   address: '',
   id: '',
+  index,
 })
 
 export default function AddressBook() {
   const [addressBook, setAddressBook] = useState<AddressBookRow[]>([
-    createEmptyRow(),
+    createEmptyRow(0),
   ])
 
   const [isTextMode, setIsTextMode] = useState<boolean>(false)
@@ -36,7 +37,7 @@ export default function AddressBook() {
   }, [])
 
   const addEmptyProfile = useCallback(() => {
-    setAddressBook([...addressBook, createEmptyRow()])
+    setAddressBook([...addressBook, createEmptyRow(addressBook.length)])
   }, [addressBook])
 
   const onSetProfile = useCallback(

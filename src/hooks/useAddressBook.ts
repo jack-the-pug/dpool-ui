@@ -1,6 +1,6 @@
 import { isAddress } from 'ethers/lib/utils'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { AddressBookRow, getBook } from '../stores/addressBook'
+import { AddressBookRow, getBook } from '../store/addressBook'
 
 export default function useAddressBook() {
   const [addressList, setAddressList] = useState<AddressBookRow[]>([])

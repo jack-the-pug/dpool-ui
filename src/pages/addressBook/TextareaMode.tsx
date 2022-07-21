@@ -1,7 +1,7 @@
 import { isAddress } from 'ethers/lib/utils'
 import { useCallback, useMemo, useState } from 'react'
-import { AddressBookRow } from '../../stores/addressBook'
-import { bulkAdd } from '../../stores/addressBook'
+import { AddressBookRow } from '../../store/addressBook'
+import { bulkAdd } from '../../store/addressBook'
 
 export default function TextareaMode(props: {
   addressBook: AddressBookRow[]
@@ -23,7 +23,7 @@ export default function TextareaMode(props: {
   const parsedToAddressBook = useCallback(() => {
     const rowTextList = textarea.split('\n')
     const list: AddressBookRow[] = []
-    rowTextList.forEach((rowText) => {
+    rowTextList.forEach((rowText, index) => {
       const maybeRow = [
         rowText.split(','),
         rowText.split(' '),
@@ -36,6 +36,7 @@ export default function TextareaMode(props: {
         address: row[0],
         name: row[1],
         id: row[0].toLowerCase(),
+        index,
       })
     })
     return list

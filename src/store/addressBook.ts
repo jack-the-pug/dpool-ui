@@ -4,6 +4,7 @@ export interface AddressBookRow {
   address: string
   name: string
   id: string
+  index: number
 }
 
 class AddressBook extends Dexie {
@@ -11,7 +12,7 @@ class AddressBook extends Dexie {
   constructor() {
     super('addressBook')
     this.version(1).stores({
-      addressBook: '&id, &address, name',
+      addressBook: '&id, &address, name, &index',
     })
   }
 }
@@ -33,7 +34,7 @@ export const deleteBookRow = async (id: string) => {
 }
 
 export const getBook = async () => {
-  return await db.addressBook.orderBy('address').toArray()
+  return await db.addressBook.toCollection().sortBy('index')
 }
 
 export const bulkAdd = async (rows: AddressBookRow[]) => {
