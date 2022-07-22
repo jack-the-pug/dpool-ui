@@ -334,9 +334,8 @@ export function PoolDetail({ poolId }: { poolId: string }) {
             }
           })
         getPoolDetail()
-      } catch (err) {
-        err = typeof err === 'object' ? JSON.stringify(err) : err
-        toast.error(`${err}`)
+      } catch (err: any) {
+        toast.error(typeof err === 'object' ? err.message : JSON.stringify(err))
         setDistributionState(ActionState.FAILED)
       }
     }, [dPoolContract, chainId])
