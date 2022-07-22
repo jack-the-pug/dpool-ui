@@ -1610,3 +1610,5 @@ export function getAddChainParameters(
     blockExplorerUrls: [chainInformation.scan],
   }
 }
+
+

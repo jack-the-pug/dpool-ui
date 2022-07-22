@@ -84,10 +84,9 @@ export default function PoolDetailList() {
       return []
     }
   }, [_poolIds])
-
   if (!poolIds.length) return null
   return (
-    <div className="flex flex-col gap-20">
+    <div className="flex flex-col gap-20 mb-10">
       {poolIds.map((id) => (
         <PoolDetail poolId={id} key={id} />
       ))}
@@ -98,11 +97,13 @@ export default function PoolDetailList() {
 export function PoolDetail({ poolId }: { poolId: string }) {
   const navigate = useNavigate()
   const { dPoolAddress, isOwner } = useDPoolAddress()
+
   const { getToken } = useTokenMeta()
   const { addressName } = useAddressBook()
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const account = useAccount()
   const chainId = useChainId()
+
   const dPoolContract = useDPoolContract(dPoolAddress)
 
   const [poolMeta, setPoolMeta] = useState<Pool>()
@@ -116,11 +117,6 @@ export function PoolDetail({ poolId }: { poolId: string }) {
   }, [poolMeta])
 
   useEffect(() => {
-    console.log('dPoolContract', dPoolContract)
-    console.log('poolMeta', poolMeta)
-  }, [dPoolContract])
-
-  useEffect(() => {
     if (!poolMeta) return
     const tokenAddress = poolMeta.token
     getToken(tokenAddress).then((meta) => meta && setTokenMeta(meta))
@@ -131,7 +127,6 @@ export function PoolDetail({ poolId }: { poolId: string }) {
     if (!dPoolContract || !poolId) return
     setPoolMeta(undefined)
     setIsLoading(true)
-    console.log('dPoolContract2222', dPoolContract)
     try {
       const poolRes: GetPoolRes = await dPoolContract.getPoolById(poolId)
       console.log('poolRes', poolRes[0])
@@ -225,9 +220,8 @@ export function PoolDetail({ poolId }: { poolId: string }) {
               getPoolDetail()
             }
           })
-      } catch (err) {
-        err = typeof err === 'object' ? JSON.stringify(err) : err
-        toast.error(`${err}`)
+      } catch (err: any) {
+        toast.error(typeof err === 'object' ? err.message : JSON.stringify(err))
         setCancelState(ActionState.FAILED)
       }
     }, [dPoolContract, chainId])
@@ -246,14 +240,12 @@ export function PoolDetail({ poolId }: { poolId: string }) {
       />
     )
   }
-
   function RenderFund() {
     if (!poolMeta || !account || !dPoolAddress) return null
     if (poolMeta.distributor.toLowerCase() !== account.toLowerCase())
       return null
     if (poolMeta.state !== PoolState.Initialized) return null
     if (!tokenMeta) return null
-
     const [fundState, setFundState] = useState<ActionState>(ActionState.WAIT)
     const [isTokensApproved, setIsTokensApproved] = useState<boolean>(false)
     const nativeTokenAmount = useMemo(() => {
@@ -280,19 +272,19 @@ export function PoolDetail({ poolId }: { poolId: string }) {
               getPoolDetail()
             }
           })
-      } catch (err) {
-        err = typeof err === 'object' ? JSON.stringify(err) : err
-        toast.error(`${err}`)
+      } catch (err: any) {
+        toast.error(typeof err === 'object' ? err.message : JSON.stringify(err))
         setFundState(ActionState.FAILED)
       }
     }, [dPoolContract, chainId, isTokensApproved, poolId, nativeTokenAmount])
     return (
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center">
         <ApproveToken
           token={tokenMeta.address}
           approveAmount={poolMeta.totalAmount}
           dPoolAddress={dPoolAddress}
           onApproved={() => setIsTokensApproved(true)}
+          selectClass="bg-neutral-200"
         />
         <RenderActionButton
           state={fundState}
@@ -303,6 +295,11 @@ export function PoolDetail({ poolId }: { poolId: string }) {
             [ActionState.FAILED]: 'Fund failed.Try again',
           }}
           onClick={fundPool}
+          waitClass={`${
+            isTokensApproved
+              ? ''
+              : 'text-gray-500 border-gray-400 cursor-not-allowed'
+          } `}
         />
       </div>
     )
@@ -365,6 +362,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
 
   function RenderClaim(props: { claimer: TableRow; index: number }) {
     const { claimer, index } = props
+
     if (!poolMeta) return null
     const [claimState, setClaimState] = useState<ActionState>(ActionState.WAIT)
     const [claimedTx, setClaimedTx] = useState<string>()
@@ -374,6 +372,9 @@ export function PoolDetail({ poolId }: { poolId: string }) {
 
     const getClaimedAmount = useCallback(async () => {
       if (!dPoolContract) return
+      if (poolMeta.state === PoolState.Initialized) {
+        return claimer.amount
+      }
       const claimedAmount = await dPoolContract.userClaimedAmount(
         claimer.address,
         poolId
@@ -381,9 +382,10 @@ export function PoolDetail({ poolId }: { poolId: string }) {
       const _shouldClaimAmount = claimer.amount.sub(claimedAmount)
       setShouldClaimAmount(_shouldClaimAmount)
     }, [dPoolContract, claimer])
+
     useEffect(() => {
       getClaimedAmount()
-    }, [getClaimedAmount])
+    }, [])
 
     const claim = useCallback(async () => {
       if (!dPoolContract || !poolId || !chainId) return
@@ -409,8 +411,8 @@ export function PoolDetail({ poolId }: { poolId: string }) {
             }
           })
         // getPoolDetail()
-      } catch (err) {
-        toast.error(`${err}`)
+      } catch (err: any) {
+        toast.error(typeof err === 'object' ? err.message : JSON.stringify(err))
         setClaimState(ActionState.FAILED)
       }
     }, [dPoolContract, chainId, poolId])
