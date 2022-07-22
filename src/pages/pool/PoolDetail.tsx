@@ -24,6 +24,7 @@ import ApproveTokens, {
 } from '../../components/token/ApproveTokens'
 import { formatCurrencyAmount } from '../../utils/number'
 import useAddressBook from '../../hooks/useAddressBook'
+import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
 
 export type Pool = BasePool & {
   state: PoolState
@@ -169,7 +170,10 @@ export function PoolDetail({ poolId }: { poolId: string }) {
   }, [dPoolContract, account, poolId, chainId])
 
   const distributeAgain = useCallback(() => {
-    localStorage.setItem('distributeAgainData', JSON.stringify(poolMeta))
+    localStorage.setItem(
+      LOCAL_STORAGE_KEY.DISTRIBUTE_AGAIN_DATA,
+      JSON.stringify(poolMeta)
+    )
     navigate('/')
   }, [poolMeta])
 
@@ -235,6 +239,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
       />
     )
   }
+
   function RenderFund() {
     if (!poolMeta || !account || !dPoolAddress) return null
     if (poolMeta.distributor.toLowerCase() !== account.toLowerCase())
@@ -260,7 +265,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
         setFundState(ActionState.SUCCESS)
         transactionResponse.logs
           .filter(
-            (log) => log.address.toLowerCase() === dPoolAddress?.toLowerCase()
+            (log) => log.address.toLowerCase() === dPoolAddress.toLowerCase()
           )
           .forEach((log) => {
             const parseLog = contractIface.parseLog(log)
@@ -378,7 +383,10 @@ export function PoolDetail({ poolId }: { poolId: string }) {
       if (!dPoolContract || !poolId || !chainId) return
       setClaimState(ActionState.ING)
       try {
-        const claimSinglePoolRes = await dPoolContract.claim(poolId)
+        const claimSinglePoolRes = await dPoolContract.claimSinglePool(
+          poolId,
+          index
+        )
         const transactionResponse: ContractReceipt =
           await claimSinglePoolRes.wait()
         setClaimedTx(transactionResponse.transactionHash)
