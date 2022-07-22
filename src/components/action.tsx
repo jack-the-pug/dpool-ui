@@ -76,10 +76,6 @@ export default function Action(props: {
           >
             {baseMsg}
           </button>
-          <div className="text-gray-500 text-xs my-1 ">
-            <div className="pr-2">{msg}</div>
-            {tx ? <TranSactionHash hash={tx} /> : null}
-          </div>
         </div>
       )
     default:
