@@ -26,6 +26,7 @@ import { isAddress } from 'ethers/lib/utils'
 import { Pool } from '../pool/PoolDetail'
 
 import { formatCurrencyAmount, parsed2NumberString } from '../../utils/number'
+import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
 
 export type TPoolRow = PoolRow & {
   key?: number | string
@@ -152,7 +153,9 @@ export default function PoolsList() {
 
   // distribute pool again
   const initPool = useCallback(async () => {
-    const poolDetail = localStorage.getItem('distributeAgainData')
+    const poolDetail = localStorage.getItem(
+      LOCAL_STORAGE_KEY.DISTRIBUTE_AGAIN_DATA
+    )
     if (!poolDetail) return
     const poolDetailData = JSON.parse(poolDetail) as Pool
     const { claimers, amounts, token } = poolDetailData

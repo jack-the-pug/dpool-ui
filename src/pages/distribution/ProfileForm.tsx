@@ -37,10 +37,6 @@ export function Profile(props: TProfileProps) {
   const [inputAmount, setInputAmount] = useState<string>(
     _profile.userInputAmount
   )
-  const addressBookObj = useMemo(
-    () => JSON.parse(localStorage.getItem('ADDRESS_BOOK') || '{}'),
-    []
-  )
 
   const submit = useCallback(() => {
     const profile = { ..._profile }

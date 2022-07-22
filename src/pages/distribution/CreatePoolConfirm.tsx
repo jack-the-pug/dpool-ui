@@ -21,6 +21,7 @@ import useDPoolAddress from '../../hooks/useDPoolAddress'
 import ApproveTokens from '../../components/token/ApproveTokens'
 import { formatCurrencyAmount } from '../../utils/number'
 import useAddressBook from '../../hooks/useAddressBook'
+import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
 
 interface PoolMeta {
   name: string
@@ -143,11 +144,11 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         poolIds: ids,
       }
       const localPoolMetaList = JSON.parse(
-        localStorage.getItem('localPoolMetaList') || '[]'
+        localStorage.getItem(LOCAL_STORAGE_KEY.LOCAL_POOL_META_LIST) || '[]'
       )
       localPoolMetaList.push(localPoolMeta)
       localStorage.setItem(
-        'localPoolMetaList',
+        LOCAL_STORAGE_KEY.LOCAL_POOL_META_LIST,
         JSON.stringify(localPoolMetaList)
       )
     },
