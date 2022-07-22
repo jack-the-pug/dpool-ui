@@ -15,13 +15,13 @@ import {
 } from '../../type'
 import { DistributionType, PoolConfig } from './CreatePool'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
-import { isAddress } from 'ethers/lib/utils'
-import { AddressBookItem } from '../addressBook'
 import { useNavigate } from 'react-router-dom'
 import { dPoolABI } from '../../constants'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import ApproveTokens from '../../components/token/ApproveTokens'
 import { formatCurrencyAmount } from '../../utils/number'
+import useAddressBook from '../../hooks/useAddressBook'
+import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
 
 interface PoolMeta {
   name: string
@@ -67,15 +67,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     const localAddress = localStorage.getItem('ADDRESS_BOOK') || '{}'
     return JSON.parse(localAddress)
   }, [])
-  const getAddressName = useCallback(
-    (address: string): string | null => {
-      if (!address || !isAddress(address)) return null
-      const lowerAddress = address.toLowerCase()
-      const addressMeta: AddressBookItem = addressBook[lowerAddress]
-      return addressMeta ? addressMeta.name : null
-    },
-    [addressBook]
-  )
+  const { addressName } = useAddressBook()
 
   const poolMeta = useMemo((): PoolMeta | null => {
     if (!callData) return null
@@ -152,11 +144,11 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         poolIds: ids,
       }
       const localPoolMetaList = JSON.parse(
-        localStorage.getItem('localPoolMetaList') || '[]'
+        localStorage.getItem(LOCAL_STORAGE_KEY.LOCAL_POOL_META_LIST) || '[]'
       )
       localPoolMetaList.push(localPoolMeta)
       localStorage.setItem(
-        'localPoolMetaList',
+        LOCAL_STORAGE_KEY.LOCAL_POOL_META_LIST,
         JSON.stringify(localPoolMetaList)
       )
     },
@@ -379,9 +371,9 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           <div className="flex gap-4 my-1 justify-between">
             <div key={row.address} className="">
               {row.address}{' '}
-              {getAddressName(row.address) ? (
+              {addressName(row.address) ? (
                 <span className="text-gray-500 italic text-xs">
-                  {`(${getAddressName(row.address)})`}{' '}
+                  {`(${addressName(row.address)})`}{' '}
                 </span>
               ) : null}
             </div>

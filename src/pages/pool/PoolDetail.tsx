@@ -23,6 +23,8 @@ import ApproveTokens, {
   ApproveToken,
 } from '../../components/token/ApproveTokens'
 import { formatCurrencyAmount } from '../../utils/number'
+import useAddressBook from '../../hooks/useAddressBook'
+import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
 
 export type Pool = BasePool & {
   state: PoolState
@@ -97,7 +99,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
   const navigate = useNavigate()
   const { dPoolAddress, isOwner } = useDPoolAddress()
   const { getToken } = useTokenMeta()
-
+  const { addressName } = useAddressBook()
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const account = useAccount()
   const chainId = useChainId()
@@ -168,7 +170,10 @@ export function PoolDetail({ poolId }: { poolId: string }) {
   }, [dPoolContract, account, poolId, chainId])
 
   const distributeAgain = useCallback(() => {
-    localStorage.setItem('distributeAgainData', JSON.stringify(poolMeta))
+    localStorage.setItem(
+      LOCAL_STORAGE_KEY.DISTRIBUTE_AGAIN_DATA,
+      JSON.stringify(poolMeta)
+    )
     navigate('/')
   }, [poolMeta])
 
@@ -234,6 +239,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
       />
     )
   }
+
   function RenderFund() {
     if (!poolMeta || !account || !dPoolAddress) return null
     if (poolMeta.distributor.toLowerCase() !== account.toLowerCase())
@@ -259,7 +265,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
         setFundState(ActionState.SUCCESS)
         transactionResponse.logs
           .filter(
-            (log) => log.address.toLowerCase() === dPoolAddress?.toLowerCase()
+            (log) => log.address.toLowerCase() === dPoolAddress.toLowerCase()
           )
           .forEach((log) => {
             const parseLog = contractIface.parseLog(log)
@@ -328,9 +334,8 @@ export function PoolDetail({ poolId }: { poolId: string }) {
             }
           })
         getPoolDetail()
-      } catch (err) {
-        err = typeof err === 'object' ? JSON.stringify(err) : err
-        toast.error(`${err}`)
+      } catch (err: any) {
+        toast.error(typeof err === 'object' ? err.message : JSON.stringify(err))
         setDistributionState(ActionState.FAILED)
       }
     }, [dPoolContract, chainId])
@@ -377,7 +382,10 @@ export function PoolDetail({ poolId }: { poolId: string }) {
       if (!dPoolContract || !poolId || !chainId) return
       setClaimState(ActionState.ING)
       try {
-        const claimSinglePoolRes = await dPoolContract.claim(poolId)
+        const claimSinglePoolRes = await dPoolContract.claimSinglePool(
+          poolId,
+          index
+        )
         const transactionResponse: ContractReceipt =
           await claimSinglePoolRes.wait()
         setClaimedTx(transactionResponse.transactionHash)
@@ -445,7 +453,14 @@ export function PoolDetail({ poolId }: { poolId: string }) {
             index + 1
           )}
         </td>
-        <td className="">{claimer.address}</td>
+        <td className="">
+          {claimer.address}
+          {addressName(claimer.address) ? (
+            <span className="text-sm text-gray-500 px-1">
+              ({addressName(claimer.address)})
+            </span>
+          ) : null}
+        </td>
 
         <RenderClaim claimer={claimer} index={index} />
       </tr>

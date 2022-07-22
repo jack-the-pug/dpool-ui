@@ -7,6 +7,7 @@ import useDPoolAddress from '../../hooks/useDPoolAddress'
 import useDPool from '../../hooks/useDPool'
 import { BigNumber } from 'ethers'
 import { EosIconsBubbleLoading } from '../../components/icon'
+import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
 
 const { useChainId } = metaMaskHooks
 
@@ -21,7 +22,7 @@ export default function PoolList() {
     if (!dPoolAddress) return
     setIsLoading(true)
     const formatPoolList: DPoolLocalStorageMeta[] = JSON.parse(
-      localStorage.getItem('localPoolMetaList') || '[]'
+      localStorage.getItem(LOCAL_STORAGE_KEY.LOCAL_POOL_META_LIST) || '[]'
     ).filter((pool: DPoolLocalStorageMeta) => {
       if (!dPoolAddress) return true
       return (

@@ -6,6 +6,7 @@ import { TokenMeta as TTokenMeta } from '../type'
 import { hooks as metaMaskHooks } from '../connectors/metaMask'
 import useSignerOrProvider from './useSignOrProvider'
 import { useBalance } from './useBalance'
+import { LOCAL_STORAGE_KEY } from '../store/storeKey'
 
 type TSetToken = (token: TTokenMeta) => void
 
@@ -26,14 +27,17 @@ export default function useTokenMeta() {
   )
 
   const [tokens, setTokens] = useState(
-    JSON.parse(localStorage.getItem('tokenList') || '{}')
+    JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY.TOKEN_LIST) || '{}')
   )
 
   const setToken = useCallback<TSetToken>(
     (token: TTokenMeta) => {
       const _tokens = { ...tokens, [token.address.toLowerCase()]: token }
       setTokens(_tokens)
-      localStorage.setItem('tokenList', JSON.stringify(_tokens))
+      localStorage.setItem(
+        LOCAL_STORAGE_KEY.TOKEN_LIST,
+        JSON.stringify(_tokens)
+      )
     },
     [tokens]
   )
