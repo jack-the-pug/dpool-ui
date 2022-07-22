@@ -129,38 +129,45 @@ export function PoolDetail({ poolId }: { poolId: string }) {
   // format table data
   const getPoolDetail = useCallback(async () => {
     if (!dPoolContract || !poolId) return
+    setPoolMeta(undefined)
     setIsLoading(true)
-    const poolRes: GetPoolRes = await dPoolContract.getPoolById(poolId)
-    const {
-      amounts,
-      claimedAmount,
-      claimers,
-      deadline,
-      distributor,
-      totalAmount,
-      name,
-      startTime,
-      escrowedAmount,
-      token,
-    } = poolRes[0]
-    const state = poolRes[1]
-    const _poolMeta = {
-      amounts,
-      claimedAmount,
-      claimers,
-      deadline,
-      distributor,
-      totalAmount,
-      name,
-      startTime,
-      escrowedAmount,
-      token,
-      state,
+    console.log('dPoolContract2222', dPoolContract)
+    try {
+      const poolRes: GetPoolRes = await dPoolContract.getPoolById(poolId)
+      console.log('poolRes', poolRes[0])
+      const {
+        amounts,
+        claimedAmount,
+        claimers,
+        deadline,
+        distributor,
+        totalAmount,
+        name,
+        startTime,
+        escrowedAmount,
+        token,
+      } = poolRes[0]
+      const state = poolRes[1]
+      const _poolMeta = {
+        amounts,
+        claimedAmount,
+        claimers,
+        deadline,
+        distributor,
+        totalAmount,
+        name,
+        startTime,
+        escrowedAmount,
+        token,
+        state,
+      }
+      if (startTime !== 0) {
+        setPoolMeta(_poolMeta)
+      }
+      setIsLoading(false)
+    } catch {
+      setIsLoading(false)
     }
-    if (startTime !== 0) {
-      setPoolMeta(_poolMeta)
-    }
-    setIsLoading(false)
   }, [dPoolContract, account, poolId, chainId])
 
   useEffect(() => {
@@ -466,8 +473,8 @@ export function PoolDetail({ poolId }: { poolId: string }) {
       </tr>
     )
   }
-  if (!poolId) return <p>poolId not found</p>
-  if (!poolMeta) return null
+  if (!poolId) return <p>PoolId not found</p>
+  if (!poolMeta) return <p>Distribute not found</p>
   return (
     <div className="flex justify-center">
       <div className="w-full break-all flex flex-1 flex-col items-center">
