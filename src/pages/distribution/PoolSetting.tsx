@@ -1,4 +1,5 @@
 import { utils } from 'ethers'
+import { isAddress } from 'ethers/lib/utils'
 import { useEffect, useMemo } from 'react'
 import { useState } from 'react'
 import { DistributionType, PoolConfig } from './CreatePool'
@@ -20,10 +21,6 @@ function PoolSetting(props: {
     poolConfig.date[0],
     poolConfig.date[1],
   ])
-  const setAddress = (address: string) => {
-    if (!address || !utils.isAddress(address)) return
-    setDistributorAddress(address)
-  }
   useEffect(() => {
     const config = {
       isFundNow,
@@ -31,12 +28,14 @@ function PoolSetting(props: {
       distributor: distributorAddress,
       date,
     }
+    if (!isAddress(distributorAddress)) {
+      config.distributor = ''
+    }
     setPoolConfig(config)
   }, [isFundNow, distributionType, distributorAddress, date])
 
   const renderDatePicker = useMemo(() => {
     if (distributionType === DistributionType.Push) return null
-    if (distributionType === DistributionType.Pull && !isFundNow) return null
     return (
       <section className="flex flex-col justify-between  my-2 border border-gray-400 p-2">
         <label className="mb-2">Claimable Time Range</label>
@@ -44,8 +43,10 @@ function PoolSetting(props: {
       </section>
     )
   }, [isFundNow, distributionType])
+
   const renderDistributor = useMemo(() => {
     if (isFundNow) return null
+    if (distributionType === DistributionType.Pull) return null
     return (
       <section className="flex w-full flex-col justify-between  my-2 border border-gray-400 px-2 py-4">
         <div className="flex flex-1 items-center">
@@ -54,7 +55,9 @@ function PoolSetting(props: {
             className="outline-none bg-neutral-200  flex-1 focus:outline-none border-b border-gray-300  border-dashed"
             placeholder="address"
             value={distributorAddress}
-            onChange={(e) => setAddress(e.target.value)}
+            onChange={(e) => {
+              setDistributorAddress(e.target.value)
+            }}
           ></input>
         </div>
         <p className="text-sm text-gray-500 mt-2">
@@ -62,7 +65,7 @@ function PoolSetting(props: {
         </p>
       </section>
     )
-  }, [isFundNow])
+  }, [isFundNow, distributorAddress, distributionType])
   return (
     <div className="flex flex-1 w-full flex-col mt-10 max-w-full">
       <section className="flex justify-between items-center my-2 border border-gray-400 px-2 py-4">
