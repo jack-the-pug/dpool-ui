@@ -151,9 +151,20 @@ export default function PoolsList() {
     ],
   })
 
+  // if push later mode. the startTime and deadline is (uint48.max - 1)
+  useEffect(() => {
+    if (
+      poolConfig.distributionType === DistributionType.Push &&
+      !poolConfig.isFundNow
+    ) {
+      setPoolConfig((c) => ({ ...c, date: [2 ** 48 - 1, 2 ** 48 - 1] }))
+    }
+  }, [poolConfig.distributionType, poolConfig.isFundNow])
+
   const [errMsg, setErrMsg] = useState<string>('')
   const [isTextareaMode, setIsTextareaMode] = useState(false)
 
+  // cache distribute data
   useEffect(() => {
     const _poolList = poolList.filter((row) => isAddress(row.address))
     if (_poolList.length === 0) return
