@@ -277,7 +277,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       }
     } catch (err: any) {
       toast.error(
-        `${typeof err === 'object' ? err.reason || JSON.stringify(err) : err}`
+        `${typeof err === 'object' ? err.message || JSON.stringify(err) : err}`
       )
       setCreatePoolState(ActionState.FAILED)
     }

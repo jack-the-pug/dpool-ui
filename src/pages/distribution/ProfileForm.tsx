@@ -139,14 +139,16 @@ export function Profile(props: TProfileProps) {
         {isPercentMode ? (
           <div className="flex flex-1 justify-between w-full items-center">
             <div className="text-xs text-gray-500">
-              {utils
-                .parseUnits(
-                  parsed2NumberString(inputAmount),
-                  tokenMetaList[0]?.decimals
-                )
-                .mul(10000) // Retain two decimal places
-                .div(userInputTotal)
-                .toNumber() / 100}
+              {userInputTotal.gt(0)
+                ? utils
+                    .parseUnits(
+                      parsed2NumberString(inputAmount),
+                      tokenMetaList[0]?.decimals
+                    )
+                    .mul(10000) // Retain two decimal places
+                    .div(userInputTotal)
+                    .toNumber() / 100
+                : '0'}
               %
             </div>
             <div className="text-xs text-gray-500 cursor-not-allowed">

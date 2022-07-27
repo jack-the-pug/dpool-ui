@@ -1,5 +1,6 @@
 import { utils } from 'ethers'
-import { useEffect } from 'react'
+import { isAddress } from 'ethers/lib/utils'
+import { useEffect, useMemo } from 'react'
 import { useState } from 'react'
 import { DistributionType, PoolConfig } from './CreatePool'
 import DateRangePicker from './DateRangePicker'
@@ -20,10 +21,6 @@ function PoolSetting(props: {
     poolConfig.date[0],
     poolConfig.date[1],
   ])
-  const setAddress = (address: string) => {
-    if (!address || !utils.isAddress(address)) return
-    setDistributorAddress(address)
-  }
   useEffect(() => {
     const config = {
       isFundNow,
@@ -31,8 +28,44 @@ function PoolSetting(props: {
       distributor: distributorAddress,
       date,
     }
+    if (!isAddress(distributorAddress)) {
+      config.distributor = ''
+    }
     setPoolConfig(config)
   }, [isFundNow, distributionType, distributorAddress, date])
+
+  const renderDatePicker = useMemo(() => {
+    if (distributionType === DistributionType.Push) return null
+    return (
+      <section className="flex flex-col justify-between  my-2 border border-gray-400 p-2">
+        <label className="mb-2">Claimable Time Range</label>
+        <DateRangePicker setDate={setDate} />
+      </section>
+    )
+  }, [isFundNow, distributionType])
+
+  const renderDistributor = useMemo(() => {
+    if (isFundNow) return null
+    if (distributionType === DistributionType.Pull) return null
+    return (
+      <section className="flex w-full flex-col justify-between  my-2 border border-gray-400 px-2 py-4">
+        <div className="flex flex-1 items-center">
+          <label className="italic mr-2">Distributor:</label>
+          <input
+            className="outline-none bg-neutral-200  flex-1 focus:outline-none border-b border-gray-300  border-dashed"
+            placeholder="address"
+            value={distributorAddress}
+            onChange={(e) => {
+              setDistributorAddress(e.target.value)
+            }}
+          ></input>
+        </div>
+        <p className="text-sm text-gray-500 mt-2">
+          If set, only the distributor can push the funds to the recipients
+        </p>
+      </section>
+    )
+  }, [isFundNow, distributorAddress, distributionType])
   return (
     <div className="flex flex-1 w-full flex-col mt-10 max-w-full">
       <section className="flex justify-between items-center my-2 border border-gray-400 px-2 py-4">
@@ -115,29 +148,8 @@ function PoolSetting(props: {
         </p>
       </section>
 
-      {isFundNow ? (
-        <section className="flex flex-col justify-between  my-2 border border-gray-400 p-2">
-          <label className="mb-2">Claimable Time Range</label>
-          <DateRangePicker setDate={setDate} />
-        </section>
-      ) : null}
-
-      {!isFundNow && distributionType !== DistributionType.Pull && (
-        <section className="flex w-full flex-col justify-between  my-2 border border-gray-400 px-2 py-4">
-          <div className="flex flex-1 items-center">
-            <label className="italic mr-2">Distributor:</label>
-            <input
-              className="outline-none bg-neutral-200  flex-1 focus:outline-none border-b border-gray-300  border-dashed"
-              placeholder="address"
-              value={distributorAddress}
-              onChange={(e) => setAddress(e.target.value)}
-            ></input>
-          </div>
-          <p className="text-sm text-gray-500 mt-2">
-            If set, only the distributor can push the funds to the recipients
-          </p>
-        </section>
-      )}
+      {renderDatePicker}
+      {renderDistributor}
     </div>
   )
 }

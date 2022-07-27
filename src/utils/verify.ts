@@ -20,6 +20,7 @@ export function parsed2NumberString(
 export function isLegalPoolRow(profile: PoolRow): boolean {
   if (!profile) return false
   const amount = profile.userInputAmount
-  if (!amount || isNaN(Number(amount))) return false
+  const numberAmount = Number(amount)
+  if (!amount || isNaN(numberAmount) || numberAmount <= 0) return false
   return utils.isAddress(profile.address)
 }

@@ -63,7 +63,6 @@ const { useAccount, useChainId } = metaMaskHooks
 export default function PoolsList() {
   usePageClose()
   const account = useAccount()
-  const chainId = useChainId()
   const { getToken } = useTokenMeta()
   const { isOwner, dPoolAddress } = useDPoolAddress()
   const [dPoolFactoryVisible, setDPoolFactoryVisible] = useState<boolean>(false)
@@ -110,6 +109,7 @@ export default function PoolsList() {
         parsed2NumberString(row.userInputAmount),
         tokenMetaList[0]?.decimals
       )
+      if (baseAmount.eq(0)) return BigNumber.from(0)
       return isPercentMode && userInputTotal.gt(0)
         ? baseAmount.mul(baseAmountTotal).div(userInputTotal)
         : baseAmount
@@ -150,15 +150,6 @@ export default function PoolsList() {
       Math.round(Date.now() + 60 * 60),
     ],
   })
-  // if push later mode. the startTime and deadline is (uint48.max - 1)
-  useEffect(() => {
-    if (
-      poolConfig.distributionType === DistributionType.Push &&
-      !poolConfig.isFundNow
-    ) {
-      setPoolConfig((c) => ({ ...c, date: [2 ** 48 - 1, 2 ** 48 - 1] }))
-    }
-  }, [poolConfig.distributionType, poolConfig.isFundNow])
 
   const [errMsg, setErrMsg] = useState<string>('')
   const [isTextareaMode, setIsTextareaMode] = useState(false)
@@ -185,8 +176,8 @@ export default function PoolsList() {
       LOCAL_STORAGE_KEY.DISTRIBUTE_CATCH_DATA
     )
     if (!poolDetail) {
-      getToken('0x0000000000000000000000000000000000000000').then(
-        (token) => token && setTokenMetaList([token])
+      getToken('0x0000000000000000000000000000000000000000').then((token) =>
+        setTokenMetaList([token!])
       )
       return
     }
@@ -268,10 +259,13 @@ export default function PoolsList() {
     if (!tokenMetaList[0] || repeatedAddress || !account) return null
     if (!isOwner) return null
     const { isFundNow, date } = poolConfig
-    const distributor = isAddress(poolConfig.distributor)
-      ? poolConfig.distributor
-      : account
-    const _pool = poolList.filter((row) => isLegalPoolRow(row))
+
+    const distributor =
+      poolConfig.distributionType === DistributionType.Pull
+        ? account
+        : poolConfig.distributor
+
+    const _pool = poolList.filter(isLegalPoolRow)
     if (_pool.length !== parsedTokenAmounts[0].length) return null
 
     // address must be unique
@@ -284,8 +278,14 @@ export default function PoolsList() {
     pool.sort((a, b) => (a.address > b.address ? 1 : -1))
     const claimer = pool.map((row) => row.address)
 
-    const [startTime, endTime] = date
-
+    let [startTime, endTime] = date
+    if (
+      poolConfig.distributionType === DistributionType.Push &&
+      !poolConfig.isFundNow
+    ) {
+      startTime = 2 ** 48 - 1
+      endTime = 2 ** 48 - 1
+    }
     // one token. one pool.
     const callDataList: PoolCreateCallData[] = []
     for (let i = 0; i < tokenMetaList.length; i++) {
@@ -327,16 +327,16 @@ export default function PoolsList() {
   // Total token amount of processed accuracy losses
   const tokenTotalAmounts = useMemo(() => {
     if (!createPoolCallData) return
-    const totalAmount: BigNumber[] = []
+    const totalAmounts: BigNumber[] = []
     createPoolCallData.forEach((data) =>
-      totalAmount.push(
+      totalAmounts.push(
         data[PoolCreator.Amounts].reduce(
           (sum, cur) => sum.add(cur),
           BigNumber.from(0)
         )
       )
     )
-    return totalAmount
+    return totalAmounts
   }, [createPoolCallData])
 
   const callDataCheck = useMemo(() => {
@@ -371,9 +371,11 @@ export default function PoolsList() {
    * textarea,table Mode switch.
    */
   const poolList2textarea = useCallback(() => {
-    const textarea = poolList.filter(isLegalPoolRow).reduce((pre, cur) => {
-      return `${pre}${cur.address},${cur.userInputAmount}\n`
-    }, '')
+    const textarea = poolList
+      .filter((row) => isAddress(row.address))
+      .reduce((pre, cur) => {
+        return `${pre}${cur.address},${cur.userInputAmount}\n`
+      }, '')
     setTextarea(textarea)
   }, [poolList])
 
@@ -526,7 +528,7 @@ export default function PoolsList() {
         ) : (
           <div
             onClick={() => addEmptyProfile()}
-            className="w-full cursor-cell flex items-center justify-center h-8 border border-dashed  border-gray-500"
+            className="w-full cursor-pointer flex items-center justify-center h-8 border border-dashed  border-gray-500"
           >
             <MaterialSymbolsAdd className="flex-1" />
           </div>

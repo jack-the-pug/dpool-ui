@@ -132,6 +132,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
     setIsLoading(true)
     try {
       const poolRes: GetPoolRes = await dPoolContract.getPoolById(poolId)
+      console.log('poolRes', poolRes[0])
       const {
         amounts,
         claimedAmount,
@@ -251,7 +252,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
       if (!dPoolContract || !poolId || !chainId) return
       setCancelState(ActionState.ING)
       try {
-        const cancelPoolByIdRes = await dPoolContract.cancel(poolId)
+        const cancelPoolByIdRes = await dPoolContract.cancel([poolId])
         const transactionResponse: ContractReceipt =
           await cancelPoolByIdRes.wait()
         setCancelState(ActionState.SUCCESS)
@@ -287,7 +288,11 @@ export function PoolDetail({ poolId }: { poolId: string }) {
   }
   function RenderFund() {
     if (!poolMeta || !account || !dPoolAddress) return null
-    if (poolMeta.distributor.toLowerCase() !== account.toLowerCase())
+
+    if (
+      poolMeta.distributor &&
+      poolMeta.distributor.toLowerCase() !== account.toLowerCase()
+    )
       return null
     if (poolMeta.state !== PoolState.Initialized) return null
     if (!tokenMeta) return null
