@@ -57,16 +57,14 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
 
   const [poolIds, setPoolIds] = useState<string[]>([])
 
-  const [isTokensApproved, setIsTokensApproved] = useState<boolean>(false)
+  // later mode. do not need approved
+  const [isTokensApproved, setIsTokensApproved] = useState<boolean>(
+    !callData[0][PoolCreator.isFundNow]
+  )
   const [createPoolState, setCreatePoolState] = useState<ActionState>(
     ActionState.WAIT
   )
   const [createTx, setCreateTx] = useState<string>()
-
-  const addressBook = useMemo(() => {
-    const localAddress = localStorage.getItem('ADDRESS_BOOK') || '{}'
-    return JSON.parse(localAddress)
-  }, [])
   const { addressName } = useAddressBook()
 
   const poolMeta = useMemo((): PoolMeta | null => {
@@ -92,7 +90,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
 
   const tokenTotalAmounts = useMemo(() => {
     const totalAmount: BigNumber[] = []
-    console.log('callData', callData)
     callData.forEach((data) =>
       totalAmount.push(
         data[PoolCreator.Amounts].reduce(
@@ -151,6 +148,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         LOCAL_STORAGE_KEY.LOCAL_POOL_META_LIST,
         JSON.stringify(localPoolMetaList)
       )
+      localStorage.removeItem(LOCAL_STORAGE_KEY.DISTRIBUTE_CATCH_DATA)
     },
     [poolMeta, dPoolAddress, chainId, account]
   )
@@ -193,7 +191,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
   const singleCreate = useCallback(
     async (callData: PoolCreateCallData): Promise<string | undefined> => {
       if (!dPoolContract || !dPoolAddress) return
-      console.log('dPoolContract', dPoolContract)
+
       const singleCreateRequest = await dPoolContract.create(callData, {
         value: nativeTokenValue,
       })
@@ -249,9 +247,10 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
   }, [dPoolContract, dPoolAddress, callData, nativeTokenValue])
   const isBalanceEnough = useMemo(() => {
     for (let i = 0; i < tokenTotalAmounts.length; i++) {
-      const amount = tokenTotalAmounts[i]
+      const total = tokenTotalAmounts[i]
       const balance = tokenMetaList[i].balance
-      if (balance.lt(amount)) return false
+
+      if (balance.lt(total)) return false
     }
     return true
   }, [tokenTotalAmounts, tokenMetaList])
@@ -277,7 +276,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         setCreateTx(tx)
       }
     } catch (err: any) {
-      console.log('err', err)
       toast.error(
         `${typeof err === 'object' ? err.reason || JSON.stringify(err) : err}`
       )
@@ -458,7 +456,8 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           </div>
         )}
       </div>
-      {poolMeta.config.distributor.toLowerCase() === account?.toLowerCase() ? (
+      {poolMeta.config.distributor.toLowerCase() === account?.toLowerCase() &&
+      poolMeta.config.isFundNow ? (
         <div className="mt-4">
           <ApproveTokens
             tokens={tokenMetaList.map((token, index) => ({

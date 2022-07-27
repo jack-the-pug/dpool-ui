@@ -115,14 +115,14 @@ function PoolSetting(props: {
         </p>
       </section>
 
-      {distributionType === DistributionType.Push && isFundNow ? null : (
+      {isFundNow ? (
         <section className="flex flex-col justify-between  my-2 border border-gray-400 p-2">
           <label className="mb-2">Claimable Time Range</label>
           <DateRangePicker setDate={setDate} />
         </section>
-      )}
+      ) : null}
 
-      {!isFundNow && (
+      {!isFundNow && distributionType !== DistributionType.Pull && (
         <section className="flex w-full flex-col justify-between  my-2 border border-gray-400 px-2 py-4">
           <div className="flex flex-1 items-center">
             <label className="italic mr-2">Distributor:</label>

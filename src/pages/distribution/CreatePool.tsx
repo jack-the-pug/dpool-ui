@@ -37,6 +37,14 @@ export enum DistributionType {
   Push = 'push',
 }
 
+export interface DistributePageCache {
+  poolList: TPoolRow[]
+  tokenMetaList: TokenMeta[]
+  poolName: string
+  poolConfig?: PoolConfig
+  tableHeaderInputList?: string[]
+}
+
 export interface PoolConfig {
   isFundNow: boolean
   distributionType: DistributionType
@@ -63,12 +71,7 @@ export default function PoolsList() {
   const [poolName, setPoolName] = useState<string>('Distribution')
   const [tableHeaderInputList, setTableHeaderInputList] = useState<string[]>([])
   const [tokenMetaList, setTokenMetaList] = useState<TokenMeta[]>([])
-  // setDefault token
-  useEffect(() => {
-    getToken('0x0000000000000000000000000000000000000000').then(
-      (token) => token && setTokenMetaList([token])
-    )
-  }, [chainId])
+
   const [poolList, setPoolList] = useState<TPoolRow[]>([createPoolEmptyItem()])
 
   const isPercentMode = useMemo(() => {
@@ -143,40 +146,75 @@ export default function PoolsList() {
     distributionType: DistributionType.Push,
     distributor: '',
     date: [
-      Math.round(Date.now() / 1000 + 60 * 2),
+      Math.round(Date.now() / 1000 + 60 * 5),
       Math.round(Date.now() + 60 * 60),
     ],
   })
+  // if push later mode. the startTime and deadline is (uint48.max - 1)
+  useEffect(() => {
+    if (
+      poolConfig.distributionType === DistributionType.Push &&
+      !poolConfig.isFundNow
+    ) {
+      setPoolConfig((c) => ({ ...c, date: [2 ** 48 - 1, 2 ** 48 - 1] }))
+    }
+  }, [poolConfig.distributionType, poolConfig.isFundNow])
 
   const [errMsg, setErrMsg] = useState<string>('')
   const [isTextareaMode, setIsTextareaMode] = useState(false)
 
-  // distribute pool again
+  // cache distribute data
+  useEffect(() => {
+    const _poolList = poolList.filter((row) => isAddress(row.address))
+    if (_poolList.length === 0) return
+    const distributeCacheData = {
+      poolList,
+      tokenMetaList,
+      tableHeaderInputList,
+      poolConfig,
+      poolName,
+    }
+    localStorage.setItem(
+      LOCAL_STORAGE_KEY.DISTRIBUTE_CATCH_DATA,
+      JSON.stringify(distributeCacheData)
+    )
+  }, [poolList, tokenMetaList, tableHeaderInputList, poolConfig, poolName])
+
   const initPool = useCallback(async () => {
     const poolDetail = localStorage.getItem(
-      LOCAL_STORAGE_KEY.DISTRIBUTE_AGAIN_DATA
+      LOCAL_STORAGE_KEY.DISTRIBUTE_CATCH_DATA
     )
-    if (!poolDetail) return
-    const poolDetailData = JSON.parse(poolDetail) as Pool
-    const { claimers, amounts, token } = poolDetailData
-    const tokenMeta: TokenMeta = (await getToken(token))!
-    const poolRows: TPoolRow[] = []
-    const tokenList = [tokenMeta]
-    for (let i = 0; i < claimers.length; i++) {
-      poolRows.push({
-        address: claimers[i],
-        userInputAmount: utils.formatUnits(amounts[i], tokenMeta.decimals),
-        key: claimers[i],
-      })
+    if (!poolDetail) {
+      getToken('0x0000000000000000000000000000000000000000').then(
+        (token) => token && setTokenMetaList([token])
+      )
+      return
     }
-    setTokenMetaList(tokenList)
-    if (poolRows.length) {
-      setPoolList(poolRows)
-    } else {
-      setPoolList([createPoolEmptyItem()])
-    }
+    // set data from local
+    const poolDetailData = JSON.parse(poolDetail) as DistributePageCache
+    const {
+      poolList,
+      tokenMetaList,
+      tableHeaderInputList,
+      poolName,
+      poolConfig,
+    } = poolDetailData
+    setPoolList(poolList)
+    setPoolName(poolName)
+    // JSON.parse(JSON.stringify(BigNumber)) lose prototype.
+    setTokenMetaList(() =>
+      tokenMetaList.map((token) => ({
+        ...token,
+        balance: BigNumber.from(token.balance),
+      }))
+    )
 
-    localStorage.removeItem('distributeAgainData')
+    if (poolConfig) {
+      setPoolConfig(poolConfig)
+    }
+    if (tableHeaderInputList) {
+      setTableHeaderInputList(tableHeaderInputList)
+    }
   }, [])
   useEffect(() => {
     initPool()
@@ -341,7 +379,6 @@ export default function PoolsList() {
 
   const textarea2poolList = useCallback(() => {
     const textByRow = textarea.split('\n')
-    console.log('textarea')
     const _poolList: TPoolRow[] = []
     for (let i = 0; i < textByRow.length; i++) {
       const text = textByRow[i]

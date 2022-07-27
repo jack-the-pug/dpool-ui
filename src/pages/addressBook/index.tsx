@@ -27,7 +27,6 @@ export default function AddressBook() {
   const getAddressBook = () => {
     getBook().then((res) => {
       if (res.length) {
-        console.log('localDb', res)
         setAddressBook(res)
       }
     })
@@ -55,9 +54,7 @@ export default function AddressBook() {
 
   const onRemoveProfile = useCallback(
     (address: string) => {
-      deleteBookRow(address)
-        .then(() => getAddressBook())
-        .catch(console.log)
+      deleteBookRow(address).then(() => getAddressBook())
     },
     [addressBook]
   )

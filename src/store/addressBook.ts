@@ -12,7 +12,6 @@ export const getBookRow = async (id: string) => {
 
 export const updateBookRow = async (meta: AddressBookRow) => {
   const row = { ...meta }
-  console.log('updateBookRow', row)
   return await set(row.id.toLowerCase(), row)
 }
 

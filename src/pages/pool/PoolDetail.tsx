@@ -5,6 +5,7 @@ import {
   BasePool,
   DPoolEvent,
   GetPoolRes,
+  PoolRow,
   PoolState,
   TokenMeta,
 } from '../../type'
@@ -25,6 +26,7 @@ import ApproveTokens, {
 import { formatCurrencyAmount } from '../../utils/number'
 import useAddressBook from '../../hooks/useAddressBook'
 import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
+import { DistributePageCache, TPoolRow } from '../distribution/CreatePool'
 
 export type Pool = BasePool & {
   state: PoolState
@@ -118,6 +120,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
 
   useEffect(() => {
     if (!poolMeta) return
+
     const tokenAddress = poolMeta.token
     getToken(tokenAddress).then((meta) => meta && setTokenMeta(meta))
   }, [poolMeta, getToken])
@@ -129,7 +132,6 @@ export function PoolDetail({ poolId }: { poolId: string }) {
     setIsLoading(true)
     try {
       const poolRes: GetPoolRes = await dPoolContract.getPoolById(poolId)
-      console.log('poolRes', poolRes[0])
       const {
         amounts,
         claimedAmount,
@@ -172,12 +174,29 @@ export function PoolDetail({ poolId }: { poolId: string }) {
   }, [dPoolContract, account, poolId, chainId])
 
   const distributeAgain = useCallback(() => {
+    if (!poolMeta || !tokenMeta) return
+
+    const poolList = poolMeta.claimers.map(
+      (address: string, index: number): TPoolRow => ({
+        address,
+        userInputAmount: utils.formatUnits(
+          poolMeta.amounts[index],
+          tokenMeta.decimals
+        ),
+        key: address,
+      })
+    )
+    const distributePageCache: DistributePageCache = {
+      poolList,
+      tokenMetaList: [tokenMeta],
+      poolName: poolMeta.name,
+    }
     localStorage.setItem(
-      LOCAL_STORAGE_KEY.DISTRIBUTE_AGAIN_DATA,
-      JSON.stringify(poolMeta)
+      LOCAL_STORAGE_KEY.DISTRIBUTE_CATCH_DATA,
+      JSON.stringify(distributePageCache)
     )
     navigate('/')
-  }, [poolMeta])
+  }, [poolMeta, tokenMeta])
 
   if (isLoading) {
     return (
@@ -186,7 +205,33 @@ export function PoolDetail({ poolId }: { poolId: string }) {
       </p>
     )
   }
-
+  const parseDate = (second: number) => {
+    try {
+      return format(new Date(second * 1000), 'Pp')
+    } catch {
+      return
+    }
+  }
+  function RenderDate() {
+    if (!poolMeta) return null
+    const startDate = parseDate(poolMeta.startTime)
+    const endDate = parseDate(poolMeta.deadline)
+    if (!startDate || !endDate) return null
+    return (
+      <>
+        <div className="flex h-6 w-full justify-between items-center">
+          <div>Start Date</div>
+          <div className="flex-1 border-b border-gray-500 border-dotted mx-2"></div>
+          <div>{startDate}</div>
+        </div>
+        <div className="flex h-6 w-full justify-between items-center">
+          <div>End Date</div>
+          <div className="flex-1  border-b border-gray-500 border-dotted mx-2"></div>
+          <div>{endDate}</div>
+        </div>
+      </>
+    )
+  }
   function RenderCancel() {
     if (!poolMeta || !account) return null
     if (poolMeta.state !== PoolState.Initialized) return null
@@ -520,16 +565,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
               <span className="ml-1 text-gray-500">{tokenMeta?.symbol}</span>
             </div>
           </div>
-          <div className="flex h-6 w-full justify-between items-center">
-            <div>Start Date</div>
-            <div className="flex-1 border-b border-gray-500 border-dotted mx-2"></div>
-            <div>{format(new Date(poolMeta.startTime * 1000), 'Pp')}</div>
-          </div>
-          <div className="flex h-6 w-full justify-between items-center">
-            <div>End Date</div>
-            <div className="flex-1  border-b border-gray-500 border-dotted mx-2"></div>
-            <div>{format(new Date(poolMeta.deadline * 1000), 'Pp')}</div>
-          </div>
+          <RenderDate />
         </section>
 
         <div className="flex mt-4 gap-2 w-full justify-between">

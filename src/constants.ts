@@ -1570,11 +1570,23 @@ const Polygon: Chain = {
   name: 'Polygon',
   symbol: 'MATIC',
   decimals: 18,
-  dPoolFactoryAddress: '0x260da69caa8e644E85eD862Ed819fb3C29578aC8',
+  dPoolFactoryAddress: '0x43677d1e464EF3121B4Ea4Ff89133f71e05238e1',
   scan: 'https://polygonscan.com',
   urls: [
     'https://rpc-mainnet.matic.network',
     'https://matic-mainnet.chainstacklabs.com',
+  ],
+}
+const Mumbai: Chain = {
+  chainId: 80001,
+  name: 'Mumbai',
+  symbol: 'MATIC',
+  decimals: 18,
+  dPoolFactoryAddress: '0x7B6e14296d50C81D1F831224CD271FE9aCC18bd1',
+  scan: 'https://mumbai.polygonscan.com/',
+  urls: [
+    'https://polygontestapi.terminet.io/rpc',
+    'https://rpc.ankr.com/polygon_mumbai',
   ],
 }
 
@@ -1583,7 +1595,7 @@ const RinkeBy: Chain = {
   name: 'Rinkeby',
   symbol: 'ETH',
   decimals: 18,
-  dPoolFactoryAddress: '0xde109499a60165404d8A8AcbCb72abb7FF8EC89b',
+  dPoolFactoryAddress: '0x43677d1e464EF3121B4Ea4Ff89133f71e05238e1',
   scan: 'https://rinkeby.etherscan.io',
   urls: ['https://rpc.ankr.com/eth_rinkeby'],
 }
@@ -1591,6 +1603,7 @@ export const chains: Chains = {
   1: Mainnet,
   137: Polygon,
   4: RinkeBy,
+  80001: Mumbai,
 }
 
 export function getAddChainParameters(
