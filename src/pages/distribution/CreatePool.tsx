@@ -63,7 +63,6 @@ const { useAccount, useChainId } = metaMaskHooks
 export default function PoolsList() {
   usePageClose()
   const account = useAccount()
-  const chainId = useChainId()
   const { getToken } = useTokenMeta()
   const { isOwner, dPoolAddress } = useDPoolAddress()
   const [dPoolFactoryVisible, setDPoolFactoryVisible] = useState<boolean>(false)
@@ -185,8 +184,8 @@ export default function PoolsList() {
       LOCAL_STORAGE_KEY.DISTRIBUTE_CATCH_DATA
     )
     if (!poolDetail) {
-      getToken('0x0000000000000000000000000000000000000000').then(
-        (token) => token && setTokenMetaList([token])
+      getToken('0x0000000000000000000000000000000000000000').then((token) =>
+        setTokenMetaList([token!])
       )
       return
     }
@@ -526,7 +525,7 @@ export default function PoolsList() {
         ) : (
           <div
             onClick={() => addEmptyProfile()}
-            className="w-full cursor-cell flex items-center justify-center h-8 border border-dashed  border-gray-500"
+            className="w-full cursor-pointer flex items-center justify-center h-8 border border-dashed  border-gray-500"
           >
             <MaterialSymbolsAdd className="flex-1" />
           </div>
