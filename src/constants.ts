@@ -1555,7 +1555,7 @@ interface Chains {
   [key: number]: Chain
 }
 
-const ETH: Chain = {
+const Mainnet: Chain = {
   chainId: 1,
   name: 'Ethereum Mainnet',
   symbol: 'ETH',
@@ -1565,12 +1565,12 @@ const ETH: Chain = {
   urls: [],
 }
 
-const MATIC: Chain = {
+const Polygon: Chain = {
   chainId: 137,
   name: 'Polygon',
   symbol: 'MATIC',
   decimals: 18,
-  dPoolFactoryAddress: '0xa04373e1DdF88008Eead7437C9C6F504A76BCa63',
+  dPoolFactoryAddress: '0x260da69caa8e644E85eD862Ed819fb3C29578aC8',
   scan: 'https://polygonscan.com',
   urls: [
     'https://rpc-mainnet.matic.network',
@@ -1583,13 +1583,13 @@ const RinkeBy: Chain = {
   name: 'Rinkeby',
   symbol: 'ETH',
   decimals: 18,
-  dPoolFactoryAddress: '0xd99C72DfFB547E4AD32CB3FE3D6d8D6f16179ae9',
+  dPoolFactoryAddress: '0xde109499a60165404d8A8AcbCb72abb7FF8EC89b',
   scan: 'https://rinkeby.etherscan.io',
   urls: ['https://rpc.ankr.com/eth_rinkeby'],
 }
 export const chains: Chains = {
-  1: ETH,
-  137: MATIC,
+  1: Mainnet,
+  137: Polygon,
   4: RinkeBy,
 }
 

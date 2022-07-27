@@ -43,7 +43,6 @@ export default function TextareaMode(props: {
   }, [textarea])
   const onTextareaBlur = () => {
     const list = parsedToAddressBook()
-    console.log('list', list)
     bulkAdd(list)
     setAddressBook(list)
   }
@@ -51,8 +50,8 @@ export default function TextareaMode(props: {
     <textarea
       className="p-2 min-h-32 leading-8 bg-neutral-200 overflow-hidden text-sm resize-none outline-none focus:outline-none border border-gray-400"
       style={{ width: '36rem', height: textareaHeight }}
-      placeholder="0x314ab97b76e39d63c78d5c86c2daf8eaa306b182 mainnet
-                   0x271bffabd0f79b8bd4d7a1c245b7ec5b576ea98a,polygon
+      placeholder="0x314ab97b76e39d63c78d5c86c2daf8eaa306b182 bob
+                   0x271bffabd0f79b8bd4d7a1c245b7ec5b576ea98a,Heisenberg
                    0x141ca95b6177615fb1417cf70e930e102bf8f584=friend"
       value={textarea}
       onChange={(e) => setTextarea(e.target.value)}

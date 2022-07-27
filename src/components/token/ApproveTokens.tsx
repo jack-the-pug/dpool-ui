@@ -65,9 +65,10 @@ export interface ApproveTokenProps {
   dPoolAddress: string
   approveAmount: BigNumber
   onApproved: () => void
+  selectClass?: string
 }
 export function ApproveToken(props: ApproveTokenProps) {
-  const { token, dPoolAddress, approveAmount, onApproved } = props
+  const { token, dPoolAddress, approveAmount, onApproved, selectClass } = props
 
   const chainId = useChainId()
   const { approveToken, getApprovedAmount } = useApproveToken(dPoolAddress)
@@ -129,7 +130,7 @@ export function ApproveToken(props: ApproveTokenProps) {
   return (
     <div className="flex items-start">
       <select
-        className="outline-none mr-2"
+        className={`outline-none mr-2 ${selectClass}`}
         onChange={(e) =>
           setApproveType(e.target.value as unknown as ApproveType)
         }
