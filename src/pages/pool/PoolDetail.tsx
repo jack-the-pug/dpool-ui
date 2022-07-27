@@ -173,7 +173,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
 
   const distributeAgain = useCallback(() => {
     localStorage.setItem(
-      LOCAL_STORAGE_KEY.DISTRIBUTE_AGAIN_DATA,
+      LOCAL_STORAGE_KEY.DISTRIBUTE_CATCH_DATA,
       JSON.stringify(poolMeta)
     )
     navigate('/')
