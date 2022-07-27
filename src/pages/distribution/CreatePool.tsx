@@ -150,7 +150,6 @@ export default function PoolsList() {
       Math.round(Date.now() + 60 * 60),
     ],
   })
-
   // if push later mode. the startTime and deadline is (uint48.max - 1)
   useEffect(() => {
     if (
