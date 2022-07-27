@@ -5,6 +5,7 @@ import {
   BasePool,
   DPoolEvent,
   GetPoolRes,
+  PoolRow,
   PoolState,
   TokenMeta,
 } from '../../type'
@@ -25,6 +26,7 @@ import ApproveTokens, {
 import { formatCurrencyAmount } from '../../utils/number'
 import useAddressBook from '../../hooks/useAddressBook'
 import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
+import { DistributePageCache, TPoolRow } from '../distribution/CreatePool'
 
 export type Pool = BasePool & {
   state: PoolState
@@ -129,7 +131,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
     setIsLoading(true)
     try {
       const poolRes: GetPoolRes = await dPoolContract.getPoolById(poolId)
-      console.log('poolRes', poolRes[0])
+
       const {
         amounts,
         claimedAmount,
@@ -172,12 +174,29 @@ export function PoolDetail({ poolId }: { poolId: string }) {
   }, [dPoolContract, account, poolId, chainId])
 
   const distributeAgain = useCallback(() => {
+    if (!poolMeta || !tokenMeta) return
+
+    const poolList = poolMeta.claimers.map(
+      (address: string, index: number): TPoolRow => ({
+        address,
+        userInputAmount: utils.formatUnits(
+          poolMeta.amounts[index],
+          tokenMeta.decimals
+        ),
+        key: address,
+      })
+    )
+    const distributePageCache: DistributePageCache = {
+      poolList,
+      tokenMetaList: [tokenMeta],
+      poolName: poolMeta.name,
+    }
     localStorage.setItem(
       LOCAL_STORAGE_KEY.DISTRIBUTE_CATCH_DATA,
-      JSON.stringify(poolMeta)
+      JSON.stringify(distributePageCache)
     )
     navigate('/')
-  }, [poolMeta])
+  }, [poolMeta, tokenMeta])
 
   if (isLoading) {
     return (

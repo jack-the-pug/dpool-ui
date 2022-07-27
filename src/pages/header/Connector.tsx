@@ -30,9 +30,7 @@ export default function Connector() {
     }
   }, [isActive])
   useEffect(() => {
-    void metaMask.connectEagerly().catch(() => {
-      console.debug('Failed to connect to metamask')
-    })
+    void metaMask.connectEagerly()
   }, [])
 
   if (!isConnect) {

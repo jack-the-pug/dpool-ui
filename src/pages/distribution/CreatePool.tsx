@@ -180,14 +180,11 @@ export default function PoolsList() {
       JSON.stringify(distributeCacheData)
     )
   }, [poolList, tokenMetaList, tableHeaderInputList, poolConfig, poolName])
-  useEffect(() => {
-    console.log('toke', tokenMetaList)
-  }, [tokenMetaList])
+
   const initPool = useCallback(async () => {
     const poolDetail = localStorage.getItem(
       LOCAL_STORAGE_KEY.DISTRIBUTE_CATCH_DATA
     )
-
     if (!poolDetail) {
       getToken('0x0000000000000000000000000000000000000000').then(
         (token) => token && setTokenMetaList([token])
@@ -383,7 +380,6 @@ export default function PoolsList() {
 
   const textarea2poolList = useCallback(() => {
     const textByRow = textarea.split('\n')
-    console.log('textarea')
     const _poolList: TPoolRow[] = []
     for (let i = 0; i < textByRow.length; i++) {
       const text = textByRow[i]

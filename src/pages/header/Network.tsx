@@ -28,7 +28,6 @@ export default function NetworkAction() {
           desiredChainId === -1 ? undefined : desiredChainId
         )
       } else {
-        console.log('param add')
         await connector.activate(
           desiredChainId === -1
             ? undefined

@@ -90,7 +90,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
 
   const tokenTotalAmounts = useMemo(() => {
     const totalAmount: BigNumber[] = []
-    console.log('callData', callData)
     callData.forEach((data) =>
       totalAmount.push(
         data[PoolCreator.Amounts].reduce(
@@ -192,7 +191,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
   const singleCreate = useCallback(
     async (callData: PoolCreateCallData): Promise<string | undefined> => {
       if (!dPoolContract || !dPoolAddress) return
-      console.log('dPoolContract', dPoolContract)
+
       const singleCreateRequest = await dPoolContract.create(callData, {
         value: nativeTokenValue,
       })
@@ -250,7 +249,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     for (let i = 0; i < tokenTotalAmounts.length; i++) {
       const total = tokenTotalAmounts[i]
       const balance = tokenMetaList[i].balance
-      console.log('balance', balance)
+
       if (balance.lt(total)) return false
     }
     return true
@@ -277,7 +276,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         setCreateTx(tx)
       }
     } catch (err: any) {
-      console.log('err', err)
       toast.error(
         `${typeof err === 'object' ? err.reason || JSON.stringify(err) : err}`
       )
