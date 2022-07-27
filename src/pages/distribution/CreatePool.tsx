@@ -263,8 +263,7 @@ export default function PoolsList() {
     const distributor =
       poolConfig.distributionType === DistributionType.Pull
         ? account
-        : poolConfig.distributor
-
+        : poolConfig.distributor || '0x0000000000000000000000000000000000000000'
     const _pool = poolList.filter(isLegalPoolRow)
     if (_pool.length !== parsedTokenAmounts[0].length) return null
 

@@ -58,9 +58,9 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
   const [poolIds, setPoolIds] = useState<string[]>([])
 
   // later mode. do not need approved
-  const [isTokensApproved, setIsTokensApproved] = useState<boolean>(
-    !callData[0][PoolCreator.isFundNow]
-  )
+  const [isTokensApproved, setIsTokensApproved] = useState<boolean>(() => {
+    return !callData[0][PoolCreator.isFundNow]
+  })
   const [createPoolState, setCreatePoolState] = useState<ActionState>(
     ActionState.WAIT
   )
@@ -191,7 +191,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
   const singleCreate = useCallback(
     async (callData: PoolCreateCallData): Promise<string | undefined> => {
       if (!dPoolContract || !dPoolAddress) return
-
+      console.log('callData', callData, nativeTokenValue)
       const singleCreateRequest = await dPoolContract.create(callData, {
         value: nativeTokenValue,
       })
@@ -261,10 +261,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     const poolLength = callData.length
     let tx: string | undefined
     try {
-      if (
-        distributionType === DistributionType.Push &&
-        poolMeta.config.isFundNow
-      ) {
+      if (poolMeta.config.isFundNow) {
         tx = await batchDisperse()
       } else {
         poolLength === 1
@@ -276,6 +273,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         setCreateTx(tx)
       }
     } catch (err: any) {
+      console.log('err', err)
       toast.error(
         `${typeof err === 'object' ? err.message || JSON.stringify(err) : err}`
       )
@@ -429,7 +427,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         </div>
       </div>
       <div className="">
-        {poolMeta.config.distributor &&
+        {BigNumber.from(poolMeta.config.distributor).gt(0) &&
         poolMeta.config.distributor.toLowerCase() !== account?.toLowerCase() ? (
           <div className="flex justify-between my-4">
             <div>Distributor</div>
@@ -456,8 +454,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           </div>
         )}
       </div>
-      {poolMeta.config.distributor.toLowerCase() === account?.toLowerCase() &&
-      poolMeta.config.isFundNow ? (
+      {poolMeta.config.isFundNow ? (
         <div className="mt-4">
           <ApproveTokens
             tokens={tokenMetaList.map((token, index) => ({
