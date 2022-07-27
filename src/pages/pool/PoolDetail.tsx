@@ -288,9 +288,9 @@ export function PoolDetail({ poolId }: { poolId: string }) {
   }
   function RenderFund() {
     if (!poolMeta || !account || !dPoolAddress) return null
-
+    const distributor = BigNumber.from(poolMeta.distributor)
     if (
-      poolMeta.distributor &&
+      !distributor.eq(0) &&
       poolMeta.distributor.toLowerCase() !== account.toLowerCase()
     )
       return null
@@ -358,7 +358,8 @@ export function PoolDetail({ poolId }: { poolId: string }) {
   function RenderDistribute() {
     if (!poolMeta || !account) return null
     if (poolMeta.state !== PoolState.Funded) return null
-    if (!BigNumber.from(poolMeta.distributor).eq(account)) return null
+    const distributor = BigNumber.from(poolMeta.distributor)
+    if (!distributor.eq(0) && !distributor.eq(account)) return null
     const [distributionState, setDistributionState] = useState<ActionState>(
       ActionState.WAIT
     )
