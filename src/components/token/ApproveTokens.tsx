@@ -13,6 +13,8 @@ import useDPoolAddress from '../../hooks/useDPoolAddress'
 import useTokenMeta from '../../hooks/useTokenMeta'
 import { TokenMeta } from '../../type'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
+import { useERC20Permit } from '../../hooks/useERC20Permit'
+import useDPool from '../../hooks/useDPool'
 
 enum ApproveType {
   LIMIT = 'LIMIT',
@@ -84,10 +86,20 @@ export function ApproveToken(props: ApproveTokenProps) {
   const [approvedAmount, setApprovedAmount] = useState<BigNumber>(
     BigNumber.from(0)
   )
+
   const shouldApproveAmount = useMemo(() => {
     if (approvedAmount.gte(approveAmount)) return BigNumber.from(0)
     return approveAmount.sub(approvedAmount)
   }, [approveAmount, approvedAmount])
+
+  const getSignatureData = useERC20Permit()
+  useEffect(() => {
+    getSignatureData(token, shouldApproveAmount, dPoolAddress).then(
+      (signData: any) => {
+        console.log('signData', signData)
+      }
+    )
+  }, [getSignatureData, token, shouldApproveAmount, dPoolAddress])
 
   useEffect(() => {
     getToken(token).then(setTokenMeta)
