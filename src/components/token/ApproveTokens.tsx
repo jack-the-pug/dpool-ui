@@ -92,15 +92,6 @@ export function ApproveToken(props: ApproveTokenProps) {
     return approveAmount.sub(approvedAmount)
   }, [approveAmount, approvedAmount])
 
-  const getSignatureData = useERC20Permit()
-  useEffect(() => {
-    getSignatureData(token, shouldApproveAmount, dPoolAddress).then(
-      (signData: any) => {
-        console.log('signData', signData)
-      }
-    )
-  }, [getSignatureData, token, shouldApproveAmount, dPoolAddress])
-
   useEffect(() => {
     getToken(token).then(setTokenMeta)
   }, [token, chainId])

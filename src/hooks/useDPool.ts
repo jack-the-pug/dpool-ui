@@ -4,7 +4,7 @@ import { isAddress } from 'ethers/lib/utils'
 import { useEffect, useMemo, useState } from 'react'
 import useSignerOrProvider from './useSignOrProvider'
 import { hooks as metaMaskHooks } from '../connectors/metaMask'
-import { dPoolABI } from '../constants'
+import dPoolABI from '../abis/dPool.json'
 
 export default function useDPool(poolAddress: string | undefined) {
   const { provider } = useWeb3React()

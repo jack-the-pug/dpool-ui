@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
 import { BigNumber, ContractReceipt, ethers } from 'ethers'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import Action, { ActionState } from '../../components/action'
 import { Dialog } from '../../components/dialog'
@@ -16,12 +16,14 @@ import {
 import { DistributionType, PoolConfig } from './CreatePool'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { useNavigate } from 'react-router-dom'
-import { dPoolABI } from '../../constants'
+import dPoolABI from '../../abis/dPool.json'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import ApproveTokens from '../../components/token/ApproveTokens'
 import { formatCurrencyAmount } from '../../utils/number'
 import useAddressBook from '../../hooks/useAddressBook'
 import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
+import useSignerOrProvider from '../../hooks/useSignOrProvider'
+import { useERC20Permit } from '../../hooks/useERC20Permit'
 
 interface PoolMeta {
   name: string
@@ -42,6 +44,13 @@ interface CreatePoolConfirmProps {
   distributionType: DistributionType
 }
 
+enum SubmitMethod {
+  batchDisperse = 'batchDisperse',
+  batchDisperseWidthPermit = 'batchDisperseWidthPermit',
+  singleCreate = 'singleCreate',
+  batchCreate = 'batchCreate',
+}
+
 const { useAccount, useChainId } = metaMaskHooks
 const dPoolInterface = new ethers.utils.Interface(dPoolABI)
 
@@ -57,7 +66,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
 
   const [poolIds, setPoolIds] = useState<string[]>([])
 
-  // later mode. do not need approved
+  // later mode.
   const [isTokensApproved, setIsTokensApproved] = useState<boolean>(() => {
     return !callData[0][PoolCreator.isFundNow]
   })
@@ -245,6 +254,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       }
     }
   }, [dPoolContract, dPoolAddress, callData, nativeTokenValue])
+
   const isBalanceEnough = useMemo(() => {
     for (let i = 0; i < tokenTotalAmounts.length; i++) {
       const total = tokenTotalAmounts[i]
@@ -338,7 +348,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           [ActionState.SUCCESS]:
             distributionType === DistributionType.Pull
               ? `Pool ${poolIds.join(',')} Created`
-              : `Distribution Success`,
+              : `Distribution Created`,
         }}
         tx={createTx}
         onClick={isBalanceEnough ? submit : () => {}}
@@ -364,8 +374,8 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
 
       <div className="font-mono">
         {renderUIData.map((row) => (
-          <div className="flex gap-4 my-1 justify-between">
-            <div key={row.address} className="">
+          <div key={row.address} className="flex gap-4 my-1 justify-between">
+            <div className="">
               {row.address}{' '}
               {addressName(row.address) ? (
                 <span className="text-gray-500 italic text-xs">

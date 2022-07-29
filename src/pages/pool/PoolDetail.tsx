@@ -1,4 +1,4 @@
-import { utils } from 'ethers'
+import { BigNumber, utils } from 'ethers'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { BasePool, GetPoolRes, PoolState, TokenMeta } from '../../type'
@@ -34,7 +34,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const account = useAccount()
   const chainId = useChainId()
-  const [isTokensApproved, setIsTokensApproved] = useState<boolean>(false)
+  const [submittable, setSubmittable] = useState<boolean>(false)
   const dPoolContract = useDPoolContract(dPoolAddress)
 
   const [poolMeta, setPoolMeta] = useState<Pool>()
@@ -153,7 +153,6 @@ export function PoolDetail({ poolId }: { poolId: string }) {
               <td>{tokenMeta?.symbol}</td>
             </tr>
           </thead>
-
           <tbody>
             {poolList.map((claimer, index) => (
               <DistributeRow
@@ -198,26 +197,27 @@ export function PoolDetail({ poolId }: { poolId: string }) {
             <Cancel
               poolMeta={poolMeta}
               dPoolAddress={dPoolAddress}
-              tokenMeta={tokenMeta}
               isOwner={isOwner}
               poolId={poolId}
               getPoolDetail={getPoolDetail}
             />
+
             <Fund
               poolMeta={poolMeta}
               dPoolAddress={dPoolAddress}
               tokenMeta={tokenMeta}
               poolId={poolId}
               getPoolDetail={getPoolDetail}
-              isTokensApproved={isTokensApproved}
-              setIsTokensApproved={setIsTokensApproved}
+              submittable={submittable}
+              setSubmittable={setSubmittable}
             />
             <Distribute
               poolMeta={poolMeta}
               dPoolAddress={dPoolAddress}
               poolId={poolId}
               getPoolDetail={getPoolDetail}
-              isTokensApproved={isTokensApproved}
+              submittable={submittable}
+              tokenMeta={tokenMeta}
             />
           </div>
         </div>

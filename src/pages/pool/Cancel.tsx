@@ -13,27 +13,14 @@ const contractIface = new ethers.utils.Interface(dPoolABI)
 interface CancelProps {
   poolMeta: Pool | undefined
   dPoolAddress: string | undefined
-  tokenMeta: TokenMeta | undefined
   poolId: string
   getPoolDetail: Function
   isOwner: boolean
 }
 
 export function Cancel(props: CancelProps) {
-  const { poolMeta, dPoolAddress, tokenMeta, poolId, getPoolDetail, isOwner } =
-    props
+  const { poolMeta, dPoolAddress, poolId, getPoolDetail, isOwner } = props
   const { account, chainId } = useWeb3React()
-  if (!poolMeta || !account) return null
-  if (poolMeta.state !== PoolState.Initialized) return null
-  if (!isOwner) {
-    return null
-  }
-  const { startTime, deadline } = poolMeta
-  const nowTime = Date.now() / 1000
-  if (nowTime >= startTime && nowTime <= deadline) {
-    return null
-  }
-
   const [cancelState, setCancelState] = useState<ActionState>(ActionState.WAIT)
   const dPoolContract = useDPoolContract(dPoolAddress)
   const cancelPool = useCallback(async () => {
@@ -60,6 +47,16 @@ export function Cancel(props: CancelProps) {
     }
   }, [dPoolContract, chainId])
 
+  if (!poolMeta || !account) return null
+  if (poolMeta.state !== PoolState.Initialized) return null
+  if (!isOwner) {
+    return null
+  }
+  const { startTime, deadline } = poolMeta
+  const nowTime = Date.now() / 1000
+  if (nowTime >= startTime && nowTime <= deadline) {
+    return null
+  }
   return (
     <RenderActionButton
       state={cancelState}

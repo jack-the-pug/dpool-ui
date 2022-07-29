@@ -19,8 +19,8 @@ interface FundProps {
   tokenMeta: TokenMeta | undefined
   poolId: string
   getPoolDetail: Function
-  isTokensApproved: boolean
-  setIsTokensApproved: (b: boolean) => void
+  submittable: boolean
+  setSubmittable: (b: boolean) => void
 }
 
 export function Fund(props: FundProps) {
@@ -30,32 +30,38 @@ export function Fund(props: FundProps) {
     tokenMeta,
     poolId,
     getPoolDetail,
-    setIsTokensApproved,
-    isTokensApproved,
+    setSubmittable,
+    submittable,
   } = props
-  if (!tokenMeta) return null
-  if (!poolMeta || !dPoolAddress) return null
-  if (poolMeta.state !== PoolState.Initialized) return null
+  if (
+    !tokenMeta ||
+    !poolMeta ||
+    !dPoolAddress ||
+    poolMeta.state !== PoolState.Initialized
+  )
+    return null
 
   const { account, chainId } = useWeb3React()
   const dPoolContract = useDPoolContract(tokenMeta.address)
 
   const distributor = BigNumber.from(poolMeta.distributor)
-  if (
-    !distributor.eq(0) &&
-    poolMeta.distributor.toLowerCase() !== account?.toLowerCase()
-  )
-    return null
 
   const [fundState, setFundState] = useState<ActionState>(ActionState.WAIT)
-  const { isSupportPermit, getSignatureData } = useERC20Permit(dPoolAddress)
+  const { isSupportPermit, getSignatureData } = useERC20Permit(
+    tokenMeta.address
+  )
+  const [isApproved, setIsApproved] = useState<boolean>(false)
+  useEffect(() => {
+    setSubmittable(isSupportPermit ? true : isApproved ? true : false)
+  }, [isSupportPermit, isApproved])
   const nativeTokenAmount = useMemo(() => {
     if (!BigNumber.from(poolMeta.token).eq(0)) return BigNumber.from(0)
     return poolMeta.totalAmount
   }, [poolMeta])
 
   const fundPool = useCallback(async () => {
-    if (!dPoolContract || !poolId || !chainId) return
+    if (!dPoolContract || !poolId) return
+    console.log('isSupportPermit', isSupportPermit)
     setFundState(ActionState.ING)
     try {
       let fundPoolByIdRes
@@ -102,17 +108,29 @@ export function Fund(props: FundProps) {
       toast.error(typeof err === 'object' ? err.message : JSON.stringify(err))
       setFundState(ActionState.FAILED)
     }
-  }, [dPoolContract, chainId, poolId, nativeTokenAmount, isSupportPermit])
-
+  }, [
+    dPoolContract,
+    poolId,
+    nativeTokenAmount,
+    isSupportPermit,
+    getSignatureData,
+  ])
+  if (
+    !distributor.eq(0) &&
+    poolMeta.distributor.toLowerCase() !== account?.toLowerCase()
+  )
+    return null
   return (
     <div className="flex gap-2 items-center">
-      <ApproveToken
-        token={tokenMeta.address}
-        approveAmount={poolMeta.totalAmount}
-        dPoolAddress={dPoolAddress}
-        onApproved={() => setIsTokensApproved(true)}
-        selectClass="bg-neutral-200"
-      />
+      {isSupportPermit ? null : (
+        <ApproveToken
+          token={tokenMeta.address}
+          approveAmount={poolMeta.totalAmount}
+          dPoolAddress={dPoolAddress}
+          onApproved={() => setIsApproved(true)}
+          selectClass="bg-neutral-200"
+        />
+      )}
       {BigNumber.from(poolMeta.distributor).eq(0) ? null : (
         <RenderActionButton
           state={fundState}
@@ -124,7 +142,7 @@ export function Fund(props: FundProps) {
           }}
           onClick={fundPool}
           waitClass={`${
-            isTokensApproved
+            submittable
               ? ''
               : 'text-gray-500 border-gray-400 cursor-not-allowed'
           } `}

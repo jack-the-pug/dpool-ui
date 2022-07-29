@@ -1,13 +1,14 @@
 import { useWeb3React } from '@web3-react/core'
 import { BigNumber, ContractReceipt, ethers } from 'ethers'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { ActionState } from '../../components/action'
-import { PoolState, DPoolEvent } from '../../type'
+import { PoolState, DPoolEvent, TokenMeta } from '../../type'
 import { Pool } from './PoolDetail'
 import useDPoolContract from '../../hooks/useDPool'
 import dPoolABI from '../../abis/dPool.json'
 import RenderActionButton from '../../components/action'
+import { useERC20Permit } from '../../hooks/useERC20Permit'
 
 const contractIface = new ethers.utils.Interface(dPoolABI)
 
@@ -16,30 +17,62 @@ interface DistributeProps {
   dPoolAddress: string | undefined
   poolId: string
   getPoolDetail: Function
-  isTokensApproved: boolean
+  submittable: boolean
+  tokenMeta: TokenMeta | undefined
 }
 export function Distribute(props: DistributeProps) {
+  const {
+    poolMeta,
+    dPoolAddress,
+    submittable,
+    poolId,
+    getPoolDetail,
+    tokenMeta,
+  } = props
+  if (!tokenMeta || !dPoolAddress || !poolMeta) return null
   const { account, chainId } = useWeb3React()
-  const { poolMeta, dPoolAddress, isTokensApproved, poolId, getPoolDetail } =
-    props
-  if (!poolMeta || !account) return null
-  if (poolMeta.state === PoolState.Closed) return null
-
-  const distributor = BigNumber.from(poolMeta.distributor)
-  if (!distributor.eq(0) && !distributor.eq(account)) return null
   const [distributionState, setDistributionState] = useState<ActionState>(
     ActionState.WAIT
   )
   const dPoolContract = useDPoolContract(dPoolAddress)
   const [distributeTx, setDistributeTx] = useState<string>()
-
+  const { isSupportPermit, getSignatureData } = useERC20Permit(
+    tokenMeta.address
+  )
+  useEffect(() => {
+    console.log('isSupportPermit', isSupportPermit)
+  }, [isSupportPermit])
   const distributePool = useCallback(async () => {
     if (!dPoolContract || !poolId || !chainId) return
     setDistributionState(ActionState.ING)
     const successClaimedAddress: string[] = []
 
     try {
-      const distributionPoolByIdRes = await dPoolContract.distribute(poolId)
+      let distributionPoolByIdRes
+      console.log('poolMeta.distributor', poolMeta.distributor)
+      if (isSupportPermit && BigNumber.from(poolMeta.distributor).eq(0)) {
+        const signatureData = (await getSignatureData(
+          poolMeta.totalAmount,
+          dPoolAddress
+        ))!
+        console.log('signatureData', signatureData)
+        const fundWithPermitCallData = [
+          signatureData.tokenAddress,
+          signatureData.amount,
+          signatureData.deadline,
+          signatureData.v,
+          signatureData.r,
+          signatureData.s,
+        ]
+        console.log('fundWithPermitCallData', fundWithPermitCallData)
+        distributionPoolByIdRes = await dPoolContract.distributeWithPermit(
+          poolId,
+          fundWithPermitCallData
+        )
+      } else {
+        distributionPoolByIdRes = await dPoolContract.distribute(poolId)
+      }
+
       const transactionResponse: ContractReceipt =
         await distributionPoolByIdRes.wait()
       setDistributeTx(transactionResponse.transactionHash)
@@ -61,22 +94,26 @@ export function Distribute(props: DistributeProps) {
       toast.error(typeof err === 'object' ? err.message : JSON.stringify(err))
       setDistributionState(ActionState.FAILED)
     }
-  }, [dPoolContract, chainId])
+  }, [dPoolContract, chainId, getSignatureData, isSupportPermit, poolMeta])
+  if (!poolMeta || !account) return null
+  if (poolMeta.state === PoolState.Closed) return null
+  const distributor = BigNumber.from(poolMeta.distributor)
+  if (!distributor.eq(0) && !distributor.eq(account)) return null
   return (
     <RenderActionButton
       state={distributionState}
       stateMsgMap={{
         [ActionState.WAIT]: distributor.eq(0)
-          ? ' Fund and Distribute'
+          ? 'Fund and Distribute'
           : 'Distribute',
         [ActionState.ING]: 'Distributing',
         [ActionState.SUCCESS]: 'Distributed',
         [ActionState.FAILED]: 'Distribute failed.Try again',
       }}
       tx={distributeTx}
-      onClick={isTokensApproved ? distributePool : () => {}}
+      onClick={submittable ? distributePool : () => {}}
       waitClass={
-        isTokensApproved
+        submittable
           ? 'text-green-500 border-green-500'
           : 'text-gray-500 border-gray-400 cursor-not-allowed'
       }

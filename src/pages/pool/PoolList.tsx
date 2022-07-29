@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { DPoolLocalStorageMeta } from '../../type'
 
 import useDPoolAddress from '../../hooks/useDPoolAddress'
@@ -8,6 +8,7 @@ import useDPool from '../../hooks/useDPool'
 import { BigNumber } from 'ethers'
 import { EosIconsBubbleLoading } from '../../components/icon'
 import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
+import { PoolDetail } from './PoolDetail'
 
 const { useChainId } = metaMaskHooks
 
@@ -86,6 +87,27 @@ export default function PoolList() {
           fetch transactions from the dPoolContract again
         </button>
       </div>
+    </div>
+  )
+}
+
+export function PoolDetailList() {
+  const { poolIds: _poolIds } = useParams()
+  const poolIds = useMemo((): string[] => {
+    if (!_poolIds) return []
+    try {
+      const ids = _poolIds.split(',')
+      return ids
+    } catch {
+      return []
+    }
+  }, [_poolIds])
+  if (!poolIds.length) return null
+  return (
+    <div className="flex flex-col gap-20 mb-10">
+      {poolIds.map((id) => (
+        <PoolDetail poolId={id} key={id} />
+      ))}
     </div>
   )
 }

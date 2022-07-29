@@ -1,7 +1,7 @@
 import { useWeb3React } from '@web3-react/core'
 import { BigNumber, Contract } from 'ethers'
 import { splitSignature } from 'ethers/lib/utils'
-import { useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import EIP2612 from '../abis/eip2612.json'
 import useSignerOrProvider from './useSignOrProvider'
 
@@ -40,13 +40,6 @@ interface AllowedSignatureData extends BaseSignatureData {
 
 export type SignatureData = StandardSignatureData | AllowedSignatureData
 
-const EIP712_DOMAIN_TYPE = [
-  { name: 'name', type: 'string' },
-  { name: 'version', type: 'string' },
-  { name: 'chainId', type: 'uint256' },
-  { name: 'verifyingContract', type: 'address' },
-]
-
 const EIP712_DOMAIN_TYPE_NO_VERSION = [
   { name: 'name', type: 'string' },
   { name: 'chainId', type: 'uint256' },
@@ -61,81 +54,86 @@ const EIP2612_TYPE = [
   { name: 'deadline', type: 'uint256' },
 ]
 
-const PERMIT_ALLOWED_TYPE = [
-  { name: 'holder', type: 'address' },
-  { name: 'spender', type: 'address' },
-  { name: 'nonce', type: 'uint256' },
-  { name: 'expiry', type: 'uint256' },
-  { name: 'allowed', type: 'bool' },
-]
-
 const permitInfo: PermitInfo = {
   type: PermitType.AMOUNT,
-  name: 'dPool',
-  version: 'v1',
+  name: 'Uniswap',
 }
+const permitInfoMap = {}
 
-export function useERC20Permit() {
+export function useERC20Permit(tokenAddress: string) {
   const { account, chainId, provider } = useWeb3React()
-  const allowed = permitInfo.type === PermitType.ALLOWED
-  const signatureDeadline = 5 * 60
+  const [nonce, setNonce] = useState<number>()
+  useEffect(() => {
+    console.log('nonce', nonce)
+  }, [nonce])
+  const [isSupportPermit, setIsSupportPermit] = useState<boolean>(true)
+  const eip2612TokenContract = useMemo(() => {
+    if (!provider) return
+    return new Contract(tokenAddress, EIP2612, provider)
+  }, [provider, tokenAddress])
+  useEffect(() => {
+    console.log('eip2612TokenContract', eip2612TokenContract)
+  }, [eip2612TokenContract])
+  const getNonce = useCallback(async (): Promise<number | undefined> => {
+    if (!account || !eip2612TokenContract) return
+    try {
+      const accountNonce = await eip2612TokenContract.nonces(account)
+      console.log('accountNonce', accountNonce, accountNonce.toNumber())
+      return accountNonce.toNumber()
+    } catch {
+      return
+    }
+  }, [account, eip2612TokenContract])
+
+  useEffect(() => {
+    getNonce().then((nonce) => {
+      if (nonce !== undefined) {
+        setNonce(nonce)
+      } else {
+        setIsSupportPermit(false)
+      }
+    })
+  }, [getNonce])
 
   const getSignatureData = useCallback(
     async (
-      tokenAddress: string,
       amount: BigNumber,
       spender: string
-    ): Promise<SignatureData | null> => {
-      if (!provider || !account || !chainId) return null
-      const eip2612TokenContract = new Contract(tokenAddress, EIP2612, provider)
-      let nonce = null
-      try {
-        nonce = (
-          (await eip2612TokenContract.nonces(account)) as BigNumber
-        ).toNumber()
-      } catch {
+    ): Promise<StandardSignatureData | null> => {
+      if (
+        !provider ||
+        !account ||
+        !chainId ||
+        nonce === undefined ||
+        !eip2612TokenContract
+      )
         return null
-      }
-      if (nonce === null) return null
+      const signatureDeadline = Math.floor(Date.now() / 1000) + 10 * 60
+      const permitInfoName = await eip2612TokenContract.name()
+      console.log('permitInfoName', permitInfoName)
       const value = amount.toString()
-      const message = allowed
-        ? {
-            holder: account,
-            spender,
-            allowed,
-            nonce,
-            expiry: signatureDeadline,
-          }
-        : {
-            owner: account,
-            spender,
-            value,
-            nonce,
-            deadline: signatureDeadline,
-          }
-      const domain = permitInfo.version
-        ? {
-            name: permitInfo.name,
-            version: permitInfo.version,
-            verifyingContract: tokenAddress,
-            chainId,
-          }
-        : {
-            name: permitInfo.name,
-            verifyingContract: tokenAddress,
-            chainId,
-          }
+      const message = {
+        owner: account,
+        spender,
+        value,
+        nonce,
+        deadline: signatureDeadline,
+      }
+      const domain = {
+        name: permitInfoName,
+        verifyingContract: tokenAddress,
+        chainId,
+      }
       const signData = JSON.stringify({
         types: {
-          EIP712Domain: permitInfo.version
-            ? EIP712_DOMAIN_TYPE
-            : EIP712_DOMAIN_TYPE_NO_VERSION,
-          Permit: allowed ? PERMIT_ALLOWED_TYPE : EIP2612_TYPE,
+          EIP712Domain: EIP712_DOMAIN_TYPE_NO_VERSION,
+          Permit: EIP2612_TYPE,
         },
         domain,
         primaryType: 'Permit',
         message,
       })
+      console.log('signData', signData)
       const signerResponse = await provider.send('eth_signTypedData_v4', [
         account,
         signData,
@@ -147,7 +145,7 @@ export function useERC20Permit() {
         r,
         s,
         deadline: signatureDeadline,
-        ...(allowed ? { allowed } : { amount: amount.toString() }),
+        amount: value,
         nonce: nonce,
         chainId,
         owner: account,
@@ -156,7 +154,7 @@ export function useERC20Permit() {
         permitType: permitInfo.type,
       }
     },
-    [provider, account, chainId]
+    [provider, account, chainId, nonce, isSupportPermit]
   )
-  return getSignatureData
+  return { getSignatureData, isSupportPermit } as const
 }
