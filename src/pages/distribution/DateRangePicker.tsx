@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { formatDistanceToNow } from 'date-fns'
+import { format, formatDistanceToNow } from 'date-fns'
 interface TDateRangePickerProps {
   setDate: Function
 }
@@ -60,5 +60,37 @@ export default function DateRangePicker(props: TDateRangePickerProps) {
         <div>end in {formatDistanceToNow(new Date(endDate))}</div>
       </div>
     </div>
+  )
+}
+
+interface DateRangeProps {
+  start: number
+  end: number
+}
+const parseDate = (second: number) => {
+  try {
+    return format(new Date(second * 1000), 'Pp')
+  } catch {
+    return
+  }
+}
+export function DateRange(props: DateRangeProps) {
+  const { start, end } = props
+  const startDate = parseDate(start)
+  const endDate = parseDate(end)
+  if (!startDate || !endDate) return null
+  return (
+    <>
+      <div className="flex h-6 w-full justify-between items-center">
+        <div>Start Date</div>
+        <div className="flex-1 border-b border-gray-500 border-dotted mx-2"></div>
+        <div>{startDate}</div>
+      </div>
+      <div className="flex h-6 w-full justify-between items-center">
+        <div>End Date</div>
+        <div className="flex-1  border-b border-gray-500 border-dotted mx-2"></div>
+        <div>{endDate}</div>
+      </div>
+    </>
   )
 }
