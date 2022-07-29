@@ -40,8 +40,7 @@ export function Fund(props: FundProps) {
     poolMeta.state !== PoolState.Initialized
   )
     return null
-
-  const { account, chainId } = useWeb3React()
+  const { account } = useWeb3React()
   const dPoolContract = useDPoolContract(tokenMeta.address)
 
   const distributor = BigNumber.from(poolMeta.distributor)
@@ -61,7 +60,6 @@ export function Fund(props: FundProps) {
 
   const fundPool = useCallback(async () => {
     if (!dPoolContract || !poolId) return
-    console.log('isSupportPermit', isSupportPermit)
     setFundState(ActionState.ING)
     try {
       let fundPoolByIdRes
@@ -78,7 +76,6 @@ export function Fund(props: FundProps) {
           signatureData?.r,
           signatureData?.s,
         ]
-        console.log('fundWithPermitCallData', fundWithPermitCallData)
         fundPoolByIdRes = await dPoolContract.fundWithPermit(
           poolId,
           fundWithPermitCallData,

@@ -39,9 +39,6 @@ export function Distribute(props: DistributeProps) {
   const { isSupportPermit, getSignatureData } = useERC20Permit(
     tokenMeta.address
   )
-  useEffect(() => {
-    console.log('isSupportPermit', isSupportPermit)
-  }, [isSupportPermit])
   const distributePool = useCallback(async () => {
     if (!dPoolContract || !poolId || !chainId) return
     setDistributionState(ActionState.ING)
@@ -49,7 +46,6 @@ export function Distribute(props: DistributeProps) {
 
     try {
       let distributionPoolByIdRes
-      console.log('poolMeta.distributor', poolMeta.distributor)
       if (isSupportPermit && BigNumber.from(poolMeta.distributor).eq(0)) {
         const signatureData = (await getSignatureData(
           poolMeta.totalAmount,

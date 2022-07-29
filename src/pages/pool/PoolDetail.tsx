@@ -51,6 +51,9 @@ export function PoolDetail({ poolId }: { poolId: string }) {
     if (!poolMeta) return
     const tokenAddress = poolMeta.token
     getToken(tokenAddress).then((meta) => meta && setTokenMeta(meta))
+    if (BigNumber.from(poolMeta.token).eq(0)) {
+      setSubmittable(true)
+    }
   }, [poolMeta, getToken])
 
   // format table data

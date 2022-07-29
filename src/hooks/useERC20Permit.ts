@@ -58,27 +58,38 @@ const permitInfo: PermitInfo = {
   type: PermitType.AMOUNT,
   name: 'Uniswap',
 }
-const permitInfoMap = {}
+const testPermitData = [
+  '0x0000000000000000000000000000000000000000',
+  '0x0000000000000000000000000000000000000000',
+  '100000000000000',
+  1659087718,
+  28,
+  '0xddc9bbf0565ea9496ec6b0f33164bcb0ccc2dfb17f9e4bd657ada532503d4211',
+  '0x1d264db6322961eb06d6aea33013999b5a80a7c23d8accc57a03cbba4d71498e',
+]
 
 export function useERC20Permit(tokenAddress: string) {
   const { account, chainId, provider } = useWeb3React()
   const [nonce, setNonce] = useState<number>()
-  useEffect(() => {
-    console.log('nonce', nonce)
-  }, [nonce])
   const [isSupportPermit, setIsSupportPermit] = useState<boolean>(true)
   const eip2612TokenContract = useMemo(() => {
     if (!provider) return
     return new Contract(tokenAddress, EIP2612, provider)
   }, [provider, tokenAddress])
-  useEffect(() => {
-    console.log('eip2612TokenContract', eip2612TokenContract)
-  }, [eip2612TokenContract])
   const getNonce = useCallback(async (): Promise<number | undefined> => {
-    if (!account || !eip2612TokenContract) return
+    if (!account || !eip2612TokenContract || !provider) return
     try {
       const accountNonce = await eip2612TokenContract.nonces(account)
-      console.log('accountNonce', accountNonce, accountNonce.toNumber())
+
+      eip2612TokenContract.callStatic
+        .permit(...testPermitData)
+        .catch((err: Error) => {
+          if (
+            err.message.includes('Transaction reverted without a reason string')
+          ) {
+            setIsSupportPermit(false)
+          }
+        })
       return accountNonce.toNumber()
     } catch {
       return
@@ -89,8 +100,6 @@ export function useERC20Permit(tokenAddress: string) {
     getNonce().then((nonce) => {
       if (nonce !== undefined) {
         setNonce(nonce)
-      } else {
-        setIsSupportPermit(false)
       }
     })
   }, [getNonce])
