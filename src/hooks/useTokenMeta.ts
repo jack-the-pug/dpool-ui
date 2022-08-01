@@ -1,12 +1,13 @@
 import { BigNumber, Contract } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { chains, ESC20ABI } from '../constants'
+import { chains } from '../constants'
 import { TokenMeta as TTokenMeta } from '../type'
 import { hooks as metaMaskHooks } from '../connectors/metaMask'
 import useSignerOrProvider from './useSignOrProvider'
 import { useBalance } from './useBalance'
 import { LOCAL_STORAGE_KEY } from '../store/storeKey'
+import ERC20ABI from '../abis/erc20.json'
 
 type TSetToken = (token: TTokenMeta) => void
 
@@ -21,7 +22,7 @@ export default function useTokenMeta() {
     (tokenAddress: string) => {
       if (!signerOrProvider || !tokenAddress || !isAddress(tokenAddress))
         return null
-      return new Contract(tokenAddress, ESC20ABI, signerOrProvider)
+      return new Contract(tokenAddress, ERC20ABI, signerOrProvider)
     },
     [signerOrProvider]
   )
@@ -75,5 +76,6 @@ export default function useTokenMeta() {
     tokenList,
     getToken,
     setToken,
+    getERC20TokenContract,
   } as const
 }

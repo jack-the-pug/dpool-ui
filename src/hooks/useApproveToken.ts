@@ -3,7 +3,7 @@ import { isAddress } from 'ethers/lib/utils'
 import { useCallback } from 'react'
 import useSignerOrProvider from './useSignOrProvider'
 import { hooks as metaMaskHooks } from '../connectors/metaMask'
-import { ESC20ABI } from '../constants'
+import ERC20ABI from '../abis/erc20.json'
 import { toast } from 'react-toastify'
 const { useAccount, useChainId } = metaMaskHooks
 
@@ -18,7 +18,7 @@ export const useApproveToken = (dPoolAddress: string | undefined) => {
       if (!signerOrProvider || !tokenAddress || !isAddress(tokenAddress))
         return null
 
-      return new Contract(tokenAddress, ESC20ABI, signerOrProvider)
+      return new Contract(tokenAddress, ERC20ABI, signerOrProvider)
     },
     [signerOrProvider]
   )

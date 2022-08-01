@@ -21,7 +21,6 @@ export default function Action(props: {
   waitClass?: string
   ingClass?: string
   successClass?: string
-  failedClass?: string
 }) {
   const {
     state,
@@ -32,12 +31,13 @@ export default function Action(props: {
     waitClass,
     ingClass,
     successClass,
-    failedClass,
   } = props
   const msg = stateMsgMap[state]
   const baseMsg = stateMsgMap[ActionState.WAIT]
+
   switch (state) {
     case ActionState.WAIT:
+    case ActionState.FAILED:
       return (
         <button
           onClick={onClick}
@@ -67,17 +67,7 @@ export default function Action(props: {
           {tx ? <TranSactionHash hash={tx} /> : null}
         </div>
       )
-    case ActionState.FAILED:
-      return (
-        <div className={`${failedClass}`}>
-          <button
-            onClick={onClick}
-            className={`w-full text-center  border border-gray-900 px-2 rounded-md`}
-          >
-            {baseMsg}
-          </button>
-        </div>
-      )
+
     default:
       return <button>msg</button>
   }

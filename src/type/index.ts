@@ -77,3 +77,12 @@ export interface DPoolLocalStorageMeta {
   dPoolAddress: string
   creator: string
 }
+
+export interface PermitCallData {
+  token: string
+  value: string
+  deadline: number
+  v: number
+  r: string
+  s: string
+}

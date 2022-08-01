@@ -1,10 +1,10 @@
 import { useWeb3React } from '@web3-react/core'
-import { Contract, ContractInterface } from 'ethers'
-import { isAddress } from 'ethers/lib/utils'
+import { Contract } from 'ethers'
 import { useEffect, useMemo, useState } from 'react'
 import useSignerOrProvider from './useSignOrProvider'
 import { hooks as metaMaskHooks } from '../connectors/metaMask'
-import { chains, dPoolFactoryABI } from '../constants'
+import dPoolFactoryABI from '../abis/dPoolFactory.json'
+import { chains } from '../constants'
 const { useChainId, useAccount } = metaMaskHooks
 export default function useDPoolFactory() {
   const chainId = useChainId()

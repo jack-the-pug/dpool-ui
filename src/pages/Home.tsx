@@ -1,8 +1,7 @@
 import Distribution from './distribution/index'
 import AddressBook from './addressBook/index'
 import { Routes, Route } from 'react-router-dom'
-import PoolList from './pool/PoolList'
-import PoolDetailList from './pool/PoolDetail'
+import PoolList, { PoolDetailList } from './pool/PoolList'
 
 export default function Home() {
   return (
