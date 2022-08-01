@@ -11,50 +11,63 @@ import Action, { ActionState } from '../action'
 import { useApproveToken } from '../../hooks/useApproveToken'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import useTokenMeta from '../../hooks/useTokenMeta'
-import { TokenMeta } from '../../type'
+import { PermitCallData, TokenMeta } from '../../type'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
-import { useERC20Permit } from '../../hooks/useERC20Permit'
-import useDPool from '../../hooks/useDPool'
+import { SignatureData, useERC20Permit } from '../../hooks/useERC20Permit'
 
 enum ApproveType {
   LIMIT = 'LIMIT',
   MAX = 'MAX',
 }
-const { useChainId } = metaMaskHooks
+export interface ApproveState {
+  isApproved: boolean
+  signatureData: undefined | PermitCallData
+}
 
+const { useChainId } = metaMaskHooks
 export default function ApproveTokens(props: {
   tokens: {
     address: string
     amount: BigNumber
   }[]
-  setIsTokensApproved: Dispatch<SetStateAction<boolean>>
+  onTokensApproved: Function
 }) {
   const { dPoolAddress } = useDPoolAddress()
-
-  const { tokens, setIsTokensApproved } = props
-  const [approvedTokens, setApprovedTokens] = useState<string[]>([])
+  const { tokens, onTokensApproved } = props
+  const [tokensApproveState, setTokensApproveState] = useState<ApproveState[]>(
+    () =>
+      tokens.map(
+        (): ApproveState => ({
+          isApproved: false,
+          signatureData: undefined,
+        })
+      )
+  )
   useEffect(() => {
-    if (approvedTokens.length === tokens.length) {
-      setIsTokensApproved(true)
+    console.log('tokensApproveState changed')
+    for (let i = 0; i < tokensApproveState.length; i++) {
+      if (!tokensApproveState[i].isApproved) return
     }
-  }, [approvedTokens.length, tokens.length])
-
+    console.log('onTokensApproved')
+    onTokensApproved(tokensApproveState)
+  }, [tokensApproveState])
   if (!dPoolAddress) return null
   return (
     <div className="flex flex-col gap-4">
-      {tokens.map((token) => (
+      {tokens.map((token, index) => (
         <ApproveToken
           key={token.address}
           token={token.address}
           dPoolAddress={dPoolAddress}
           approveAmount={token.amount}
-          onApproved={() => {
-            if (!approvedTokens.includes(token.address.toLowerCase())) {
-              setApprovedTokens([
-                ...approvedTokens,
-                token.address.toLowerCase(),
-              ])
-            }
+          onApproved={(signData) => {
+            if (tokensApproveState[index].isApproved) return
+            const _tokensApproveState = tokensApproveState.map((data) => ({
+              ...data,
+            }))
+            _tokensApproveState[index].isApproved = true
+            _tokensApproveState[index].signatureData = signData
+            setTokensApproveState(_tokensApproveState)
           }}
         />
       ))}
@@ -66,30 +79,30 @@ export interface ApproveTokenProps {
   token: string
   dPoolAddress: string
   approveAmount: BigNumber
-  onApproved: () => void
+  onApproved: (signatureData: PermitCallData | undefined) => void
   selectClass?: string
 }
 export function ApproveToken(props: ApproveTokenProps) {
-  const { token, dPoolAddress, approveAmount, onApproved, selectClass } = props
-
   const chainId = useChainId()
+  const { token, dPoolAddress, approveAmount, onApproved, selectClass } = props
   const { approveToken, getApprovedAmount } = useApproveToken(dPoolAddress)
   const { getToken } = useTokenMeta()
+  const { isSupportPermit, getSignatureData } = useERC20Permit(token)
 
+  const [signatureData, setSignatureData] = useState<PermitCallData>()
   const [tokenMeta, setTokenMeta] = useState<TokenMeta>()
   const [approveTx, setApproveTx] = useState<string>()
   const [approveType, setApproveType] = useState<ApproveType>(ApproveType.LIMIT)
   const [approveState, setApproveState] = useState<ActionState>(
     ActionState.WAIT
   )
-
   const [approvedAmount, setApprovedAmount] = useState<BigNumber>(
     BigNumber.from(0)
   )
 
   const shouldApproveAmount = useMemo(() => {
     if (approvedAmount.gte(approveAmount)) return BigNumber.from(0)
-    return approveAmount.sub(approvedAmount)
+    return approveAmount
   }, [approveAmount, approvedAmount])
 
   useEffect(() => {
@@ -116,6 +129,25 @@ export function ApproveToken(props: ApproveTokenProps) {
       setApproveTx(tx)
     }
   }, [tokenMeta, approveType, shouldApproveAmount, approveToken])
+  const handleSign = useCallback(async () => {
+    setApproveState(ActionState.ING)
+    const signatureData = await getSignatureData(
+      shouldApproveAmount,
+      dPoolAddress
+    )
+    if (signatureData) {
+      const { tokenAddress, amount, v, r, s, deadline } = signatureData
+      setSignatureData({
+        token: tokenAddress,
+        value: amount,
+        deadline,
+        r,
+        v,
+        s,
+      })
+    }
+    setApproveState(ActionState.SUCCESS)
+  }, [token, getSignatureData, shouldApproveAmount, dPoolAddress])
 
   const isApproved = useMemo(() => {
     if (BigNumber.from(token).eq(0)) return true
@@ -125,26 +157,28 @@ export function ApproveToken(props: ApproveTokenProps) {
 
   useEffect(() => {
     if (isApproved) {
-      onApproved()
+      onApproved(signatureData)
     }
-  }, [isApproved, onApproved])
+  }, [isApproved, onApproved, signatureData])
 
   if (isApproved) return null
   return (
     <div className="flex items-start">
-      <select
-        className={`outline-none mr-2 ${selectClass}`}
-        onChange={(e) =>
-          setApproveType(e.target.value as unknown as ApproveType)
-        }
-      >
-        <option value={ApproveType.LIMIT}>
-          {`${utils.formatUnits(shouldApproveAmount, tokenMeta?.decimals)} ${
-            tokenMeta ? tokenMeta.symbol : ''
-          }`}
-        </option>
-        <option value={ApproveType.MAX}>Max {tokenMeta?.symbol}</option>
-      </select>
+      {!isSupportPermit ? (
+        <select
+          className={`outline-none mr-2 ${selectClass}`}
+          onChange={(e) =>
+            setApproveType(e.target.value as unknown as ApproveType)
+          }
+        >
+          <option value={ApproveType.LIMIT}>
+            {`${utils.formatUnits(shouldApproveAmount, tokenMeta?.decimals)} ${
+              tokenMeta ? tokenMeta.symbol : ''
+            }`}
+          </option>
+          <option value={ApproveType.MAX}>Max {tokenMeta?.symbol}</option>
+        </select>
+      ) : null}
       <div>
         <Action
           state={approveState}
@@ -154,7 +188,7 @@ export function ApproveToken(props: ApproveTokenProps) {
             [ActionState.FAILED]: `Failed. Try again`,
             [ActionState.SUCCESS]: `Approved`,
           }}
-          onClick={handleApprove}
+          onClick={isSupportPermit ? handleSign : handleApprove}
           tx={approveTx}
         />
       </div>

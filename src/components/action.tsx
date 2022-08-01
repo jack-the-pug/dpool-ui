@@ -21,7 +21,6 @@ export default function Action(props: {
   waitClass?: string
   ingClass?: string
   successClass?: string
-  failedClass?: string
 }) {
   const {
     state,
@@ -32,10 +31,10 @@ export default function Action(props: {
     waitClass,
     ingClass,
     successClass,
-    failedClass,
   } = props
   const msg = stateMsgMap[state]
   const baseMsg = stateMsgMap[ActionState.WAIT]
+
   switch (state) {
     case ActionState.WAIT:
     case ActionState.FAILED:

@@ -60,7 +60,6 @@ export function Distribute(props: DistributeProps) {
           signatureData.r,
           signatureData.s,
         ]
-        console.log('fundWithPermitCallData', fundWithPermitCallData)
         distributionPoolByIdRes = await dPoolContract.distributeWithPermit(
           poolId,
           fundWithPermitCallData
@@ -91,7 +90,7 @@ export function Distribute(props: DistributeProps) {
       setDistributionState(ActionState.FAILED)
     }
   }, [dPoolContract, chainId, getSignatureData, isSupportPermit, poolMeta])
-  if (!poolMeta || !account) return null
+  if (!account) return null
   if (poolMeta.state === PoolState.Closed) return null
   const distributor = BigNumber.from(poolMeta.distributor)
   if (!distributor.eq(0) && !distributor.eq(account)) return null
@@ -113,7 +112,6 @@ export function Distribute(props: DistributeProps) {
           ? 'text-green-500 border-green-500'
           : 'text-gray-500 border-gray-400 cursor-not-allowed'
       }
-      failedClass="text-green-500 border-green-500"
     />
   )
 }

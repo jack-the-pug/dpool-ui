@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
 import { BigNumber, ContractReceipt, ethers } from 'ethers'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import Action, { ActionState } from '../../components/action'
 import { Dialog } from '../../components/dialog'
@@ -8,9 +8,9 @@ import { EosIconsBubbleLoading, ZondiconsClose } from '../../components/icon'
 import useDPool from '../../hooks/useDPool'
 import {
   DPoolEvent,
+  PermitCallData,
   PoolCreateCallData as PoolCreateCallData,
   PoolCreator,
-  PoolRow,
   TokenMeta,
 } from '../../type'
 import { DistributionType, PoolConfig } from './CreatePool'
@@ -18,12 +18,12 @@ import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { useNavigate } from 'react-router-dom'
 import dPoolABI from '../../abis/dPool.json'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
-import ApproveTokens from '../../components/token/ApproveTokens'
+import ApproveTokens, {
+  ApproveState,
+} from '../../components/token/ApproveTokens'
 import { formatCurrencyAmount } from '../../utils/number'
 import useAddressBook from '../../hooks/useAddressBook'
 import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
-import useSignerOrProvider from '../../hooks/useSignOrProvider'
-import { useERC20Permit } from '../../hooks/useERC20Permit'
 
 interface PoolMeta {
   name: string
@@ -42,13 +42,6 @@ interface CreatePoolConfirmProps {
   tokenMetaList: TokenMeta[]
   callData: readonly PoolCreateCallData[]
   distributionType: DistributionType
-}
-
-enum SubmitMethod {
-  batchDisperse = 'batchDisperse',
-  batchDisperseWidthPermit = 'batchDisperseWidthPermit',
-  singleCreate = 'singleCreate',
-  batchCreate = 'batchCreate',
 }
 
 const { useAccount, useChainId } = metaMaskHooks
@@ -73,6 +66,8 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
   const [createPoolState, setCreatePoolState] = useState<ActionState>(
     ActionState.WAIT
   )
+  const [permitCallDataList, setPermitCallDataList] =
+    useState<Array<undefined | PermitCallData>>()
   const [createTx, setCreateTx] = useState<string>()
   const { addressName } = useAddressBook()
 
@@ -138,6 +133,14 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       amounts: callData.map((pool) => pool[PoolCreator.Amounts][row]),
     }))
   }, [poolMeta, tokenMetaList, callData])
+  const isBalanceEnough = useMemo(() => {
+    for (let i = 0; i < tokenTotalAmounts.length; i++) {
+      const total = tokenTotalAmounts[i]
+      const balance = tokenMetaList[i].balance
+      if (balance.lt(total)) return false
+    }
+    return true
+  }, [tokenTotalAmounts, tokenMetaList])
 
   const onCreateSuccess = useCallback(
     (ids: string[]) => {
@@ -196,7 +199,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       nativeTokenValue,
     ]
   )
-
   const singleCreate = useCallback(
     async (callData: PoolCreateCallData): Promise<string | undefined> => {
       if (!dPoolContract || !dPoolAddress) return
@@ -223,56 +225,89 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     },
     [dPoolContract, dPoolAddress, nativeTokenValue, setPoolIds]
   )
-
-  const batchDisperse = useCallback(async () => {
-    if (!dPoolContract || !dPoolAddress) return
-    const _callData = callData.map((pool) => {
-      const token = pool[PoolCreator.Token]
-      const amounts = pool[PoolCreator.Amounts]
-      const claimer = pool[PoolCreator.Claimers]
-      return {
-        token,
-        recipients: claimer,
-        values: amounts,
+  const singleDisperse = useCallback(
+    async (callData: PoolCreateCallData) => {
+      if (!dPoolContract) return
+      let req
+      if (BigNumber.from(callData[PoolCreator.Token]).eq(0)) {
+        req = await dPoolContract.disperseEther(
+          callData[PoolCreator.Claimers],
+          callData[PoolCreator.Amounts]
+        )
+      } else {
+        if (permitCallDataList?.[0]) {
+          req = await dPoolContract.disperseTokenWithPermit(
+            callData[PoolCreator.Token],
+            callData[PoolCreator.Claimers],
+            callData[PoolCreator.Amounts],
+            permitCallDataList[0]
+          )
+        } else {
+          req = await dPoolContract.disperseToken(
+            callData[PoolCreator.Token],
+            callData[PoolCreator.Claimers],
+            callData[PoolCreator.Amounts]
+          )
+        }
       }
-    })
+      const res: ContractReceipt = req.wait()
+      const { transactionHash } = res
+      return transactionHash
+    },
+    [dPoolContract, permitCallDataList]
+  )
+  const batchDisperse = useCallback(
+    async (callData: readonly PoolCreateCallData[]) => {
+      console.log('PoolCreateCallData', callData)
+      if (!dPoolContract || !dPoolAddress) return
+      const _callData = callData.map((pool) => {
+        const token = pool[PoolCreator.Token]
+        const amounts = pool[PoolCreator.Amounts]
+        const claimer = pool[PoolCreator.Claimers]
+        return {
+          token,
+          recipients: claimer,
+          values: amounts,
+        }
+      })
+      const _permitCallDataList =
+        permitCallDataList?.filter((data) => !!data) || []
+      console.log({ _callData, _permitCallDataList })
+      const batchDisperseRequest = await dPoolContract.batchDisperseWithPermit(
+        _callData,
+        _permitCallDataList,
+        {
+          value: nativeTokenValue,
+        }
+      )
+      const batchDisperseResponse: ContractReceipt =
+        await batchDisperseRequest.wait()
 
-    const batchDisperseRequest = await dPoolContract.batchDisperse(_callData, {
-      value: nativeTokenValue,
-    })
-    const batchDisperseResponse: ContractReceipt =
-      await batchDisperseRequest.wait()
-
-    const { transactionHash, logs: _logs } = batchDisperseResponse
-    const logs = _logs.filter((log) =>
-      BigNumber.from(log.address).eq(dPoolAddress)
-    )
-    for (let i = 0; i < logs.length; i++) {
-      const logJson = dPoolInterface.parseLog(logs[i])
-      if (logJson.name === DPoolEvent.DisperseToken) {
-        return transactionHash
+      const { transactionHash, logs: _logs } = batchDisperseResponse
+      const logs = _logs.filter((log) =>
+        BigNumber.from(log.address).eq(dPoolAddress)
+      )
+      for (let i = 0; i < logs.length; i++) {
+        const logJson = dPoolInterface.parseLog(logs[i])
+        if (logJson.name === DPoolEvent.DisperseToken) {
+          return transactionHash
+        }
       }
-    }
-  }, [dPoolContract, dPoolAddress, callData, nativeTokenValue])
-
-  const isBalanceEnough = useMemo(() => {
-    for (let i = 0; i < tokenTotalAmounts.length; i++) {
-      const total = tokenTotalAmounts[i]
-      const balance = tokenMetaList[i].balance
-
-      if (balance.lt(total)) return false
-    }
-    return true
-  }, [tokenTotalAmounts, tokenMetaList])
+    },
+    [dPoolContract, dPoolAddress, nativeTokenValue, permitCallDataList]
+  )
 
   const submit = useCallback(async () => {
     if (!poolMeta || !isBalanceEnough) return
     setCreatePoolState(ActionState.ING)
     const poolLength = callData.length
+    console.log('permitCallDataList', permitCallDataList, poolLength)
     let tx: string | undefined
     try {
       if (poolMeta.config.isFundNow) {
-        tx = await batchDisperse()
+        poolLength === 1
+          ? (tx = await singleDisperse(callData[0]))
+          : (tx = await batchDisperse(callData))
       } else {
         poolLength === 1
           ? (tx = await singleCreate(callData[0]))
@@ -299,6 +334,8 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     singleCreate,
     poolIds,
     isBalanceEnough,
+    singleDisperse,
+    permitCallDataList,
   ])
 
   const routerToPoolDetail = useCallback(() => {
@@ -316,6 +353,11 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       setVisible(false)
     }
   }, [createPoolState, setVisible])
+  const onTokensApproved = useCallback((state: ApproveState[]) => {
+    setIsTokensApproved(true)
+    const signatureData = state.map((state) => state.signatureData)
+    setPermitCallDataList(signatureData)
+  }, [])
 
   function CreateAction() {
     const waitApproved = (
@@ -357,7 +399,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           isBalanceEnough ? 'text-black' : 'text-gray-500 cursor-not-allowed'
         }
         successClass="w-full"
-        failedClass="w-full"
       ></Action>
     )
   }
@@ -471,7 +512,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               address: token.address,
               amount: tokenTotalAmounts[index],
             }))}
-            setIsTokensApproved={setIsTokensApproved}
+            onTokensApproved={onTokensApproved}
           />
         </div>
       ) : null}
