@@ -1,5 +1,5 @@
 import { Contract } from 'ethers'
-import { ERC20ABI } from '../constants'
+import ERC20ABI from '../abis/erc20.json'
 import type { Web3Provider } from '@ethersproject/providers'
 
 export interface TokenInfo {
