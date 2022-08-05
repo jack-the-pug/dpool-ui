@@ -41,7 +41,7 @@ export default function Action(props: {
       return (
         <button
           onClick={onClick}
-          className={`border border-gray-900 px-2 rounded-md ${waitClass}`}
+          className={`border border-gray-900 px-2 rounded-md whitespace-nowrap ${waitClass}`}
         >
           {baseMsg}
         </button>
@@ -49,7 +49,7 @@ export default function Action(props: {
     case ActionState.ING:
       return (
         <button
-          className={`cursor-not-allowed border px-2 rounded-md text-center border-gray-500 text-gray-500 flex justify-center items-center ${ingClass}`}
+          className={`cursor-not-allowed border px-2 rounded-md text-center whitespace-nowrap border-gray-500 text-gray-500 flex justify-center items-center ${ingClass}`}
         >
           <EosIconsBubbleLoading className="mr-1" />
           {baseMsg}
@@ -57,7 +57,7 @@ export default function Action(props: {
       )
     case ActionState.SUCCESS:
       return (
-        <div className={`flex items-center ${successClass}`}>
+        <div className={`flex items-center whitespace-nowrap ${successClass}`}>
           <button
             className="mr-2  border border-gray-900 rounded-md px-2"
             onClick={onSuccess}

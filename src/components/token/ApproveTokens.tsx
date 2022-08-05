@@ -14,6 +14,8 @@ import useTokenMeta from '../../hooks/useTokenMeta'
 import { PermitCallData, TokenMeta } from '../../type'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { SignatureData, useERC20Permit } from '../../hooks/useERC20Permit'
+import { AddressLink } from '../hash'
+import { EosIconsBubbleLoading } from '../icon'
 
 enum ApproveType {
   LIMIT = 'LIMIT',
@@ -115,6 +117,7 @@ export function ApproveToken(props: ApproveTokenProps) {
   }, [getApprovedAmount])
 
   const handleApprove = useCallback(async () => {
+    console.log('Approve')
     if (!tokenMeta) return
     setApproveState(ActionState.ING)
     const approveTokenReq = await approveToken(
@@ -135,6 +138,7 @@ export function ApproveToken(props: ApproveTokenProps) {
       shouldApproveAmount,
       dPoolAddress
     )
+    console.log('signatureData', signatureData)
     if (signatureData) {
       const { tokenAddress, amount, v, r, s, deadline } = signatureData
       setSignatureData({
@@ -145,8 +149,10 @@ export function ApproveToken(props: ApproveTokenProps) {
         v,
         s,
       })
+      setApproveState(ActionState.SUCCESS)
+    } else {
+      setApproveState(ActionState.FAILED)
     }
-    setApproveState(ActionState.SUCCESS)
   }, [token, getSignatureData, shouldApproveAmount, dPoolAddress])
 
   const isApproved = useMemo(() => {
@@ -161,37 +167,45 @@ export function ApproveToken(props: ApproveTokenProps) {
     }
   }, [isApproved, onApproved, signatureData])
 
-  if (isApproved) return null
+  if (isApproved || BigNumber.from(token).eq(0)) return null
   return (
-    <div className="flex items-start">
-      {!isSupportPermit ? (
-        <select
-          className={`outline-none mr-2 ${selectClass}`}
-          onChange={(e) =>
-            setApproveType(e.target.value as unknown as ApproveType)
-          }
-        >
-          <option value={ApproveType.LIMIT}>
-            {`${utils.formatUnits(shouldApproveAmount, tokenMeta?.decimals)} ${
-              tokenMeta ? tokenMeta.symbol : ''
-            }`}
-          </option>
-          <option value={ApproveType.MAX}>Max {tokenMeta?.symbol}</option>
-        </select>
-      ) : null}
-      <div>
-        <Action
-          state={approveState}
-          stateMsgMap={{
-            [ActionState.WAIT]: `Approve`,
-            [ActionState.ING]: `Approving`,
-            [ActionState.FAILED]: `Failed. Try again`,
-            [ActionState.SUCCESS]: `Approved`,
-          }}
-          onClick={isSupportPermit ? handleSign : handleApprove}
-          tx={approveTx}
-        />
+    <div className="w-full rounded-lg cursor-pointer flex justify-between items-center bg-neutral-200 px-2 py-1">
+      <div className="text-xs text-gray-500 ">
+        allow the <AddressLink address={dPoolAddress} name="dPool Protocol" />{' '}
+        to use your{' '}
+        {isSupportPermit ? (
+          `${utils.formatUnits(shouldApproveAmount, tokenMeta?.decimals)} ${
+            tokenMeta ? tokenMeta.symbol : ''
+          }`
+        ) : (
+          <select
+            className={`outline-none bg-neutral-200 mr-2 ${selectClass}`}
+            onChange={(e) =>
+              setApproveType(e.target.value as unknown as ApproveType)
+            }
+          >
+            <option value={ApproveType.LIMIT} className="bg-neutral-200">
+              {`${utils.formatUnits(
+                shouldApproveAmount,
+                tokenMeta?.decimals
+              )} ${tokenMeta ? tokenMeta.symbol : ''}`}
+            </option>
+            <option value={ApproveType.MAX}>Max {tokenMeta?.symbol}</option>
+          </select>
+        )}
       </div>
+      {approveState === ActionState.ING ? (
+        <div className="bg-white px-2 rounded-lg ml-1 text-lg flex items-center">
+          <EosIconsBubbleLoading className="mr-1" /> Approve
+        </div>
+      ) : (
+        <div
+          onClick={isSupportPermit ? handleSign : handleApprove}
+          className="bg-white px-2 rounded-lg ml-1 text-lg"
+        >
+          Approve
+        </div>
+      )}
     </div>
   )
 }

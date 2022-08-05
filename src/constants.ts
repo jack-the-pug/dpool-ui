@@ -1,4 +1,5 @@
 import type { AddEthereumChainParameter } from '@web3-react/types'
+import { constants } from 'ethers'
 
 export interface Chain {
   chainId: number
@@ -19,7 +20,7 @@ const Mainnet: Chain = {
   name: 'Ethereum Mainnet',
   symbol: 'ETH',
   decimals: 18,
-  dPoolFactoryAddress: '0x0000000000000000000000000000000000000000',
+  dPoolFactoryAddress: constants.AddressZero,
   scan: 'https://etherscan.io/tx/',
   urls: [],
 }

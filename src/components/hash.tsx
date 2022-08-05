@@ -20,8 +20,8 @@ export function TranSactionHash(props: { hash: string }) {
   )
 }
 
-export function AddressLink(props: { address: string }) {
-  const { address } = props
+export function AddressLink(props: { address: string; name?: string }) {
+  const { address, name } = props
   const chainId = useChainId()
   const scanUrl = useMemo(() => {
     if (!chainId) return
@@ -31,7 +31,7 @@ export function AddressLink(props: { address: string }) {
 
   return (
     <a href={scanUrl} target="blank" className="text-green-500">
-      {address}
+      {name || address}
     </a>
   )
 }
