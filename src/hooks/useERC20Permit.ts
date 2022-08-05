@@ -10,7 +10,6 @@ import {
 } from 'ethers/lib/utils'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import EIP2612 from '../abis/eip2612.json'
-import USDC_ABI from '../abis/usdc.json'
 
 export enum PermitType {
   AMOUNT = 1,
