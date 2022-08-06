@@ -1,4 +1,4 @@
-import { BigNumber, utils } from 'ethers'
+import { BigNumber, constants, utils } from 'ethers'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { Dialog } from '../dialog'
@@ -29,7 +29,7 @@ export default function TokenSelect(props: TTokenSelectProps) {
   const nativeTokenMeta = useMemo(() => {
     if (!chainId || !chains[chainId] || !nativeTokenBalance) return null
     const nativeToken: TTokenMeta = {
-      address: '0x0000000000000000000000000000000000000000',
+      address: constants.AddressZero,
       decimals: chains[chainId].decimals,
       symbol: chains[chainId].symbol,
       balance: nativeTokenBalance || BigNumber.from(0),

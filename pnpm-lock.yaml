@@ -1,4 +1,4 @@
-lockfileVersion: 5.3
+lockfileVersion: 5.4
 
 specifiers:
   '@ethersproject/providers': ^5.6.8
@@ -36,16 +36,16 @@ dependencies:
   '@web3-react/metamask': 8.0.26-beta.0_react@18.1.0
   '@web3-react/network': 8.0.26-beta.0_react@18.1.0
   '@web3-react/types': 8.0.19-beta.0_react@18.1.0
-  '@web3-react/walletconnect': 8.0.34-beta.0_04e83cc38a780e86ebd6f0a08dd1e532
+  '@web3-react/walletconnect': 8.0.34-beta.0_atudzq4kpahin26w6cqi3upfgi
   date-fns: 2.28.0
   dialog-polyfill: 0.5.6
   ethers: 5.6.9
   idb-keyval: 6.2.0
   react: 18.1.0
   react-dom: 18.1.0_react@18.1.0
-  react-router-dom: 6.3.0_react-dom@18.1.0+react@18.1.0
-  react-toastify: 9.0.3_react-dom@18.1.0+react@18.1.0
-  recoil: 0.7.4_react-dom@18.1.0+react@18.1.0
+  react-router-dom: 6.3.0_ef5jwxihqo6n7gxfmzogljlgcm
+  react-toastify: 9.0.3_ef5jwxihqo6n7gxfmzogljlgcm
+  recoil: 0.7.4_ef5jwxihqo6n7gxfmzogljlgcm
 
 devDependencies:
   '@types/react': 18.0.9
@@ -1067,7 +1067,7 @@ packages:
       - react
     dev: false
 
-  /@web3-react/walletconnect/8.0.34-beta.0_04e83cc38a780e86ebd6f0a08dd1e532:
+  /@web3-react/walletconnect/8.0.34-beta.0_atudzq4kpahin26w6cqi3upfgi:
     resolution: {integrity: sha512-CG6dc6Lq0QVNvTp5lCFycIaHoPPV+X/6ay3swd5t2LD9R9Ao8sSzF0zU9Fi1iq41UDCue6WO4u2Lp7uHNAIcxw==}
     peerDependencies:
       '@walletconnect/ethereum-provider': ^1.7.5
@@ -2169,7 +2169,7 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /react-router-dom/6.3.0_react-dom@18.1.0+react@18.1.0:
+  /react-router-dom/6.3.0_ef5jwxihqo6n7gxfmzogljlgcm:
     resolution: {integrity: sha512-uaJj7LKytRxZNQV8+RbzJWnJ8K2nPsOOEuX7aQstlMZKQT0164C+X2w6bnkqU3sjtLvpd5ojrezAyfZ1+0sStw==}
     peerDependencies:
       react: '>=16.8'
@@ -2190,7 +2190,7 @@ packages:
       react: 18.1.0
     dev: false
 
-  /react-toastify/9.0.3_react-dom@18.1.0+react@18.1.0:
+  /react-toastify/9.0.3_ef5jwxihqo6n7gxfmzogljlgcm:
     resolution: {integrity: sha512-0QZJk0SqYBxouRBGCFU3ymvjlwimRRhVH7SzqGRiVrQ001KSoUNbGKx9Yq42aoPv18n45yJzEFG82zqv3HnASg==}
     peerDependencies:
       react: '>=16'
@@ -2215,7 +2215,7 @@ packages:
       picomatch: 2.3.1
     dev: true
 
-  /recoil/0.7.4_react-dom@18.1.0+react@18.1.0:
+  /recoil/0.7.4_ef5jwxihqo6n7gxfmzogljlgcm:
     resolution: {integrity: sha512-sCXvQGMfSprkNU4ZRkJV4B0qFQSURJMgsICqY1952WRlg66NMwYqi6n67vhnhn0qw4zHU1gHXJuMvRDaiRNFZw==}
     peerDependencies:
       react: '>=16.13.1'

@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
 import { BigNumber, ContractReceipt, ethers } from 'ethers'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import Action, { ActionState } from '../../components/action'
 import { Dialog } from '../../components/dialog'
@@ -167,10 +167,24 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
 
   const batchCreate = useCallback(
     async (callData: readonly PoolCreateCallData[]) => {
+      console.log('batchCreate')
       if (!dPoolContract || !dPoolAddress) return
-      const batchCreateRequest = await dPoolContract.batchCreate(callData, {
-        value: nativeTokenValue,
-      })
+      let batchCreateRequest
+      if (permitCallDataList) {
+        console.log('callData', callData, permitCallDataList)
+
+        batchCreateRequest = await dPoolContract.batchCreateWithPermit(
+          callData,
+          permitCallDataList.filter((d) => !!d),
+          {
+            value: nativeTokenValue,
+          }
+        )
+      } else {
+        batchCreateRequest = await dPoolContract.batchCreate(callData, {
+          value: nativeTokenValue,
+        })
+      }
       const batchCreateResponse: ContractReceipt =
         await batchCreateRequest.wait()
       const { transactionHash, logs: _logs } = batchCreateResponse
@@ -187,7 +201,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       }
 
       setPoolIds(poolIds)
-      onCreateSuccess(poolIds)
       return transactionHash
     },
     [
@@ -197,15 +210,29 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       setPoolIds,
       callData,
       nativeTokenValue,
+      permitCallDataList,
     ]
   )
   const singleCreate = useCallback(
     async (callData: PoolCreateCallData): Promise<string | undefined> => {
+      console.log('singleCreate')
       if (!dPoolContract || !dPoolAddress) return
       console.log('callData', callData, nativeTokenValue)
-      const singleCreateRequest = await dPoolContract.create(callData, {
-        value: nativeTokenValue,
-      })
+
+      let singleCreateRequest
+      if (permitCallDataList && permitCallDataList[0]) {
+        singleCreateRequest = await dPoolContract.createWithPermit(
+          callData,
+          permitCallDataList[0],
+          {
+            value: nativeTokenValue,
+          }
+        )
+      } else {
+        singleCreateRequest = await dPoolContract.create(callData, {
+          value: nativeTokenValue,
+        })
+      }
       const singleCreateResponse: ContractReceipt =
         await singleCreateRequest.wait()
       const { transactionHash, logs: _logs } = singleCreateResponse
@@ -214,16 +241,21 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       )
       for (let i = 0; i < logs.length; i++) {
         const logJson = dPoolInterface.parseLog(logs[i])
-
+        console.log('logJson', logJson)
         if (logJson.name === DPoolEvent.Created) {
           const poolId = logJson.args['poolId'].toString()
           setPoolIds([poolId])
-          onCreateSuccess([poolId])
           return transactionHash
         }
       }
     },
-    [dPoolContract, dPoolAddress, nativeTokenValue, setPoolIds]
+    [
+      dPoolContract,
+      dPoolAddress,
+      nativeTokenValue,
+      setPoolIds,
+      permitCallDataList,
+    ]
   )
   const singleDisperse = useCallback(
     async (callData: PoolCreateCallData) => {
@@ -236,11 +268,13 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         )
       } else {
         if (permitCallDataList?.[0]) {
+          console.log('disperseTokenWithPermit', permitCallDataList[0])
+          const { r, s, v, value, token, deadline } = permitCallDataList[0]
           req = await dPoolContract.disperseTokenWithPermit(
             callData[PoolCreator.Token],
             callData[PoolCreator.Claimers],
             callData[PoolCreator.Amounts],
-            permitCallDataList[0]
+            [token, value, deadline, v, r, s]
           )
         } else {
           req = await dPoolContract.disperseToken(
@@ -250,8 +284,9 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           )
         }
       }
-      const res: ContractReceipt = req.wait()
+      const res: ContractReceipt = await req.wait()
       const { transactionHash } = res
+      console.log('transactionHash', transactionHash)
       return transactionHash
     },
     [dPoolContract, permitCallDataList]
@@ -301,10 +336,13 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     if (!poolMeta || !isBalanceEnough) return
     setCreatePoolState(ActionState.ING)
     const poolLength = callData.length
-    console.log('permitCallDataList', permitCallDataList, poolLength)
+
     let tx: string | undefined
     try {
-      if (poolMeta.config.isFundNow) {
+      if (
+        poolMeta.config.isFundNow &&
+        distributionType === DistributionType.Push
+      ) {
         poolLength === 1
           ? (tx = await singleDisperse(callData[0]))
           : (tx = await batchDisperse(callData))
@@ -316,11 +354,13 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       if (tx) {
         setCreatePoolState(ActionState.SUCCESS)
         setCreateTx(tx)
+      } else {
+        throw new Error('transaction not found')
       }
     } catch (err: any) {
-      console.log('err', err)
+      console.error('err', err)
       toast.error(
-        `${typeof err === 'object' ? err.message || JSON.stringify(err) : err}`
+        `${typeof err === 'object' ? err.message || err.reason : err}`
       )
       setCreatePoolState(ActionState.FAILED)
     }
@@ -330,14 +370,17 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     batchCreate,
     batchDisperse,
     distributionType,
-    onCreateSuccess,
     singleCreate,
     poolIds,
     isBalanceEnough,
     singleDisperse,
     permitCallDataList,
   ])
-
+  useEffect(() => {
+    console.log('poolIds', poolIds)
+    if (!poolIds || poolIds.length === 0) return
+    onCreateSuccess(poolIds)
+  }, [poolIds])
   const routerToPoolDetail = useCallback(() => {
     if (
       distributionType === DistributionType.Push &&
@@ -359,49 +402,14 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     setPermitCallDataList(signatureData)
   }, [])
 
-  function CreateAction() {
-    const waitApproved = (
-      <div className="flex items-center">
-        <EosIconsBubbleLoading className="mr-1" />
-        Waiting for approval
-      </div>
-    )
-    if (
-      !isTokensApproved &&
-      poolMeta?.config.distributor.toLowerCase() === account?.toLowerCase()
-    )
-      return waitApproved
-    return (
-      <Action
-        state={createPoolState}
-        stateMsgMap={{
-          [ActionState.WAIT]:
-            distributionType === DistributionType.Pull
-              ? 'Create Pool'
-              : poolMeta!.config.isFundNow
-              ? 'Distribute Now'
-              : 'Create Distribution',
-          [ActionState.ING]:
-            distributionType === DistributionType.Pull ||
-            !poolMeta!.config.isFundNow
-              ? 'Creating'
-              : 'Distributing',
-          [ActionState.FAILED]: 'Failed. Try Again',
-          [ActionState.SUCCESS]:
-            distributionType === DistributionType.Pull
-              ? `Pool ${poolIds.join(',')} Created`
-              : `Distribution Created`,
-        }}
-        tx={createTx}
-        onClick={isBalanceEnough ? submit : () => {}}
-        onSuccess={routerToPoolDetail}
-        waitClass={
-          isBalanceEnough ? 'text-black' : 'text-gray-500 cursor-not-allowed'
-        }
-        successClass="w-full"
-      ></Action>
-    )
-  }
+  const submittable = useMemo(() => {
+    if (!poolMeta?.config.isFundNow) return true
+    if (!isBalanceEnough) return false
+    return isTokensApproved
+  }, [isTokensApproved, account, poolMeta, isBalanceEnough])
+  useEffect(() => {
+    console.log('poolIds', poolIds)
+  }, [poolIds])
   if (!poolMeta || !poolMeta.length) return null
   return (
     <Dialog visible={visible} onClose={onClosePage}>
@@ -431,9 +439,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
                     {' '}
                     {formatCurrencyAmount(amount, tokenMetaList[i])}
                   </div>
-                  <span className="opacity-0 ml-1">
-                    {tokenMetaList[i].symbol}
-                  </span>
                 </div>
               ))}
             </div>
@@ -462,7 +467,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         <div>Balance</div>
         <div className="flex gap-2">
           {tokenMetaList.map((tokenMeta, index) => (
-            <div className="flex">
+            <div className="flex" key={tokenMeta.address}>
               <div
                 className={`${
                   tokenMeta.balance.lt(tokenTotalAmounts[index])
@@ -517,7 +522,34 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         </div>
       ) : null}
       <div className="flex flex-col justify-between mt-6">
-        <CreateAction />
+        <Action
+          state={createPoolState}
+          stateMsgMap={{
+            [ActionState.WAIT]:
+              distributionType === DistributionType.Pull
+                ? 'Create Pool'
+                : poolMeta!.config.isFundNow
+                ? 'Distribute Now'
+                : 'Create Distribution',
+            [ActionState.ING]:
+              distributionType === DistributionType.Pull ||
+              !poolMeta!.config.isFundNow
+                ? 'Creating'
+                : 'Distributing',
+            [ActionState.FAILED]: 'Failed. Try Again',
+            [ActionState.SUCCESS]:
+              distributionType === DistributionType.Pull
+                ? `Pool ${poolIds.join(',')} Created`
+                : `Distribution Created`,
+          }}
+          tx={createTx}
+          onClick={submittable ? submit : () => {}}
+          onSuccess={routerToPoolDetail}
+          waitClass={
+            submittable ? 'text-black' : 'text-gray-500 cursor-not-allowed'
+          }
+          successClass="w-full"
+        ></Action>
         <div className="flex justify-center text-gray-500 text-sm my-2">
           <div>Pay {poolMeta.config.isFundNow ? 'Now' : 'Later'}</div>
         </div>

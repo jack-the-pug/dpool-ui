@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MaterialSymbolsAdd } from '../../components/icon'
 import { usePageClose } from '../../hooks/usePageClose'
 
-import { BigNumber, utils } from 'ethers'
+import { BigNumber, constants, utils } from 'ethers'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import {
   PoolRow,
@@ -176,7 +176,7 @@ export default function PoolsList() {
       LOCAL_STORAGE_KEY.DISTRIBUTE_CATCH_DATA
     )
     if (!poolDetail) {
-      getToken('0x0000000000000000000000000000000000000000').then((token) =>
+      getToken(constants.AddressZero).then((token) =>
         setTokenMetaList([token!])
       )
       return
@@ -257,20 +257,18 @@ export default function PoolsList() {
   // batchCreate callData
   const createPoolCallData: PoolCreateCallData[] | null = useMemo(() => {
     if (!tokenMetaList[0] || repeatedAddress || !account) return null
-    if (!isOwner) return null
+    // if (!isOwner) return null
     const { isFundNow, date } = poolConfig
 
-    const distributor =
-      poolConfig.distributionType === DistributionType.Pull
-        ? account
-        : poolConfig.distributor || '0x0000000000000000000000000000000000000000'
+    const distributor = poolConfig.isFundNow
+      ? account
+      : poolConfig.distributor || constants.AddressZero
     const _pool = poolList.filter(isLegalPoolRow)
     if (_pool.length !== parsedTokenAmounts[0].length) return null
 
     // address must be unique
     const poolAddressMap = new Map()
     _pool.forEach((row) => poolAddressMap.set(row.address.toLowerCase(), row))
-
     const pool: TPoolRow[] = Array.from(poolAddressMap.values())
 
     // dPool contract need sort by address.
@@ -282,14 +280,16 @@ export default function PoolsList() {
       poolConfig.distributionType === DistributionType.Push &&
       !poolConfig.isFundNow
     ) {
+      // max uint48
       startTime = 2 ** 48 - 1
       endTime = 2 ** 48 - 1
     }
     // one token. one pool.
     const callDataList: PoolCreateCallData[] = []
     for (let i = 0; i < tokenMetaList.length; i++) {
-      const amounts = parsedTokenAmounts[i]
-      // if table have header.should handle accuracy loss. Rest token give to first address
+      //  must clone origin parsedTokenAmounts.
+      const amounts = parsedTokenAmounts[i].map((v) => BigNumber.from(v))
+      // if table have header input. should handle accuracy loss. Rest token give to first address
       if (tableHeaderInputList[i] && !isNaN(Number(tableHeaderInputList[i]))) {
         const totalAmount = utils.parseUnits(
           tableHeaderInputList[i],

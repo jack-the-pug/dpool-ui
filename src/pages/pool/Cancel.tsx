@@ -3,7 +3,7 @@ import { ContractReceipt, ethers } from 'ethers'
 import { useState, useCallback } from 'react'
 import { toast } from 'react-toastify'
 import { ActionState } from '../../components/action'
-import { TokenMeta, PoolState, DPoolEvent } from '../../type'
+import { PoolState, DPoolEvent } from '../../type'
 import { Pool } from './PoolDetail'
 import useDPoolContract from '../../hooks/useDPool'
 import dPoolABI from '../../abis/dPool.json'
@@ -24,7 +24,7 @@ export function Cancel(props: CancelProps) {
   const [cancelState, setCancelState] = useState<ActionState>(ActionState.WAIT)
   const dPoolContract = useDPoolContract(dPoolAddress)
   const cancelPool = useCallback(async () => {
-    if (!dPoolContract || !poolId || !chainId) return
+    if (!dPoolContract || !poolId || !chainId || !isOwner) return
     setCancelState(ActionState.ING)
     try {
       const cancelPoolByIdRes = await dPoolContract.cancel([poolId])

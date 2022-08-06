@@ -46,12 +46,14 @@ export function PoolDetail({ poolId }: { poolId: string }) {
       amount: poolMeta.amounts[index],
     }))
   }, [poolMeta])
-
   useEffect(() => {
     if (!poolMeta) return
     const tokenAddress = poolMeta.token
     getToken(tokenAddress).then((meta) => meta && setTokenMeta(meta))
     if (BigNumber.from(poolMeta.token).eq(0)) {
+      setSubmittable(true)
+    }
+    if (poolMeta.state === PoolState.Funded) {
       setSubmittable(true)
     }
   }, [poolMeta, getToken])
@@ -185,6 +187,17 @@ export function PoolDetail({ poolId }: { poolId: string }) {
           </div>
           <DateRange start={poolMeta.startTime} end={poolMeta.deadline} />
         </section>
+        <div>
+          <Fund
+            poolMeta={poolMeta}
+            dPoolAddress={dPoolAddress}
+            tokenMeta={tokenMeta}
+            poolId={poolId}
+            getPoolDetail={getPoolDetail}
+            submittable={submittable}
+            setSubmittable={setSubmittable}
+          />
+        </div>
         <div className="flex mt-4 gap-2 w-full justify-between">
           <div>
             {isOwner ? (
@@ -205,15 +218,6 @@ export function PoolDetail({ poolId }: { poolId: string }) {
               getPoolDetail={getPoolDetail}
             />
 
-            <Fund
-              poolMeta={poolMeta}
-              dPoolAddress={dPoolAddress}
-              tokenMeta={tokenMeta}
-              poolId={poolId}
-              getPoolDetail={getPoolDetail}
-              submittable={submittable}
-              setSubmittable={setSubmittable}
-            />
             <Distribute
               poolMeta={poolMeta}
               dPoolAddress={dPoolAddress}

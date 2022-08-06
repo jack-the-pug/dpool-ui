@@ -36,37 +36,13 @@ export function Distribute(props: DistributeProps) {
   )
   const dPoolContract = useDPoolContract(dPoolAddress)
   const [distributeTx, setDistributeTx] = useState<string>()
-  const { isSupportPermit, getSignatureData } = useERC20Permit(
-    tokenMeta.address
-  )
   const distributePool = useCallback(async () => {
     if (!dPoolContract || !poolId || !chainId) return
     setDistributionState(ActionState.ING)
     const successClaimedAddress: string[] = []
 
     try {
-      let distributionPoolByIdRes
-      if (isSupportPermit && BigNumber.from(poolMeta.distributor).eq(0)) {
-        const signatureData = (await getSignatureData(
-          poolMeta.totalAmount,
-          dPoolAddress
-        ))!
-        console.log('signatureData', signatureData)
-        const fundWithPermitCallData = [
-          signatureData.tokenAddress,
-          signatureData.amount,
-          signatureData.deadline,
-          signatureData.v,
-          signatureData.r,
-          signatureData.s,
-        ]
-        distributionPoolByIdRes = await dPoolContract.distributeWithPermit(
-          poolId,
-          fundWithPermitCallData
-        )
-      } else {
-        distributionPoolByIdRes = await dPoolContract.distribute(poolId)
-      }
+      const distributionPoolByIdRes = await dPoolContract.distribute(poolId)
 
       const transactionResponse: ContractReceipt =
         await distributionPoolByIdRes.wait()
@@ -89,18 +65,17 @@ export function Distribute(props: DistributeProps) {
       toast.error(typeof err === 'object' ? err.message : JSON.stringify(err))
       setDistributionState(ActionState.FAILED)
     }
-  }, [dPoolContract, chainId, getSignatureData, isSupportPermit, poolMeta])
+  }, [dPoolContract, chainId, poolMeta])
   if (!account) return null
   if (poolMeta.state === PoolState.Closed) return null
   const distributor = BigNumber.from(poolMeta.distributor)
-  if (!distributor.eq(0) && !distributor.eq(account)) return null
+  if (distributor.eq(0)) return null
+  if (account.toLowerCase() !== poolMeta.distributor.toLowerCase()) return null
   return (
     <RenderActionButton
       state={distributionState}
       stateMsgMap={{
-        [ActionState.WAIT]: distributor.eq(0)
-          ? 'Fund and Distribute'
-          : 'Distribute',
+        [ActionState.WAIT]: 'Distribute',
         [ActionState.ING]: 'Distributing',
         [ActionState.SUCCESS]: 'Distributed',
         [ActionState.FAILED]: 'Distribute failed.Try again',

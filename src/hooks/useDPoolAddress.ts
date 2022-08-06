@@ -63,8 +63,12 @@ export default function useDPoolAddress() {
   const getDPoolAddressByAccount = useCallback(
     async (account: string) => {
       if (!dPoolFactory || !account || !isAddress(account)) return
-      const address = await dPoolFactory.distributionPoolOf(account)
-      return address
+      try {
+        const address = await dPoolFactory.distributionPoolOf(account)
+        return address
+      } catch {
+        return
+      }
     },
     [dPoolFactory]
   )
@@ -77,9 +81,11 @@ export default function useDPoolAddress() {
     res.then((_address: string) => {
       if (_address && isAddress(_address)) {
         setIsOwner(() => BigNumber.from(address).eq(_address))
+      } else {
+        setIsOwner(false)
       }
     })
-  }, [address, getDPoolAddressByAccount, account])
+  }, [address, getDPoolAddressByAccount, account, chainId])
 
   return {
     dPoolAddress: address,

@@ -1,4 +1,4 @@
-import { BigNumber, Contract } from 'ethers'
+import { BigNumber, constants, Contract } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { chains } from '../constants'
@@ -47,7 +47,7 @@ export default function useTokenMeta() {
       if (!chainId) return
       if (BigNumber.from(address).eq(0)) {
         const nativeToken: TTokenMeta = {
-          address: '0x0000000000000000000000000000000000000000',
+          address: constants.AddressZero,
           decimals: chains[chainId].decimals,
           symbol: chains[chainId].symbol,
           balance: nativeTokenBalance || BigNumber.from(0),
