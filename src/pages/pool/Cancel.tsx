@@ -48,7 +48,7 @@ export function Cancel(props: CancelProps) {
   }, [dPoolContract, chainId])
 
   if (!poolMeta || !account) return null
-  if (poolMeta.state !== PoolState.Initialized) return null
+  if (poolMeta.state === PoolState.Closed) return null
   if (!isOwner) {
     return null
   }
