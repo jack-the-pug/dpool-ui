@@ -83,7 +83,7 @@ export function Fund(props: FundProps) {
         .forEach((log) => {
           const parseLog = contractIface.parseLog(log)
           if (signatureData) {
-            if (parseLog.name === DPoolEvent.Distribute) {
+            if (parseLog.name === DPoolEvent.Distributed) {
               getPoolDetail()
             }
           } else {

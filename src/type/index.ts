@@ -66,7 +66,7 @@ export enum DPoolEvent {
   Cancel = 'Cancel',
   Claimed = 'Claimed',
   Funded = 'Funded',
-  Distribute = 'Distribute',
+  Distributed = 'Distributed',
   DisperseToken = 'DisperseToken',
 }
 
