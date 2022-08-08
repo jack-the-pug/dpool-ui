@@ -118,12 +118,13 @@ export function RenderClaim(props: ClaimProps) {
       setClaimState(ActionState.FAILED)
     }
   }, [dPoolContract, chainId, poolId])
-
+  const { startTime, deadline } = poolMeta
+  const nowTime = Date.now() / 1000
   const isClaimer = claimer.address.toLowerCase() === account?.toLowerCase()
+  if (nowTime < startTime || nowTime > deadline) return null
   if (shouldClaimAmount.eq(0)) {
     return <div className="text-gray-500">Received</div>
   }
-
   return (
     <>
       <td className="font-medium text-lg">
