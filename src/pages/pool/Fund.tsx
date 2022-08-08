@@ -1,10 +1,9 @@
 import { useWeb3React } from '@web3-react/core'
 import { BigNumber, ContractReceipt, ethers } from 'ethers'
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { toast } from 'react-toastify'
 import { ActionState } from '../../components/action'
 import { ApproveToken } from '../../components/token/ApproveTokens'
-import { SignatureData, useERC20Permit } from '../../hooks/useERC20Permit'
 import { PoolState, DPoolEvent, TokenMeta, PermitCallData } from '../../type'
 import { Pool } from './PoolDetail'
 import useDPoolContract from '../../hooks/useDPool'
@@ -19,8 +18,8 @@ interface FundProps {
   tokenMeta: TokenMeta | undefined
   poolId: string
   getPoolDetail: Function
-  submittable: boolean
-  setSubmittable: (b: boolean) => void
+  isApproved: boolean
+  setIsApproved: (b: boolean) => void
 }
 
 export function Fund(props: FundProps) {
@@ -30,8 +29,8 @@ export function Fund(props: FundProps) {
     tokenMeta,
     poolId,
     getPoolDetail,
-    setSubmittable,
-    submittable,
+    setIsApproved,
+    isApproved,
   } = props
   if (
     !tokenMeta ||
@@ -55,8 +54,7 @@ export function Fund(props: FundProps) {
     setFundState(ActionState.ING)
     try {
       let fundPoolByIdRes
-      // every one can distribute
-      if (distributor.eq(0)) {
+      if (poolMeta.state === PoolState.Initialized) {
         if (signatureData) {
           fundPoolByIdRes = await dPoolContract.distributeWithPermit(poolId, [
             signatureData.token,
@@ -70,10 +68,21 @@ export function Fund(props: FundProps) {
           fundPoolByIdRes = await dPoolContract.distribute(poolId)
         }
       } else {
+        if (signatureData) {
+          fundPoolByIdRes = await dPoolContract.fundWithPermit(poolId, [
+            signatureData.token,
+            signatureData.value,
+            signatureData.deadline,
+            signatureData.v,
+            signatureData.r,
+            signatureData.s,
+          ])
+        }
         fundPoolByIdRes = await dPoolContract.fund(poolId, {
           value: nativeTokenAmount,
         })
       }
+
       const transactionResponse: ContractReceipt = await fundPoolByIdRes.wait()
       setFundState(ActionState.SUCCESS)
       transactionResponse.logs
@@ -93,7 +102,6 @@ export function Fund(props: FundProps) {
           }
         })
     } catch (err: any) {
-      console.error(err)
       toast.error(typeof err === 'object' ? err.message : JSON.stringify(err))
       setFundState(ActionState.FAILED)
     }
@@ -104,13 +112,13 @@ export function Fund(props: FundProps) {
   )
     return null
   return (
-    <div className="flex gap-2 items-center justify-start">
+    <div className="flex gap-2 items-center justify-end">
       <ApproveToken
         token={tokenMeta.address}
         approveAmount={poolMeta.totalAmount}
         dPoolAddress={dPoolAddress}
         onApproved={(signatureData) => {
-          setSubmittable(true)
+          setIsApproved(true)
           if (signatureData) {
             setSignatureData(signatureData)
           }
@@ -127,9 +135,9 @@ export function Fund(props: FundProps) {
           [ActionState.SUCCESS]: 'Funded',
           [ActionState.FAILED]: 'Fund failed.Try again',
         }}
-        onClick={submittable ? fundPool : () => {}}
+        onClick={isApproved ? fundPool : () => {}}
         waitClass={`${
-          submittable ? '' : 'text-gray-500 border-gray-400 cursor-not-allowed'
+          isApproved ? '' : 'text-gray-500 border-gray-400 cursor-not-allowed'
         } `}
       />
     </div>

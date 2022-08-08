@@ -19,6 +19,7 @@ interface DistributeProps {
   getPoolDetail: Function
   submittable: boolean
   tokenMeta: TokenMeta | undefined
+  addressTotal: number
 }
 export function Distribute(props: DistributeProps) {
   const {
@@ -28,6 +29,7 @@ export function Distribute(props: DistributeProps) {
     poolId,
     getPoolDetail,
     tokenMeta,
+    addressTotal,
   } = props
   if (!tokenMeta || !dPoolAddress || !poolMeta) return null
   const { account, chainId } = useWeb3React()
@@ -43,7 +45,6 @@ export function Distribute(props: DistributeProps) {
 
     try {
       const distributionPoolByIdRes = await dPoolContract.distribute(poolId)
-
       const transactionResponse: ContractReceipt =
         await distributionPoolByIdRes.wait()
       setDistributeTx(transactionResponse.transactionHash)
@@ -55,19 +56,24 @@ export function Distribute(props: DistributeProps) {
         )
         .forEach((log) => {
           const parseLog = contractIface.parseLog(log)
-
           if (parseLog.name === DPoolEvent.Claimed) {
             successClaimedAddress.push(parseLog.args[1])
           }
         })
-      getPoolDetail()
+      if (successClaimedAddress.length === addressTotal) {
+        getPoolDetail()
+      }
     } catch (err: any) {
       toast.error(typeof err === 'object' ? err.message : JSON.stringify(err))
       setDistributionState(ActionState.FAILED)
     }
   }, [dPoolContract, chainId, poolMeta])
   if (!account) return null
-  if (poolMeta.state === PoolState.Closed) return null
+  if (
+    poolMeta.state === PoolState.Closed ||
+    poolMeta.state === PoolState.Initialized
+  )
+    return null
   const distributor = BigNumber.from(poolMeta.distributor)
   if (distributor.eq(0)) return null
   if (account.toLowerCase() !== poolMeta.distributor.toLowerCase()) return null

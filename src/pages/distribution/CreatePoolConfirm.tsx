@@ -160,6 +160,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         LOCAL_STORAGE_KEY.LOCAL_POOL_META_LIST,
         JSON.stringify(localPoolMetaList)
       )
+      console.log('create success')
       localStorage.removeItem(LOCAL_STORAGE_KEY.DISTRIBUTE_CATCH_DATA)
     },
     [poolMeta, dPoolAddress, chainId, account]
@@ -537,10 +538,9 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
                 ? 'Creating'
                 : 'Distributing',
             [ActionState.FAILED]: 'Failed. Try Again',
-            [ActionState.SUCCESS]:
-              distributionType === DistributionType.Pull
-                ? `Pool ${poolIds.join(',')} Created`
-                : `Distribution Created`,
+            [ActionState.SUCCESS]: poolMeta.config.isFundNow
+              ? `Distribution Created`
+              : `Pool ${poolIds.join(',')} Created`,
           }}
           tx={createTx}
           onClick={submittable ? submit : () => {}}

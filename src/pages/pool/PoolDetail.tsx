@@ -30,15 +30,21 @@ export function PoolDetail({ poolId }: { poolId: string }) {
   const { dPoolAddress, isOwner } = useDPoolAddress()
 
   const { getToken } = useTokenMeta()
-
-  const [isLoading, setIsLoading] = useState<boolean>(false)
   const account = useAccount()
   const chainId = useChainId()
-  const [submittable, setSubmittable] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
   const dPoolContract = useDPoolContract(dPoolAddress)
+  const [isApproved, setIsApproved] = useState<boolean>(false)
 
   const [poolMeta, setPoolMeta] = useState<Pool>()
   const [tokenMeta, setTokenMeta] = useState<TokenMeta>()
+
+  const submittable = useMemo(() => {
+    if (!poolMeta) return false
+    if (BigNumber.from(poolMeta.token).eq(0)) return true
+    return poolMeta.state === PoolState.Funded
+  }, [poolMeta?.token, isApproved])
+
   const poolList = useMemo((): Claimer[] => {
     if (!poolMeta) return []
     return poolMeta.claimers.map((claimer, index) => ({
@@ -50,12 +56,6 @@ export function PoolDetail({ poolId }: { poolId: string }) {
     if (!poolMeta) return
     const tokenAddress = poolMeta.token
     getToken(tokenAddress).then((meta) => meta && setTokenMeta(meta))
-    if (BigNumber.from(poolMeta.token).eq(0)) {
-      setSubmittable(true)
-    }
-    if (poolMeta.state === PoolState.Funded) {
-      setSubmittable(true)
-    }
   }, [poolMeta, getToken])
 
   // format table data
@@ -187,17 +187,19 @@ export function PoolDetail({ poolId }: { poolId: string }) {
           </div>
           <DateRange start={poolMeta.startTime} end={poolMeta.deadline} />
         </section>
-        <div>
+
+        <div className="w-full flex justify-end my-2">
           <Fund
             poolMeta={poolMeta}
             dPoolAddress={dPoolAddress}
             tokenMeta={tokenMeta}
             poolId={poolId}
             getPoolDetail={getPoolDetail}
-            submittable={submittable}
-            setSubmittable={setSubmittable}
+            isApproved={isApproved}
+            setIsApproved={setIsApproved}
           />
         </div>
+
         <div className="flex mt-4 gap-2 w-full justify-between">
           <div>
             {isOwner ? (
@@ -225,6 +227,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
               getPoolDetail={getPoolDetail}
               submittable={submittable}
               tokenMeta={tokenMeta}
+              addressTotal={poolList.length}
             />
           </div>
         </div>

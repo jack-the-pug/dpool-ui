@@ -192,7 +192,7 @@ export default function PoolsList() {
     } = poolDetailData
     setPoolList(poolList)
     setPoolName(poolName)
-    // JSON.parse(JSON.stringify(BigNumber)) lose prototype.
+    // JSON.parse(JSON.stringify(BigNumber)) lose prototype. So need convert to BigNumber
     setTokenMetaList(() =>
       tokenMetaList.map((token) => ({
         ...token,
@@ -538,7 +538,7 @@ export default function PoolsList() {
 
       <div className="w-full mt-5 flex justify-between items-center">
         <div className="flex items-baseline">
-          Total:
+          {tokenTotalAmounts ? `Total:` : null}
           <div className="flex flex-col font-medium mx-2">
             {tokenTotalAmounts &&
               tokenTotalAmounts.map((amount, index) => (
