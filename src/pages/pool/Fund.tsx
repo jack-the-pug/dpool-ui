@@ -54,7 +54,7 @@ export function Fund(props: FundProps) {
     setFundState(ActionState.ING)
     try {
       let fundPoolByIdRes
-      if (poolMeta.state === PoolState.Initialized) {
+      if (distributor.eq(0)) {
         if (signatureData) {
           fundPoolByIdRes = await dPoolContract.distributeWithPermit(poolId, [
             signatureData.token,
