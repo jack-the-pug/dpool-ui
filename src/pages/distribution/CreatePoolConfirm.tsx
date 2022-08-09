@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import Action, { ActionState } from '../../components/action'
 import { Dialog } from '../../components/dialog'
-import { EosIconsBubbleLoading, ZondiconsClose } from '../../components/icon'
+import { ZondiconsClose } from '../../components/icon'
 import useDPool from '../../hooks/useDPool'
 import {
   DPoolEvent,
@@ -165,7 +165,147 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     },
     [poolMeta, dPoolAddress, chainId, account]
   )
+  const createPoolOption = useMemo(() => {
+    if (!poolMeta) return
+    const permitData = permitCallDataList
+      ? permitCallDataList.map((sign) => {
+          if (sign) {
+            const { r, s, v, value, token, deadline } = sign
+            return [token, value, deadline, v, r, s]
+          }
+        })
+      : null
+    if (callData.length === 1) {
+      const token = callData[0][PoolCreator.Token]
+      const claimers = callData[0][PoolCreator.Claimers]
+      const amounts = callData[0][PoolCreator.Amounts]
+      if (
+        poolMeta.config.isFundNow &&
+        distributionType === DistributionType.Push
+      ) {
+        if (BigNumber.from(callData[0][PoolCreator.Token]).eq(0)) {
+          return {
+            method: 'disperseEther',
+            params: [claimers, amounts],
+            event: DPoolEvent.DisperseToken,
+          }
+        } else {
+          if (permitData?.[0]) {
+            return {
+              method: 'disperseTokenWithPermit',
+              params: [token, claimers, amounts, permitData[0]],
+              event: DPoolEvent.DisperseToken,
+            }
+          } else {
+            return {
+              method: 'disperseToken',
+              params: [token, claimers, amounts],
+              event: DPoolEvent.DisperseToken,
+            }
+          }
+        }
+      } else {
+        if (permitData?.[0]) {
+          return {
+            method: 'createWithPermit',
+            params: [callData[0], permitData[0], { value: nativeTokenValue }],
+            event: DPoolEvent.Created,
+          }
+        } else {
+          return {
+            method: 'create',
+            params: [callData[0], { value: nativeTokenValue }],
+            event: DPoolEvent.Created,
+          }
+        }
+      }
+    } else {
+      if (
+        poolMeta.config.isFundNow &&
+        distributionType === DistributionType.Push
+      ) {
+        if (permitData) {
+          return {
+            method: 'batchDisperseWithPermit',
+            params: [
+              callData,
+              permitData.filter((d) => !!d),
+              {
+                value: nativeTokenValue,
+              },
+            ],
+          }
+        } else {
+          return {
+            method: 'batchDisperse',
+            params: [
+              callData,
+              {
+                value: nativeTokenValue,
+              },
+            ],
+          }
+        }
+      } else {
+        if (permitData) {
+          return {
+            method: 'batchCreateWithPermit',
+            params: [callData, permitData.filter((d) => !!d)],
+          }
+        } else {
+          return {
+            method: 'batchCreate',
+            params: [callData],
+          }
+        }
+      }
+    }
+  }, [poolMeta, callData, permitCallDataList])
 
+  const singleCreate = useCallback(
+    async (callData: PoolCreateCallData): Promise<string | undefined> => {
+      console.log('singleCreate')
+      if (!dPoolContract || !dPoolAddress) return
+      console.log('callData', callData, nativeTokenValue)
+
+      let singleCreateRequest
+      if (permitCallDataList && permitCallDataList[0]) {
+        singleCreateRequest = await dPoolContract.createWithPermit(
+          callData,
+          permitCallDataList[0],
+          {
+            value: nativeTokenValue,
+          }
+        )
+      } else {
+        singleCreateRequest = await dPoolContract.create(callData, {
+          value: nativeTokenValue,
+        })
+      }
+      const singleCreateResponse: ContractReceipt =
+        await singleCreateRequest.wait()
+      const { transactionHash, logs: _logs } = singleCreateResponse
+      const logs = _logs.filter((log) =>
+        BigNumber.from(log.address).eq(dPoolAddress)
+      )
+      for (let i = 0; i < logs.length; i++) {
+        const logJson = dPoolInterface.parseLog(logs[i])
+        console.log('logJson', logJson)
+        if (logJson.name === DPoolEvent.Created) {
+          const poolId = logJson.args['poolId'].toString()
+          setPoolIds([poolId])
+          return transactionHash
+        }
+      }
+    },
+    [
+      dPoolContract,
+      dPoolAddress,
+      nativeTokenValue,
+      setPoolIds,
+      permitCallDataList,
+    ]
+  )
   const batchCreate = useCallback(
     async (callData: readonly PoolCreateCallData[]) => {
       console.log('batchCreate')
@@ -214,50 +354,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       permitCallDataList,
     ]
   )
-  const singleCreate = useCallback(
-    async (callData: PoolCreateCallData): Promise<string | undefined> => {
-      console.log('singleCreate')
-      if (!dPoolContract || !dPoolAddress) return
-      console.log('callData', callData, nativeTokenValue)
 
-      let singleCreateRequest
-      if (permitCallDataList && permitCallDataList[0]) {
-        singleCreateRequest = await dPoolContract.createWithPermit(
-          callData,
-          permitCallDataList[0],
-          {
-            value: nativeTokenValue,
-          }
-        )
-      } else {
-        singleCreateRequest = await dPoolContract.create(callData, {
-          value: nativeTokenValue,
-        })
-      }
-      const singleCreateResponse: ContractReceipt =
-        await singleCreateRequest.wait()
-      const { transactionHash, logs: _logs } = singleCreateResponse
-      const logs = _logs.filter((log) =>
-        BigNumber.from(log.address).eq(dPoolAddress)
-      )
-      for (let i = 0; i < logs.length; i++) {
-        const logJson = dPoolInterface.parseLog(logs[i])
-        console.log('logJson', logJson)
-        if (logJson.name === DPoolEvent.Created) {
-          const poolId = logJson.args['poolId'].toString()
-          setPoolIds([poolId])
-          return transactionHash
-        }
-      }
-    },
-    [
-      dPoolContract,
-      dPoolAddress,
-      nativeTokenValue,
-      setPoolIds,
-      permitCallDataList,
-    ]
-  )
   const singleDisperse = useCallback(
     async (callData: PoolCreateCallData) => {
       if (!dPoolContract) return

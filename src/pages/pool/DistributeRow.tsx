@@ -1,6 +1,6 @@
 import { useWeb3React } from '@web3-react/core'
 import { BigNumber, ContractReceipt, ethers } from 'ethers'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { ActionState } from '../../components/action'
 import useAddressBook from '../../hooks/useAddressBook'
@@ -10,6 +10,7 @@ import { Pool } from './PoolDetail'
 import useDPoolContract from '../../hooks/useDPool'
 import dPoolABI from '../../abis/dPool.json'
 import RenderActionButton from '../../components/action'
+import { useCallDPoolContract } from '../../hooks/useContractCall'
 
 export interface Claimer {
   address: string
@@ -35,7 +36,7 @@ export function DistributeRow(props: ClaimProps) {
     <tr key={claimer.address} className="py-2 px-4">
       <td className="text-gray-500 text-center">
         {claimer.address.toLowerCase() === account?.toLowerCase() ? (
-          <span className="text-xs bg-green-500 text-white px-2 rounded-lg cursor-default">
+          <span className="text-xs text-green-500 bg-green-200 px-2 rounded-md cursor-default">
             ME
           </span>
         ) : (
@@ -64,8 +65,9 @@ export function DistributeRow(props: ClaimProps) {
 
 export function RenderClaim(props: ClaimProps) {
   const { claimer, index, poolMeta, dPoolAddress, poolId, tokenMeta } = props
-  if (!poolMeta) return null
+  if (!poolMeta || !dPoolAddress) return null
   const { chainId, account } = useWeb3React()
+  const callDPool = useCallDPoolContract(dPoolAddress)
   const [claimState, setClaimState] = useState<ActionState>(ActionState.WAIT)
   const [claimedTx, setClaimedTx] = useState<string>()
   const [shouldClaimAmount, setShouldClaimAmount] = useState<BigNumber>(
@@ -92,62 +94,54 @@ export function RenderClaim(props: ClaimProps) {
   const claim = useCallback(async () => {
     if (!dPoolContract || !poolId || !chainId) return
     setClaimState(ActionState.ING)
-    try {
-      const claimSinglePoolRes = await dPoolContract.claimSinglePool(
-        poolId,
-        index
-      )
-      const transactionResponse: ContractReceipt =
-        await claimSinglePoolRes.wait()
-      setClaimedTx(transactionResponse.transactionHash)
-
-      transactionResponse.logs
-        .filter(
-          (log) => log.address.toLowerCase() === dPoolAddress?.toLowerCase()
-        )
-        .forEach((log) => {
-          const parseLog = contractIface.parseLog(log)
-
-          if (parseLog.name === DPoolEvent.Claimed) {
-            setClaimState(ActionState.SUCCESS)
-          }
-        })
-      // getPoolDetail()
-    } catch (err: any) {
-      toast.error(typeof err === 'object' ? err.message : JSON.stringify(err))
+    const result = await callDPool(
+      'claimSinglePool',
+      [poolId, index],
+      DPoolEvent.Claimed
+    )
+    if (!result.success) {
       setClaimState(ActionState.FAILED)
+      return
     }
+    const { transactionHash } = result.data
+    setClaimedTx(transactionHash)
+    setClaimState(ActionState.SUCCESS)
   }, [dPoolContract, chainId, poolId])
-  const { startTime, deadline } = poolMeta
-  const nowTime = Date.now() / 1000
-  const isClaimer = claimer.address.toLowerCase() === account?.toLowerCase()
-  if (nowTime < startTime || nowTime > deadline) return null
-  if (shouldClaimAmount.eq(0)) {
-    return <div className="text-gray-500">Received</div>
-  }
+
+  const actionCell = useMemo(() => {
+    const { startTime, deadline } = poolMeta
+    const nowTime = Date.now() / 1000
+    const isClaimer = claimer.address.toLowerCase() === account?.toLowerCase()
+    // uint48
+    if (poolMeta.state === PoolState.Initialized) return <div>Wait Fund</div>
+    if (startTime === 2 ** 48 - 1) return <div>Wait Distribute</div>
+    if (nowTime < startTime) return <div>Not Started</div>
+    if (shouldClaimAmount.eq(0)) return <div>Received</div>
+    if (nowTime >= deadline) return <div>Expired</div>
+    if (isClaimer && poolMeta.state === PoolState.Funded) {
+      return (
+        <RenderActionButton
+          state={claimState}
+          stateMsgMap={{
+            [ActionState.WAIT]: 'Claim',
+            [ActionState.ING]: 'Claiming',
+            [ActionState.SUCCESS]: 'Claimed',
+            [ActionState.FAILED]: 'Claim failed.Try again',
+          }}
+          tx={claimedTx}
+          onClick={() => claim()}
+          waitClass="text-gray-200 bg-green-500 border-green-500 text-center rounded-2xl px-2"
+        />
+      )
+    }
+    return null
+  }, [shouldClaimAmount, poolMeta, claim, claimState, claimedTx])
   return (
     <>
       <td className="font-medium text-lg">
         {formatCurrencyAmount(shouldClaimAmount, tokenMeta)}
       </td>
-      <td>
-        {isClaimer && poolMeta.state === PoolState.Funded ? (
-          <RenderActionButton
-            state={claimState}
-            stateMsgMap={{
-              [ActionState.WAIT]: 'Claim',
-              [ActionState.ING]: 'Claiming',
-              [ActionState.SUCCESS]: 'Claimed',
-              [ActionState.FAILED]: 'Claim failed.Try again',
-            }}
-            tx={claimedTx}
-            onClick={() => claim()}
-            waitClass="text-gray-200 bg-green-500 border-green-500 text-center rounded-2xl px-2"
-          />
-        ) : (
-          <div className="text-gray-500">Unclaimed</div>
-        )}
-      </td>
+      <td className="text-gray-400">{actionCell}</td>
     </>
   )
 }

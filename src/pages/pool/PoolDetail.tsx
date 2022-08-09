@@ -152,10 +152,12 @@ export function PoolDetail({ poolId }: { poolId: string }) {
         </div>
         <table className="my-4">
           <thead className="">
-            <tr>
+            <tr className="text-gray-500">
               <td></td>
               <td>ADDRESS</td>
-              <td>{tokenMeta?.symbol}</td>
+              <td>
+                AMOUNT/<span>{tokenMeta?.symbol}</span>
+              </td>
             </tr>
           </thead>
           <tbody>
@@ -174,7 +176,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
         </table>
 
         <section className="text-xs w-full flex flex-col gap-4 mt-20">
-          <div className="flex h-6 w-full justify-between items-center ">
+          {/* <div className="flex h-6 w-full justify-between items-center ">
             <div>Remaining Amount</div>
             <div className="flex-1 border-b border-gray-500 border-dotted mx-2"></div>
             <div>
@@ -184,7 +186,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
               )}
               <span className="ml-1 text-gray-500">{tokenMeta?.symbol}</span>
             </div>
-          </div>
+          </div> */}
           <DateRange start={poolMeta.startTime} end={poolMeta.deadline} />
         </section>
 

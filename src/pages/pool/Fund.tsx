@@ -9,6 +9,10 @@ import { Pool } from './PoolDetail'
 import useDPoolContract from '../../hooks/useDPool'
 import dPoolABI from '../../abis/dPool.json'
 import RenderActionButton from '../../components/action'
+import {
+  useCallContract,
+  useCallDPoolContract,
+} from '../../hooks/useContractCall'
 
 const contractIface = new ethers.utils.Interface(dPoolABI)
 
@@ -40,7 +44,7 @@ export function Fund(props: FundProps) {
   )
     return null
   const { account } = useWeb3React()
-  const dPoolContract = useDPoolContract(dPoolAddress)
+  const callDPool = useCallDPoolContract(dPoolAddress)
   const distributor = BigNumber.from(poolMeta.distributor)
   const [fundState, setFundState] = useState<ActionState>(ActionState.WAIT)
   const [signatureData, setSignatureData] = useState<PermitCallData>()
@@ -49,63 +53,75 @@ export function Fund(props: FundProps) {
     return poolMeta.totalAmount
   }, [poolMeta])
 
-  const fundPool = useCallback(async () => {
-    if (!dPoolContract || !poolId) return
-    setFundState(ActionState.ING)
-    try {
-      let fundPoolByIdRes
-      if (distributor.eq(0)) {
-        if (signatureData) {
-          fundPoolByIdRes = await dPoolContract.distributeWithPermit(poolId, [
-            signatureData.token,
-            signatureData.value,
-            signatureData.deadline,
-            signatureData.v,
-            signatureData.r,
-            signatureData.s,
-          ])
-        } else {
-          fundPoolByIdRes = await dPoolContract.distribute(poolId)
-        }
-      } else {
-        if (signatureData) {
-          fundPoolByIdRes = await dPoolContract.fundWithPermit(poolId, [
-            signatureData.token,
-            signatureData.value,
-            signatureData.deadline,
-            signatureData.v,
-            signatureData.r,
-            signatureData.s,
-          ])
-        }
-        fundPoolByIdRes = await dPoolContract.fund(poolId, {
-          value: nativeTokenAmount,
-        })
-      }
-
-      const transactionResponse: ContractReceipt = await fundPoolByIdRes.wait()
-      setFundState(ActionState.SUCCESS)
-      transactionResponse.logs
-        .filter(
-          (log) => log.address.toLowerCase() === dPoolAddress.toLowerCase()
-        )
-        .forEach((log) => {
-          const parseLog = contractIface.parseLog(log)
-          if (signatureData) {
-            if (parseLog.name === DPoolEvent.Distributed) {
-              getPoolDetail()
-            }
-          } else {
-            if (parseLog.name === DPoolEvent.Funded) {
-              getPoolDetail()
-            }
+  const callOption = useMemo(() => {
+    const permitData = signatureData
+      ? [
+          signatureData.token,
+          signatureData.value,
+          signatureData.deadline,
+          signatureData.v,
+          signatureData.r,
+          signatureData.s,
+        ]
+      : null
+    // fund and distribute
+    if (distributor.eq(0)) {
+      // with permit
+      return permitData
+        ? {
+            method: 'distributeWithPermit',
+            params: [poolId, permitData],
+            eventName: DPoolEvent.Distributed,
           }
-        })
-    } catch (err: any) {
-      toast.error(typeof err === 'object' ? err.message : JSON.stringify(err))
-      setFundState(ActionState.FAILED)
+        : {
+            method: 'distribute',
+            params: [
+              poolId,
+              {
+                value: nativeTokenAmount,
+              },
+            ],
+            eventName: DPoolEvent.Distributed,
+          }
     }
-  }, [dPoolContract, poolId, nativeTokenAmount, signatureData])
+    // only fund
+    else {
+      return permitData
+        ? {
+            method: 'fundWithPermit',
+            params: [poolId, permitData],
+            eventName: DPoolEvent.Funded,
+          }
+        : {
+            method: 'fund',
+            params: [
+              poolId,
+              {
+                value: nativeTokenAmount,
+              },
+            ],
+            eventName: DPoolEvent.Funded,
+          }
+    }
+  }, [distributor, signatureData, poolId, nativeTokenAmount])
+
+  const fundPool = useCallback(async () => {
+    if (!callDPool || !poolId) return
+    setFundState(ActionState.ING)
+    const result = await callDPool(
+      callOption.method,
+      callOption.params,
+      callOption.eventName
+    )
+    if (!result.success) {
+      setFundState(ActionState.FAILED)
+      return
+    }
+    setFundState(ActionState.SUCCESS)
+    if (result.data.logs.length) {
+      getPoolDetail()
+    }
+  }, [callOption, callDPool])
   if (
     !distributor.eq(0) &&
     account?.toLowerCase() !== poolMeta.distributor.toLowerCase()

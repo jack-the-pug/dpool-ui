@@ -9,6 +9,7 @@ import useDPoolContract from '../../hooks/useDPool'
 import dPoolABI from '../../abis/dPool.json'
 import RenderActionButton from '../../components/action'
 import { useERC20Permit } from '../../hooks/useERC20Permit'
+import { useCallDPoolContract } from '../../hooks/useContractCall'
 
 const contractIface = new ethers.utils.Interface(dPoolABI)
 
@@ -36,38 +37,25 @@ export function Distribute(props: DistributeProps) {
   const [distributionState, setDistributionState] = useState<ActionState>(
     ActionState.WAIT
   )
-  const dPoolContract = useDPoolContract(dPoolAddress)
-  const [distributeTx, setDistributeTx] = useState<string>()
+  const callDPool = useCallDPoolContract(dPoolAddress)
+
   const distributePool = useCallback(async () => {
-    if (!dPoolContract || !poolId || !chainId) return
+    if (!poolId || !chainId) return
     setDistributionState(ActionState.ING)
-    const successClaimedAddress: string[] = []
-
-    try {
-      const distributionPoolByIdRes = await dPoolContract.distribute(poolId)
-      const transactionResponse: ContractReceipt =
-        await distributionPoolByIdRes.wait()
-      setDistributeTx(transactionResponse.transactionHash)
-      setDistributionState(ActionState.SUCCESS)
-
-      transactionResponse.logs
-        .filter(
-          (log) => log.address.toLowerCase() === dPoolAddress?.toLowerCase()
-        )
-        .forEach((log) => {
-          const parseLog = contractIface.parseLog(log)
-          if (parseLog.name === DPoolEvent.Claimed) {
-            successClaimedAddress.push(parseLog.args[1])
-          }
-        })
-      if (successClaimedAddress.length === addressTotal) {
-        getPoolDetail()
-      }
-    } catch (err: any) {
-      toast.error(typeof err === 'object' ? err.message : JSON.stringify(err))
+    const result = await callDPool(
+      'distribute',
+      [poolId],
+      DPoolEvent.Distributed
+    )
+    if (!result.success) {
       setDistributionState(ActionState.FAILED)
+      return
     }
-  }, [dPoolContract, chainId, poolMeta])
+    setDistributionState(ActionState.SUCCESS)
+    if (result.data.logs.length) {
+      getPoolDetail()
+    }
+  }, [callDPool, chainId, poolMeta])
   if (!account) return null
   if (
     poolMeta.state === PoolState.Closed ||
@@ -86,7 +74,6 @@ export function Distribute(props: DistributeProps) {
         [ActionState.SUCCESS]: 'Distributed',
         [ActionState.FAILED]: 'Distribute failed.Try again',
       }}
-      tx={distributeTx}
       onClick={submittable ? distributePool : () => {}}
       waitClass={
         submittable
