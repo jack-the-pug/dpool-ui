@@ -354,6 +354,50 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       permitCallDataList,
     ]
   )
+  const singleCreate = useCallback(
+    async (callData: PoolCreateCallData): Promise<string | undefined> => {
+      console.log('singleCreate')
+      if (!dPoolContract || !dPoolAddress) return
+      console.log('callData', callData, nativeTokenValue)
+
+      let singleCreateRequest
+      if (permitCallDataList && permitCallDataList[0]) {
+        singleCreateRequest = await dPoolContract.createWithPermit(
+          callData,
+          permitCallDataList[0],
+          {
+            value: nativeTokenValue,
+          }
+        )
+      } else {
+        singleCreateRequest = await dPoolContract.create(callData, {
+          value: nativeTokenValue,
+        })
+      }
+      const singleCreateResponse: ContractReceipt =
+        await singleCreateRequest.wait()
+      const { transactionHash, logs: _logs } = singleCreateResponse
+      const logs = _logs.filter((log) =>
+        BigNumber.from(log.address).eq(dPoolAddress)
+      )
+      for (let i = 0; i < logs.length; i++) {
+        const logJson = dPoolInterface.parseLog(logs[i])
+        console.log('logJson', logJson)
+        if (logJson.name === DPoolEvent.Created) {
+          const poolId = logJson.args['poolId'].toString()
+          setPoolIds([poolId])
+          return transactionHash
+        }
+      }
+    },
+    [
+      dPoolContract,
+      dPoolAddress,
+      nativeTokenValue,
+      setPoolIds,
+      permitCallDataList,
+    ]
+  )
 
   const singleDisperse = useCallback(
     async (callData: PoolCreateCallData) => {
@@ -638,6 +682,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
             [ActionState.SUCCESS]: poolMeta.config.isFundNow
               ? `Distribution Created`
               : `Pool ${poolIds.join(',')} Created`,
+
           }}
           tx={createTx}
           onClick={submittable ? submit : () => {}}

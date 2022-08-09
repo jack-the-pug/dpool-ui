@@ -190,7 +190,9 @@ export function PoolDetail({ poolId }: { poolId: string }) {
           <DateRange start={poolMeta.startTime} end={poolMeta.deadline} />
         </section>
 
+
         <div className="w-full flex justify-end my-2">
+
           <Fund
             poolMeta={poolMeta}
             dPoolAddress={dPoolAddress}
@@ -201,7 +203,6 @@ export function PoolDetail({ poolId }: { poolId: string }) {
             setIsApproved={setIsApproved}
           />
         </div>
-
         <div className="flex mt-4 gap-2 w-full justify-between">
           <div>
             {isOwner ? (

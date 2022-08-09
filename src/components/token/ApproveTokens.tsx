@@ -155,6 +155,23 @@ export function ApproveToken(props: ApproveTokenProps) {
         setApproveState(ActionState.FAILED)
       }
     } catch {
+    const signatureData = await getSignatureData(
+      shouldApproveAmount,
+      dPoolAddress
+    )
+    console.log('signatureData', signatureData)
+    if (signatureData) {
+      const { tokenAddress, amount, v, r, s, deadline } = signatureData
+      setSignatureData({
+        token: tokenAddress,
+        value: amount,
+        deadline,
+        r,
+        v,
+        s,
+      })
+      setApproveState(ActionState.SUCCESS)
+    } else {
       setApproveState(ActionState.FAILED)
     }
   }, [token, getSignatureData, shouldApproveAmount, dPoolAddress])

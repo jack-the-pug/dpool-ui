@@ -33,6 +33,7 @@ export function Cancel(props: CancelProps) {
   const callDPool = useCallDPoolContract(dPoolAddress)
   const cancelPool = useCallback(async () => {
     if (!poolId || !chainId || !isOwner) return
+
     setCancelState(ActionState.ING)
     const result = await callDPool('cancel', [poolId], DPoolEvent.Cancel)
     if (!result.success) {

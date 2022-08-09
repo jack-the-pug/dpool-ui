@@ -44,7 +44,9 @@ export function Fund(props: FundProps) {
   )
     return null
   const { account } = useWeb3React()
+
   const callDPool = useCallDPoolContract(dPoolAddress)
+
   const distributor = BigNumber.from(poolMeta.distributor)
   const [fundState, setFundState] = useState<ActionState>(ActionState.WAIT)
   const [signatureData, setSignatureData] = useState<PermitCallData>()
@@ -52,6 +54,7 @@ export function Fund(props: FundProps) {
     if (!BigNumber.from(poolMeta.token).eq(0)) return BigNumber.from(0)
     return poolMeta.totalAmount
   }, [poolMeta])
+
 
   const callOption = useMemo(() => {
     const permitData = signatureData
@@ -122,6 +125,7 @@ export function Fund(props: FundProps) {
       getPoolDetail()
     }
   }, [callOption, callDPool])
+
   if (
     !distributor.eq(0) &&
     account?.toLowerCase() !== poolMeta.distributor.toLowerCase()
@@ -129,12 +133,14 @@ export function Fund(props: FundProps) {
     return null
   return (
     <div className="flex gap-2 items-center justify-end">
+
       <ApproveToken
         token={tokenMeta.address}
         approveAmount={poolMeta.totalAmount}
         dPoolAddress={dPoolAddress}
         onApproved={(signatureData) => {
           setIsApproved(true)
+
           if (signatureData) {
             setSignatureData(signatureData)
           }
@@ -154,6 +160,7 @@ export function Fund(props: FundProps) {
         onClick={isApproved ? fundPool : () => {}}
         waitClass={`${
           isApproved ? '' : 'text-gray-500 border-gray-400 cursor-not-allowed'
+
         } `}
       />
     </div>

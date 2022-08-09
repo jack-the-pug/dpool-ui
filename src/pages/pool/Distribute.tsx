@@ -37,11 +37,13 @@ export function Distribute(props: DistributeProps) {
   const [distributionState, setDistributionState] = useState<ActionState>(
     ActionState.WAIT
   )
+
   const callDPool = useCallDPoolContract(dPoolAddress)
 
   const distributePool = useCallback(async () => {
     if (!poolId || !chainId) return
     setDistributionState(ActionState.ING)
+
     const result = await callDPool(
       'distribute',
       [poolId],
