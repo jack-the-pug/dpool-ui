@@ -58,20 +58,31 @@ const createPoolEmptyItem = (): TPoolRow => ({
   key: `${Date.now()}-${Math.random()}`,
 })
 
-const { useAccount, useChainId } = metaMaskHooks
+const { useAccount } = metaMaskHooks
 
 export default function PoolsList() {
   usePageClose()
   const account = useAccount()
-  const { getToken } = useTokenMeta()
+  const { getToken, getTokenBalance } = useTokenMeta()
   const { isOwner, dPoolAddress } = useDPoolAddress()
   const [dPoolFactoryVisible, setDPoolFactoryVisible] = useState<boolean>(false)
-
   const [poolName, setPoolName] = useState<string>('Distribution')
   const [tableHeaderInputList, setTableHeaderInputList] = useState<string[]>([])
   const [tokenMetaList, setTokenMetaList] = useState<TokenMeta[]>([])
-
+  const [tokenBalanceList, setTokenBalanceList] = useState<BigNumber[]>([])
   const [poolList, setPoolList] = useState<TPoolRow[]>([createPoolEmptyItem()])
+  const [textarea, setTextarea] = useState<string>('')
+  const [isTextareaMode, setIsTextareaMode] = useState(false)
+  const [confirmVisible, setConfirmVisible] = useState<boolean>(false)
+  const [poolConfig, setPoolConfig] = useState<PoolConfig>({
+    isFundNow: true,
+    distributionType: DistributionType.Push,
+    distributor: '',
+    date: [
+      Math.round(Date.now() / 1000 + 60 * 5),
+      Math.round(Date.now() + 60 * 60),
+    ],
+  })
 
   const isPercentMode = useMemo(() => {
     return !!tableHeaderInputList[0] && !isNaN(Number(tableHeaderInputList[0]))
@@ -140,20 +151,6 @@ export default function PoolsList() {
     )
   }, [parsedTokenAmounts])
 
-  const [textarea, setTextarea] = useState<string>('')
-  const [poolConfig, setPoolConfig] = useState<PoolConfig>({
-    isFundNow: true,
-    distributionType: DistributionType.Push,
-    distributor: '',
-    date: [
-      Math.round(Date.now() / 1000 + 60 * 5),
-      Math.round(Date.now() + 60 * 60),
-    ],
-  })
-
-  const [errMsg, setErrMsg] = useState<string>('')
-  const [isTextareaMode, setIsTextareaMode] = useState(false)
-
   // cache distribute data
   useEffect(() => {
     const _poolList = poolList.filter((row) => isAddress(row.address))
@@ -192,13 +189,7 @@ export default function PoolsList() {
     } = poolDetailData
     setPoolList(poolList)
     setPoolName(poolName)
-    // JSON.parse(JSON.stringify(BigNumber)) lose prototype. So need convert to BigNumber
-    setTokenMetaList(() =>
-      tokenMetaList.map((token) => ({
-        ...token,
-        balance: BigNumber.from(token.balance),
-      }))
-    )
+    setTokenMetaList(tokenMetaList)
 
     if (poolConfig) {
       setPoolConfig(poolConfig)
@@ -337,7 +328,13 @@ export default function PoolsList() {
     )
     return totalAmounts
   }, [createPoolCallData])
-
+  const isTokenBalanceEnough = useMemo(() => {
+    if (!tokenTotalAmounts) return false
+    for (let i = 0; i < tokenBalanceList.length; i++) {
+      if (tokenBalanceList[i].lt(tokenTotalAmounts[i])) return false
+    }
+    return true
+  }, [tokenTotalAmounts, tokenBalanceList])
   const callDataCheck = useMemo(() => {
     if (!createPoolCallData) return
     if (!isOwner) return
@@ -352,19 +349,22 @@ export default function PoolsList() {
       const nowTime = Math.round(Date.now() / 1000)
       if (nowTime >= startTime) return 'start time must in future'
     }
-
     if (!claimer.length || !amounts.length) return 'no claimers'
+    if (!isTokenBalanceEnough) return 'balance not enough'
     return true
-  }, [createPoolCallData, poolConfig, isOwner])
+  }, [createPoolCallData, poolConfig, isOwner, isTokenBalanceEnough])
 
-  useEffect(() => {
-    if (!callDataCheck) return
-    if (typeof callDataCheck === 'string') {
-      setErrMsg(callDataCheck)
-    } else {
-      setErrMsg('')
+  const getTokensBalance = useCallback(async () => {
+    const balanceList: BigNumber[] = []
+    for (let i = 0; i < tokenMetaList.length; i++) {
+      const balance = await getTokenBalance(tokenMetaList[i].address)
+      balanceList.push(balance)
     }
-  }, [callDataCheck])
+    return balanceList
+  }, [tokenMetaList, getTokenBalance])
+  useEffect(() => {
+    getTokensBalance().then(setTokenBalanceList)
+  }, [getTokenBalance, tokenMetaList])
 
   /**
    * textarea,table Mode switch.
@@ -411,6 +411,7 @@ export default function PoolsList() {
   useEffect(() => {
     setDPoolFactoryVisible(() => !dPoolAddress)
   }, [dPoolAddress])
+
   useEffect(() => {
     if (!isOwner) {
       toast.warning(
@@ -435,7 +436,6 @@ export default function PoolsList() {
     }
   }, [isOwner])
 
-  const [confirmVisible, setConfirmVisible] = useState<boolean>(false)
   const onConfirm = useCallback(() => {
     if (typeof callDataCheck !== 'boolean') return
     setConfirmVisible(true)
@@ -552,7 +552,9 @@ export default function PoolsList() {
           </div>
         </div>
         <div>
-          {errMsg ? <span className=" text-red-500 mr-2">{errMsg}</span> : null}
+          {typeof callDataCheck === 'boolean' ? null : (
+            <span className=" text-red-500 mr-2">{callDataCheck}</span>
+          )}
           <button
             onClick={typeof callDataCheck === 'boolean' ? onConfirm : undefined}
             className={`border border-gray-900 px-2 rounded-md hover:bg-gray-100 ${
@@ -565,14 +567,16 @@ export default function PoolsList() {
           </button>
         </div>
       </div>
-
       <div ref={(el) => (scrollToViewDiv.current = el)} className="h-20"></div>
+
       {createPoolCallData && confirmVisible && dPoolAddress ? (
         <CreatePoolConfirm
           visible={confirmVisible}
           setVisible={setConfirmVisible}
           callData={createPoolCallData}
           tokenMetaList={tokenMetaList}
+          tokenBalanceList={tokenBalanceList}
+          isTokenBalanceEnough={isTokenBalanceEnough}
           dPoolAddress={dPoolAddress}
           distributionType={poolConfig.distributionType}
         />

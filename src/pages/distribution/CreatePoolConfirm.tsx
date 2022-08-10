@@ -1,11 +1,9 @@
 import { format } from 'date-fns'
-import { BigNumber, ContractReceipt, ethers } from 'ethers'
+import { BigNumber } from 'ethers'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'react-toastify'
 import Action, { ActionState } from '../../components/action'
 import { Dialog } from '../../components/dialog'
 import { ZondiconsClose } from '../../components/icon'
-import useDPool from '../../hooks/useDPool'
 import {
   DPoolEvent,
   PermitCallData,
@@ -16,8 +14,6 @@ import {
 import { DistributionType, PoolConfig } from './CreatePool'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { useNavigate } from 'react-router-dom'
-import dPoolABI from '../../abis/dPool.json'
-import useDPoolAddress from '../../hooks/useDPoolAddress'
 import ApproveTokens, {
   ApproveState,
 } from '../../components/token/ApproveTokens'
@@ -42,13 +38,14 @@ interface CreatePoolConfirmProps {
   visible: boolean
   setVisible: (v: boolean) => void
   tokenMetaList: TokenMeta[]
+  tokenBalanceList: BigNumber[]
+  isTokenBalanceEnough: boolean
   callData: readonly PoolCreateCallData[]
   dPoolAddress: string
   distributionType: DistributionType
 }
 
 const { useAccount, useChainId } = metaMaskHooks
-const dPoolInterface = new ethers.utils.Interface(dPoolABI)
 
 export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
   const {
@@ -57,16 +54,14 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     callData,
     distributionType,
     tokenMetaList,
+    tokenBalanceList,
+    isTokenBalanceEnough,
     dPoolAddress,
   } = props
   const chainId = useChainId()
   const account = useAccount()
-  const dPoolContract = useDPool(dPoolAddress)
-
   const navigate = useNavigate()
-
   const [poolIds, setPoolIds] = useState<string[]>([])
-
   // later mode.
   const [isTokensApproved, setIsTokensApproved] = useState<boolean>(() => {
     return !callData[0][PoolCreator.isFundNow]
@@ -142,14 +137,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       amounts: callData.map((pool) => pool[PoolCreator.Amounts][row]),
     }))
   }, [poolMeta, tokenMetaList, callData])
-  const isBalanceEnough = useMemo(() => {
-    for (let i = 0; i < tokenTotalAmounts.length; i++) {
-      const total = tokenTotalAmounts[i]
-      const balance = tokenMetaList[i].balance
-      if (balance.lt(total)) return false
-    }
-    return true
-  }, [tokenTotalAmounts, tokenMetaList])
 
   const onCreateSuccess = useCallback(
     (ids: string[]) => {
@@ -182,7 +169,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         const { r, s, v, value, token, deadline } = sign!
         return [token, value, deadline, v, r, s]
       })
-
     if (callData.length === 1) {
       const token = callData[0][PoolCreator.Token]
       const claimers = callData[0][PoolCreator.Claimers]
@@ -340,7 +326,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
   const callDPool = useCallDPoolContract(dPoolAddress)
   const submit = useCallback(async () => {
     if (!createPoolOption) return
-    console.log('createPoolOption', createPoolOption)
     setCreatePoolState(ActionState.ING)
     const result = await callDPool(
       createPoolOption.method,
@@ -371,14 +356,12 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     if (!poolIds || poolIds.length === 0) return
     onCreateSuccess(poolIds)
   }, [poolIds])
-
   const routerToPoolDetail = useCallback(() => {
     if (
       distributionType === DistributionType.Push &&
       poolMeta?.config.isFundNow
     )
       return
-    console.log('poolIds', poolIds)
     const path = `/distributions/${poolIds.join(',')}`
     navigate(path)
   }, [poolIds, distributionType, poolMeta])
@@ -388,21 +371,17 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       setVisible(false)
     }
   }, [createPoolState, setVisible])
+
   const onTokensApproved = useCallback((state: ApproveState[]) => {
     setIsTokensApproved(true)
     const signatureData = state.map((state) => state.signatureData)
-    console.log('signatureData', signatureData)
     setPermitCallDataList(signatureData)
   }, [])
-
   const submittable = useMemo(() => {
     if (!poolMeta?.config.isFundNow) return true
-    if (!isBalanceEnough) return false
+    if (!isTokenBalanceEnough) return false
     return isTokensApproved
-  }, [isTokensApproved, account, poolMeta, isBalanceEnough])
-  useEffect(() => {
-    console.log('poolIds', poolIds)
-  }, [poolIds])
+  }, [isTokensApproved, account, poolMeta, isTokenBalanceEnough])
   if (!poolMeta || !poolMeta.length) return null
   return (
     <Dialog visible={visible} onClose={onClosePage}>
@@ -411,12 +390,10 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         <div className="font-medium font-xl">{poolMeta.name}</div>
         <ZondiconsClose onClick={onClosePage} className="cursor-pointer" />
       </h1>
-
       <div className="border-b border-black border-dotted w-full my-2"></div>
-
       <div className="font-mono">
         {renderUIData.map((row) => (
-          <div key={row.address} className="flex gap-4 my-1 justify-between">
+          <div key={row.address} className="flex gap-8 my-1 justify-between">
             <div className="">
               {row.address}{' '}
               {addressName(row.address) ? (
@@ -463,12 +440,16 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
             <div className="flex" key={tokenMeta.address}>
               <div
                 className={`${
-                  tokenMeta.balance.lt(tokenTotalAmounts[index])
+                  tokenBalanceList[index] &&
+                  tokenBalanceList[index].lt(tokenTotalAmounts[index])
                     ? 'text-red-500'
                     : ''
                 }`}
               >
-                {formatCurrencyAmount(tokenMeta.balance, tokenMeta)}
+                {formatCurrencyAmount(
+                  tokenBalanceList[index] || BigNumber.from(0),
+                  tokenMeta
+                )}
               </div>
               <div className="ml-1 text-gray-500">{tokenMeta.symbol}</div>
             </div>

@@ -8,7 +8,6 @@ import { TokenMeta as TTokenMeta } from '../../type'
 import { chains } from '../../constants'
 
 import { isAddress } from 'ethers/lib/utils'
-import { useBalance } from '../../hooks/useBalance'
 interface TTokenSelectProps {
   tokenMeta: TTokenMeta | undefined
   setTokenMeta: (tokenMeta: TTokenMeta) => void
@@ -21,23 +20,20 @@ export default function TokenSelect(props: TTokenSelectProps) {
   const provider = useProvider()
   const chainId = useChainId()
   const account = useAccount()
-  const nativeTokenBalance = useBalance(account)
   const [loading, setLoading] = useState<boolean>(false)
   const [dialogVisible, setDialogVisible] = useState<boolean>(dialogDefaultOpen)
   const [tokenAddress, setTokenAddress] = useState<string>()
 
   const nativeTokenMeta = useMemo(() => {
-    if (!chainId || !chains[chainId] || !nativeTokenBalance) return null
+    if (!chainId || !chains[chainId]) return null
     const nativeToken: TTokenMeta = {
       address: constants.AddressZero,
       decimals: chains[chainId].decimals,
       symbol: chains[chainId].symbol,
-      balance: nativeTokenBalance || BigNumber.from(0),
       chainId,
     }
-
     return nativeToken
-  }, [nativeTokenBalance, chainId, tokenMeta])
+  }, [chainId, tokenMeta])
 
   useEffect(() => {
     if (!tokenMeta && nativeTokenMeta) {

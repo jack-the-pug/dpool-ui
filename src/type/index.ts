@@ -10,7 +10,6 @@ export interface TokenMeta {
   decimals: number
   address: string
   chainId: number
-  balance: BigNumber
 }
 
 export enum PoolState {
@@ -63,7 +62,7 @@ export enum DPoolFactoryEvent {
 
 export enum DPoolEvent {
   Created = 'Created',
-  Cancel = 'Cancel',
+  Canceled = 'Canceled',
   Claimed = 'Claimed',
   Funded = 'Funded',
   Distributed = 'Distributed',
