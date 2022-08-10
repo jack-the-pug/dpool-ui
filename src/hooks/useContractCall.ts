@@ -21,6 +21,7 @@ const dPoolInterface = new ethers.utils.Interface(DPoolABI)
 export function useCallContract(contract: Contract | undefined) {
   return useCallback(
     async (method: string, params: any[]): Promise<CallResult> => {
+      console.log('params', params)
       if (!contract)
         return {
           success: false,

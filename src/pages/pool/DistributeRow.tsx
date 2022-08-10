@@ -114,9 +114,9 @@ export function RenderClaim(props: ClaimProps) {
     const isClaimer = claimer.address.toLowerCase() === account?.toLowerCase()
     // uint48
     if (poolMeta.state === PoolState.Initialized) return <div>Wait Fund</div>
+    if (shouldClaimAmount.eq(0)) return <div>Received</div>
     if (startTime === 2 ** 48 - 1) return <div>Wait Distribute</div>
     if (nowTime < startTime) return <div>Not Started</div>
-    if (shouldClaimAmount.eq(0)) return <div>Received</div>
     if (nowTime >= deadline) return <div>Expired</div>
     if (isClaimer && poolMeta.state === PoolState.Funded) {
       return (

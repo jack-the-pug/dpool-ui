@@ -35,7 +35,7 @@ export function Cancel(props: CancelProps) {
     if (!poolId || !chainId || !isOwner) return
 
     setCancelState(ActionState.ING)
-    const result = await callDPool('cancel', [poolId], DPoolEvent.Cancel)
+    const result = await callDPool('cancel', [[poolId]], DPoolEvent.Canceled)
     if (!result.success) {
       setCancelState(ActionState.FAILED)
       return

@@ -567,12 +567,13 @@ export default function PoolsList() {
       </div>
 
       <div ref={(el) => (scrollToViewDiv.current = el)} className="h-20"></div>
-      {createPoolCallData && confirmVisible ? (
+      {createPoolCallData && confirmVisible && dPoolAddress ? (
         <CreatePoolConfirm
           visible={confirmVisible}
           setVisible={setConfirmVisible}
           callData={createPoolCallData}
           tokenMetaList={tokenMetaList}
+          dPoolAddress={dPoolAddress}
           distributionType={poolConfig.distributionType}
         />
       ) : null}
