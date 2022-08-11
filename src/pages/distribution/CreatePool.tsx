@@ -263,7 +263,7 @@ export default function PoolsList() {
     const pool: TPoolRow[] = Array.from(poolAddressMap.values())
 
     // dPool contract need sort by address.
-    pool.sort((a, b) => (a.address > b.address ? 1 : -1))
+    pool.sort((a, b) => (BigNumber.from(a.address).gt(b.address) ? 1 : -1))
     const claimer = pool.map((row) => row.address)
 
     let [startTime, endTime] = date
