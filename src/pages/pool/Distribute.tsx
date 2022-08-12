@@ -14,6 +14,7 @@ interface DistributeProps {
   getPoolDetail: Function
   submittable: boolean
   tokenMeta: TokenMeta | undefined
+  getPoolEvent: Function
 }
 export function Distribute(props: DistributeProps) {
   const {
@@ -23,6 +24,7 @@ export function Distribute(props: DistributeProps) {
     poolId,
     getPoolDetail,
     tokenMeta,
+    getPoolEvent,
   } = props
   if (!tokenMeta || !dPoolAddress || !poolMeta) return null
   const { account, chainId } = useWeb3React()
@@ -48,6 +50,7 @@ export function Distribute(props: DistributeProps) {
     setDistributionState(ActionState.SUCCESS)
     if (result.data.logs.length) {
       getPoolDetail()
+      getPoolEvent()
     }
   }, [callDPool, chainId, poolMeta])
   if (!account) return null

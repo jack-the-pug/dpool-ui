@@ -9,6 +9,10 @@ import { Pool } from './PoolDetail'
 import useDPoolContract from '../../hooks/useDPool'
 import { useCallDPoolContract } from '../../hooks/useContractCall'
 import { Button } from '../../components/button'
+import { ClaimEvent } from './PoolList'
+import { format } from 'date-fns'
+import { TranSactionHash } from '../../components/hash'
+import { MdiArrowTopRight } from '../../components/icon'
 
 export interface Claimer {
   address: string
@@ -17,16 +21,29 @@ export interface Claimer {
 
 interface ClaimProps {
   claimer: Claimer
+  poolId: string
+  index: number
+  claimEvent: ClaimEvent | undefined
   poolMeta: Pool | undefined
   dPoolAddress: string | undefined
   tokenMeta: TokenMeta | undefined
-  poolId: string
-  index: number
+  getPoolEvent: Function
+  getPoolDetail: Function
 }
 
 export function DistributeRow(props: ClaimProps) {
   const { account } = useWeb3React()
-  const { claimer, index, poolMeta, tokenMeta, poolId, dPoolAddress } = props
+  const {
+    claimer,
+    index,
+    poolMeta,
+    tokenMeta,
+    poolId,
+    dPoolAddress,
+    claimEvent,
+    getPoolEvent,
+    getPoolDetail,
+  } = props
   const { addressName } = useAddressBook()
   return (
     <tr key={claimer.address} className="hover:bg-gray-200">
@@ -54,13 +71,26 @@ export function DistributeRow(props: ClaimProps) {
         dPoolAddress={dPoolAddress}
         tokenMeta={tokenMeta}
         poolId={poolId}
+        claimEvent={claimEvent}
+        getPoolEvent={getPoolEvent}
+        getPoolDetail={getPoolDetail}
       />
     </tr>
   )
 }
 
 export function RenderClaim(props: ClaimProps) {
-  const { claimer, index, poolMeta, dPoolAddress, poolId, tokenMeta } = props
+  const {
+    claimer,
+    index,
+    poolMeta,
+    dPoolAddress,
+    poolId,
+    tokenMeta,
+    claimEvent,
+    getPoolEvent,
+    getPoolDetail,
+  } = props
   if (!poolMeta || !dPoolAddress) return null
   const { chainId, account } = useWeb3React()
   const callDPool = useCallDPoolContract(dPoolAddress)
@@ -85,8 +115,9 @@ export function RenderClaim(props: ClaimProps) {
   }, [dPoolContract, claimer, poolId, poolMeta])
 
   useEffect(() => {
+    if (claimEvent) return
     getClaimedAmount()
-  }, [getClaimedAmount])
+  }, [getClaimedAmount, claimEvent])
 
   const claim = useCallback(async () => {
     if (!dPoolContract || !poolId || !chainId) return
@@ -100,19 +131,54 @@ export function RenderClaim(props: ClaimProps) {
       setClaimState(ActionState.FAILED)
       return
     }
-    const { transactionHash } = result.data
-    setClaimedTx(transactionHash)
-    setClaimState(ActionState.SUCCESS)
-    getClaimedAmount()
-  }, [dPoolContract, chainId, poolId, getClaimedAmount])
+    const { transactionHash, logs } = result.data
+    if (logs.length) {
+      setClaimedTx(transactionHash)
+      setClaimState(ActionState.SUCCESS)
+      getPoolEvent()
+      // last one
+      console.log(
+        'poolMeta.totalAmount',
+        poolMeta.totalAmount,
+        claimer.amount,
+        poolMeta.totalAmount.sub(claimer.amount).eq(0)
+      )
+      if (poolMeta.totalAmount.sub(claimer.amount).eq(0)) {
+        getPoolDetail()
+      }
+    }
+  }, [
+    dPoolContract,
+    chainId,
+    poolId,
+    getClaimedAmount,
+    getPoolEvent,
+    poolMeta,
+    getPoolDetail,
+    claimer,
+  ])
 
   const actionCell = useMemo(() => {
     const { startTime, deadline } = poolMeta
     const nowTime = Date.now() / 1000
     const isClaimer = claimer.address.toLowerCase() === account?.toLowerCase()
-    // uint48
+    if (claimEvent)
+      return (
+        <div className="flex">
+          <TranSactionHash
+            hash={claimEvent.transactionHash}
+            className="text-gray-400 flex items-center mr-2"
+          >
+            TX <MdiArrowTopRight />
+          </TranSactionHash>
+          <div className="text-xs">
+            {format(new Date(claimEvent.timestamp * 1000), 'L-dd/KK:mm')}
+          </div>
+        </div>
+      )
+
     if (poolMeta.state === PoolState.Initialized) return <div>Wait Fund</div>
-    if (shouldClaimAmount.eq(0)) return <div>Received</div>
+    if (shouldClaimAmount.eq(0) || claimedTx) return <div>Received</div>
     if (startTime === 2 ** 48 - 1) return <div>Wait Distribute</div>
     if (nowTime < startTime) return <div>Not Started</div>
     if (nowTime >= deadline) return <div>Expired</div>
@@ -127,8 +193,16 @@ export function RenderClaim(props: ClaimProps) {
         </Button>
       )
     }
-    return null
-  }, [shouldClaimAmount, poolMeta, claim, claimState, claimedTx])
+    return 'NULL'
+  }, [
+    shouldClaimAmount,
+    poolMeta,
+    claim,
+    claimState,
+    claimedTx,
+    claimEvent,
+    claimedTx,
+  ])
   return (
     <>
       <td className="text-sm">

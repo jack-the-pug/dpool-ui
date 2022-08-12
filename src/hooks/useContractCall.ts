@@ -34,7 +34,7 @@ export function useCallContract(contract: Contract | undefined) {
           data: response,
         }
       } catch (err: any) {
-        const errMsg = typeof err === 'object' ? err.message : err
+        const errMsg = typeof err === 'object' ? err.message || err.reason : err
         console.log('err', err)
         toast.error(errMsg)
         return {

@@ -16,6 +16,7 @@ interface FundProps {
   getPoolDetail: Function
   isApproved: boolean
   setIsApproved: (b: boolean) => void
+  getPoolEvent: Function
 }
 
 export function Fund(props: FundProps) {
@@ -27,6 +28,7 @@ export function Fund(props: FundProps) {
     getPoolDetail,
     setIsApproved,
     isApproved,
+    getPoolEvent,
   } = props
   if (
     !tokenMeta ||
@@ -112,6 +114,7 @@ export function Fund(props: FundProps) {
     }
     setFundState(ActionState.SUCCESS)
     if (result.data.logs.length) {
+      getPoolEvent()
       getPoolDetail()
     }
   }, [callOption, callDPool])

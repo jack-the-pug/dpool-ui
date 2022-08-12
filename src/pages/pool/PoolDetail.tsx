@@ -9,7 +9,7 @@ import {
   TokenMeta,
 } from '../../type'
 import useDPoolContract from '../../hooks/useDPool'
-import { EosIconsBubbleLoading } from '../../components/icon'
+import { EosIconsBubbleLoading, MdiArrowTopRight } from '../../components/icon'
 import { useNavigate } from 'react-router-dom'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import useTokenMeta from '../../hooks/useTokenMeta'
@@ -21,6 +21,8 @@ import { Distribute } from './Distribute'
 import { Claimer, DistributeRow } from './DistributeRow'
 import { DateRange } from '../distribution/DateRangePicker'
 import { DistributeState } from './DistributeState'
+import { ClaimEvent, CreateEvent, DistributeEvent, FundEvent } from './PoolList'
+import { AddressLink, TranSactionHash } from '../../components/hash'
 
 export type Pool = BasePool & {
   state: PoolState
@@ -28,7 +30,24 @@ export type Pool = BasePool & {
 
 const { useAccount, useChainId } = metaMaskHooks
 
-export function PoolDetail({ poolId }: { poolId: string }) {
+interface PoolDetailProps {
+  poolId: string
+  createEvent: CreateEvent | undefined
+  fundEvent: FundEvent | undefined
+  distributeEvent: DistributeEvent | undefined
+  claimEventList: ClaimEvent[]
+  getPoolEvent: Function
+}
+
+export function PoolDetail(props: PoolDetailProps) {
+  const {
+    poolId,
+    createEvent,
+    fundEvent,
+    distributeEvent,
+    claimEventList,
+    getPoolEvent,
+  } = props
   const navigate = useNavigate()
   const { dPoolAddress, isOwner } = useDPoolAddress()
 
@@ -103,12 +122,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
       setIsLoading(false)
     }
   }, [dPoolContract, account, poolId, chainId])
-  useEffect(() => {
-    if (!dPoolContract) return
-    dPoolContract
-      .queryFilter(dPoolContract.filters[DPoolEvent.Claimed]())
-      .then((res) => console.log('res', res))
-  }, [dPoolContract])
+
   useEffect(() => {
     if (dPoolAddress && dPoolContract && poolId && chainId) {
       getPoolDetail()
@@ -161,14 +175,14 @@ export function PoolDetail({ poolId }: { poolId: string }) {
           </div>
         </div>
         <table className="my-4">
-          <thead className="text-sm">
-            <tr className="text-gray-500 bg-gray-100">
+          <thead className="text-sm sticky">
+            <tr className="text-gray-500 bg-gray-100 sticky">
               <td>Index</td>
               <td className="py-3">Address</td>
               <td>
                 Amount/<span>{tokenMeta?.symbol}</span>
               </td>
-              <td></td>
+              <td>State</td>
             </tr>
           </thead>
           <tbody>
@@ -181,6 +195,12 @@ export function PoolDetail({ poolId }: { poolId: string }) {
                 dPoolAddress={dPoolAddress}
                 tokenMeta={tokenMeta}
                 poolId={poolId}
+                claimEvent={claimEventList.find(
+                  (e) =>
+                    e.claimer.toLowerCase() === claimer.address.toLowerCase()
+                )}
+                getPoolEvent={getPoolEvent}
+                getPoolDetail={getPoolDetail}
               />
             ))}
           </tbody>
@@ -188,6 +208,68 @@ export function PoolDetail({ poolId }: { poolId: string }) {
 
         <section className="text-xs w-full flex flex-col gap-4 mt-20">
           <DateRange start={poolMeta.startTime} end={poolMeta.deadline} />
+        </section>
+        <section className="w-full mt-10 text-xs border border-gray-300 divide-solid divide-y divide-gray-300 rounded-md ">
+          {createEvent && (
+            <div className="flex justify-between text-gray-400 px-2 py-3">
+              <div className="flex items-center">
+                CREATE
+                <TranSactionHash
+                  hash={createEvent.transactionHash}
+                  className="text-gray-400 flex ml-2 items-center"
+                >
+                  TX <MdiArrowTopRight />
+                </TranSactionHash>
+              </div>
+              <div>
+                {'BY '}
+                <AddressLink
+                  address={createEvent.creator}
+                  className="text-gray-400"
+                />
+              </div>
+            </div>
+          )}
+          {fundEvent && (
+            <div className="flex justify-between text-gray-400 px-2 py-3">
+              <div className="flex items-center">
+                FUND
+                <TranSactionHash
+                  hash={fundEvent.transactionHash}
+                  className="text-gray-400 flex ml-2 items-center"
+                >
+                  TX <MdiArrowTopRight />
+                </TranSactionHash>
+              </div>
+              <div>
+                {'BY '}
+                <AddressLink
+                  address={fundEvent.funder}
+                  className="text-gray-400"
+                />
+              </div>
+            </div>
+          )}
+          {distributeEvent && (
+            <div className="flex justify-between text-gray-400 px-2 py-3">
+              <div className="flex items-center">
+                DISTRIBUTE
+                <TranSactionHash
+                  hash={distributeEvent.transactionHash}
+                  className="text-gray-400 flex ml-2 items-center"
+                >
+                  TX <MdiArrowTopRight />
+                </TranSactionHash>
+              </div>
+              <div>
+                {'BY '}
+                <AddressLink
+                  address={distributeEvent.distributor}
+                  className="text-gray-400"
+                />
+              </div>
+            </div>
+          )}
         </section>
         <div className="w-full mt-10 text-black">
           <Fund
@@ -198,6 +280,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
             getPoolDetail={getPoolDetail}
             isApproved={isApproved}
             setIsApproved={setIsApproved}
+            getPoolEvent={getPoolEvent}
           />
           <Distribute
             poolMeta={poolMeta}
@@ -206,6 +289,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
             getPoolDetail={getPoolDetail}
             submittable={submittable}
             tokenMeta={tokenMeta}
+            getPoolEvent={getPoolEvent}
           />
         </div>
         <div className="flex mt-4 gap-2 w-full justify-between">

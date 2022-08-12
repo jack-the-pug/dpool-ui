@@ -530,7 +530,11 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
                 'Distribute Success.'
               )}
             </div>
-            {createTx && <TranSactionHash hash={createTx} />}
+            {createTx && (
+              <TranSactionHash hash={createTx}>
+                View on Explorer
+              </TranSactionHash>
+            )}
           </div>
         )}
       </div>
