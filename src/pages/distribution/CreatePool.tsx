@@ -23,7 +23,6 @@ import { toast } from 'react-toastify'
 
 import DPoolFactory from './dPoolFactory/index'
 import { isAddress } from 'ethers/lib/utils'
-import { Pool } from '../pool/PoolDetail'
 
 import { formatCurrencyAmount, parsed2NumberString } from '../../utils/number'
 import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
@@ -275,6 +274,7 @@ export default function PoolsList() {
       startTime = 2 ** 48 - 1
       endTime = 2 ** 48 - 1
     }
+
     // one token. one pool.
     const callDataList: PoolCreateCallData[] = []
     for (let i = 0; i < tokenMetaList.length; i++) {
@@ -329,16 +329,26 @@ export default function PoolsList() {
     return totalAmounts
   }, [createPoolCallData])
   const isTokenBalanceEnough = useMemo(() => {
-    if (!tokenTotalAmounts) return false
+    if (
+      !tokenTotalAmounts ||
+      tokenTotalAmounts.length === 0 ||
+      tokenBalanceList.length === 0
+    )
+      return false
     for (let i = 0; i < tokenBalanceList.length; i++) {
-      if (tokenBalanceList[i].lt(tokenTotalAmounts[i])) return false
+      if (
+        tokenBalanceList[i] &&
+        tokenTotalAmounts[i] &&
+        tokenBalanceList[i].lt(tokenTotalAmounts[i])
+      )
+        return false
     }
     return true
   }, [tokenTotalAmounts, tokenBalanceList])
   const callDataCheck = useMemo(() => {
     if (!createPoolCallData) return
     if (!isOwner) return
-    const { distributionType } = poolConfig
+    const { distributionType, isFundNow } = poolConfig
     const callData = createPoolCallData[0]
     const claimer = callData[PoolCreator.Claimers]
     const amounts = callData[PoolCreator.Amounts]
@@ -350,7 +360,7 @@ export default function PoolsList() {
       if (nowTime >= startTime) return 'start time must in future'
     }
     if (!claimer.length || !amounts.length) return 'no claimers'
-    if (!isTokenBalanceEnough) return 'balance not enough'
+    if (isFundNow && !isTokenBalanceEnough) return 'balance not enough'
     return true
   }, [createPoolCallData, poolConfig, isOwner, isTokenBalanceEnough])
 
@@ -398,7 +408,7 @@ export default function PoolsList() {
       }
       const item: TPoolRow = {
         address,
-        userInputAmount: amount.toString(),
+        userInputAmount: baseAmount,
         key: `${Date.now()}-${Math.random()}`,
       }
       _poolList.push(item)

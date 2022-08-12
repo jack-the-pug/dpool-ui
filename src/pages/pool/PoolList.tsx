@@ -24,13 +24,15 @@ export default function PoolList() {
     setIsLoading(true)
     const formatPoolList: DPoolLocalStorageMeta[] = JSON.parse(
       localStorage.getItem(LOCAL_STORAGE_KEY.LOCAL_POOL_META_LIST) || '[]'
-    ).filter((pool: DPoolLocalStorageMeta) => {
-      if (!dPoolAddress) return true
-      return (
-        pool.dPoolAddress.toLowerCase() === dPoolAddress.toLowerCase() &&
-        pool.chainId === chainId
-      )
-    })
+    )
+      .filter((pool: DPoolLocalStorageMeta) => {
+        if (!dPoolAddress) return true
+        return (
+          pool.dPoolAddress.toLowerCase() === dPoolAddress.toLowerCase() &&
+          pool.chainId === chainId
+        )
+      })
+      .reverse()
     setPoolList(formatPoolList)
     setIsLoading(false)
   }, [chainId, dPoolAddress, dPoolContract])
@@ -49,6 +51,7 @@ export default function PoolList() {
           chainId,
           dPoolAddress,
         }))
+        .reverse()
 
       setPoolList(ListInDPoolContract)
       setIsLoading(false)
@@ -66,7 +69,7 @@ export default function PoolList() {
           const ids = pool.poolIds.join(',')
           return (
             <Link
-              key={ids}
+              key={`${ids}-${index}`}
               to={ids}
               className="flex px-4 py-1 hover:bg-gray-100 hover:scale-110 transition-all ease-in-out rounded-sm"
             >
@@ -80,7 +83,7 @@ export default function PoolList() {
       ) : (
         <p>Distributions Not Found</p>
       )}
-      <div className="text-xs text-gray-500 flex mt-16 w-full justify-end">
+      <div className="text-xs text-gray-500 flex mt-4 mb-16 w-full justify-end">
         Didn't see your transaction? Try{' '}
         <button className="ml-2 text-green-500" onClick={getPoolFromContract}>
           {' '}

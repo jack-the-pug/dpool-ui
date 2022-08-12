@@ -12,6 +12,13 @@ export interface TokenMeta {
   chainId: number
 }
 
+export enum ActionState {
+  WAIT,
+  ING,
+  SUCCESS,
+  FAILED,
+}
+
 export enum PoolState {
   None, // Pool is not exist
   Initialized, // unfunded

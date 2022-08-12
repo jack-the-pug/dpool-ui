@@ -1,16 +1,14 @@
 import { useWeb3React } from '@web3-react/core'
-import { BigNumber, ContractReceipt, ethers } from 'ethers'
+import { BigNumber } from 'ethers'
 import { useState, useCallback, useEffect, useMemo } from 'react'
-import { toast } from 'react-toastify'
-import { ActionState } from '../../components/action'
+import { ActionState } from '../../type'
 import useAddressBook from '../../hooks/useAddressBook'
 import { TokenMeta, PoolState, DPoolEvent } from '../../type'
 import { formatCurrencyAmount } from '../../utils/number'
 import { Pool } from './PoolDetail'
 import useDPoolContract from '../../hooks/useDPool'
-import dPoolABI from '../../abis/dPool.json'
-import RenderActionButton from '../../components/action'
 import { useCallDPoolContract } from '../../hooks/useContractCall'
+import { Button } from '../../components/button'
 
 export interface Claimer {
   address: string
@@ -26,15 +24,13 @@ interface ClaimProps {
   index: number
 }
 
-const contractIface = new ethers.utils.Interface(dPoolABI)
-
 export function DistributeRow(props: ClaimProps) {
   const { account } = useWeb3React()
   const { claimer, index, poolMeta, tokenMeta, poolId, dPoolAddress } = props
   const { addressName } = useAddressBook()
   return (
-    <tr key={claimer.address} className="py-2 px-4">
-      <td className="text-gray-500 text-center">
+    <tr key={claimer.address} className="hover:bg-gray-200">
+      <td className="text-gray-500 text-center py-2">
         {claimer.address.toLowerCase() === account?.toLowerCase() ? (
           <span className="text-xs text-green-500 bg-green-200 px-2 rounded-md cursor-default">
             ME
@@ -43,7 +39,7 @@ export function DistributeRow(props: ClaimProps) {
           index + 1
         )}
       </td>
-      <td className="">
+      <td className="text-sm">
         {claimer.address}
         {addressName(claimer.address) ? (
           <span className="text-sm text-gray-500 px-1">
@@ -74,6 +70,7 @@ export function RenderClaim(props: ClaimProps) {
     claimer.amount
   )
   const dPoolContract = useDPoolContract(dPoolAddress)
+
   const getClaimedAmount = useCallback(async () => {
     if (!dPoolContract) return
     if (poolMeta.state === PoolState.Initialized) {
@@ -85,11 +82,11 @@ export function RenderClaim(props: ClaimProps) {
     )
     const _shouldClaimAmount = claimer.amount.sub(claimedAmount)
     setShouldClaimAmount(_shouldClaimAmount)
-  }, [dPoolContract, claimer])
+  }, [dPoolContract, claimer, poolId, poolMeta])
 
   useEffect(() => {
     getClaimedAmount()
-  }, [])
+  }, [getClaimedAmount])
 
   const claim = useCallback(async () => {
     if (!dPoolContract || !poolId || !chainId) return
@@ -106,7 +103,8 @@ export function RenderClaim(props: ClaimProps) {
     const { transactionHash } = result.data
     setClaimedTx(transactionHash)
     setClaimState(ActionState.SUCCESS)
-  }, [dPoolContract, chainId, poolId])
+    getClaimedAmount()
+  }, [dPoolContract, chainId, poolId, getClaimedAmount])
 
   const actionCell = useMemo(() => {
     const { startTime, deadline } = poolMeta
@@ -120,28 +118,23 @@ export function RenderClaim(props: ClaimProps) {
     if (nowTime >= deadline) return <div>Expired</div>
     if (isClaimer && poolMeta.state === PoolState.Funded) {
       return (
-        <RenderActionButton
-          state={claimState}
-          stateMsgMap={{
-            [ActionState.WAIT]: 'Claim',
-            [ActionState.ING]: 'Claiming',
-            [ActionState.SUCCESS]: 'Claimed',
-            [ActionState.FAILED]: 'Claim failed.Try again',
-          }}
-          tx={claimedTx}
-          onClick={() => claim()}
-          waitClass="text-gray-200 bg-green-500 border-green-500 text-center rounded-2xl px-2"
-        />
+        <Button
+          loading={claimState === ActionState.ING}
+          onClick={claim}
+          className="w-20 py-1"
+        >
+          Claim
+        </Button>
       )
     }
     return null
   }, [shouldClaimAmount, poolMeta, claim, claimState, claimedTx])
   return (
     <>
-      <td className="font-medium text-lg">
-        {formatCurrencyAmount(shouldClaimAmount, tokenMeta)}
+      <td className="text-sm">
+        {formatCurrencyAmount(claimer.amount, tokenMeta)}
       </td>
-      <td className="text-gray-400">{actionCell}</td>
+      <td className="text-gray-400 text-sm">{actionCell}</td>
     </>
   )
 }

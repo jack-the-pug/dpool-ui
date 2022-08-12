@@ -49,7 +49,7 @@ export default function PoolTableHeader(props: {
           <TokenSelect
             tokenMeta={token}
             setTokenMeta={(token) => setTokenMetaByIndex(token, index)}
-            dialogDefaultOpen={index === 1 && !token}
+            dialogDefaultOpen={index === 1}
           />
         </div>
       ))}

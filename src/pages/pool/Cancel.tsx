@@ -1,16 +1,10 @@
 import { useWeb3React } from '@web3-react/core'
-import { ContractReceipt, ethers } from 'ethers'
 import { useState, useCallback } from 'react'
-import { toast } from 'react-toastify'
-import { ActionState } from '../../components/action'
-import { PoolState, DPoolEvent } from '../../type'
+import { PoolState, DPoolEvent, ActionState } from '../../type'
 import { Pool } from './PoolDetail'
-import useDPoolContract from '../../hooks/useDPool'
-import dPoolABI from '../../abis/dPool.json'
-import RenderActionButton from '../../components/action'
 import { useCallDPoolContract } from '../../hooks/useContractCall'
+import { EosIconsBubbleLoading } from '../../components/icon'
 
-const contractIface = new ethers.utils.Interface(dPoolABI)
 interface CancelProps {
   poolMeta: Pool | undefined
   dPoolAddress: string | undefined
@@ -33,7 +27,6 @@ export function Cancel(props: CancelProps) {
   const callDPool = useCallDPoolContract(dPoolAddress)
   const cancelPool = useCallback(async () => {
     if (!poolId || !chainId || !isOwner) return
-
     setCancelState(ActionState.ING)
     const result = await callDPool('cancel', [[poolId]], DPoolEvent.Canceled)
     if (!result.success) {
@@ -53,16 +46,14 @@ export function Cancel(props: CancelProps) {
     return null
   }
   return (
-    <RenderActionButton
-      state={cancelState}
-      stateMsgMap={{
-        [ActionState.WAIT]: 'Cancel',
-        [ActionState.ING]: 'Canceling',
-        [ActionState.SUCCESS]: 'Canceled',
-        [ActionState.FAILED]: 'Failed. Try again',
-      }}
-      onClick={cancelPool}
-      waitClass="text-red-500 border-red-500"
-    />
+    <div
+      className="flex items-center cursor-pointer text-gray-400 hover:text-red-500 "
+      onClick={cancelState !== ActionState.ING ? cancelPool : undefined}
+    >
+      {cancelState === ActionState.ING && (
+        <EosIconsBubbleLoading className="mr-1" />
+      )}
+      Cancel
+    </div>
   )
 }

@@ -1,15 +1,18 @@
 import { BigNumber, utils } from 'ethers'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
-import { BasePool, GetPoolRes, PoolState, TokenMeta } from '../../type'
+import {
+  BasePool,
+  DPoolEvent,
+  GetPoolRes,
+  PoolState,
+  TokenMeta,
+} from '../../type'
 import useDPoolContract from '../../hooks/useDPool'
 import { EosIconsBubbleLoading } from '../../components/icon'
 import { useNavigate } from 'react-router-dom'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
-
 import useTokenMeta from '../../hooks/useTokenMeta'
-
-import { formatCurrencyAmount } from '../../utils/number'
 import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
 import { DistributePageCache, TPoolRow } from '../distribution/CreatePool'
 import { Fund } from './Fund'
@@ -32,7 +35,7 @@ export function PoolDetail({ poolId }: { poolId: string }) {
   const { getToken } = useTokenMeta()
   const account = useAccount()
   const chainId = useChainId()
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
   const dPoolContract = useDPoolContract(dPoolAddress)
   const [isApproved, setIsApproved] = useState<boolean>(false)
 
@@ -100,7 +103,12 @@ export function PoolDetail({ poolId }: { poolId: string }) {
       setIsLoading(false)
     }
   }, [dPoolContract, account, poolId, chainId])
-
+  useEffect(() => {
+    if (!dPoolContract) return
+    dPoolContract
+      .queryFilter(dPoolContract.filters[DPoolEvent.Claimed]())
+      .then((res) => console.log('res', res))
+  }, [dPoolContract])
   useEffect(() => {
     if (dPoolAddress && dPoolContract && poolId && chainId) {
       getPoolDetail()
@@ -142,22 +150,25 @@ export function PoolDetail({ poolId }: { poolId: string }) {
   if (!poolMeta) return <p>Distribute not found</p>
   return (
     <div className="flex justify-center">
-      <div className="w-full break-all flex flex-1 flex-col items-center">
-        <div className=" my-5 text-xl font-medium flex cursor-pointer">
-          {poolMeta?.name}
-          <DistributeState
-            state={poolMeta?.state}
-            title={PoolState[poolMeta.state]}
-          />
+      <div className="w-full break-all flex flex-1 flex-col items-center bg-white px-4 py-2 rounded-lg">
+        <div className="my-5 w-full relative items-center flex justify-center">
+          <div className="flex">
+            {poolMeta?.name}
+            <DistributeState
+              state={poolMeta?.state}
+              title={PoolState[poolMeta.state]}
+            />
+          </div>
         </div>
         <table className="my-4">
-          <thead className="">
-            <tr className="text-gray-500">
-              <td></td>
-              <td>ADDRESS</td>
+          <thead className="text-sm">
+            <tr className="text-gray-500 bg-gray-100">
+              <td>Index</td>
+              <td className="py-3">Address</td>
               <td>
-                AMOUNT/<span>{tokenMeta?.symbol}</span>
+                Amount/<span>{tokenMeta?.symbol}</span>
               </td>
+              <td></td>
             </tr>
           </thead>
           <tbody>
@@ -176,23 +187,9 @@ export function PoolDetail({ poolId }: { poolId: string }) {
         </table>
 
         <section className="text-xs w-full flex flex-col gap-4 mt-20">
-          {/* <div className="flex h-6 w-full justify-between items-center ">
-            <div>Remaining Amount</div>
-            <div className="flex-1 border-b border-gray-500 border-dotted mx-2"></div>
-            <div>
-              {formatCurrencyAmount(
-                poolMeta.totalAmount.sub(poolMeta.claimedAmount),
-                tokenMeta
-              )}
-              <span className="ml-1 text-gray-500">{tokenMeta?.symbol}</span>
-            </div>
-          </div> */}
           <DateRange start={poolMeta.startTime} end={poolMeta.deadline} />
         </section>
-
-
-        <div className="w-full flex justify-end my-2">
-
+        <div className="w-full mt-10 text-black">
           <Fund
             poolMeta={poolMeta}
             dPoolAddress={dPoolAddress}
@@ -202,37 +199,31 @@ export function PoolDetail({ poolId }: { poolId: string }) {
             isApproved={isApproved}
             setIsApproved={setIsApproved}
           />
+          <Distribute
+            poolMeta={poolMeta}
+            dPoolAddress={dPoolAddress}
+            poolId={poolId}
+            getPoolDetail={getPoolDetail}
+            submittable={submittable}
+            tokenMeta={tokenMeta}
+          />
         </div>
         <div className="flex mt-4 gap-2 w-full justify-between">
-          <div>
-            {isOwner ? (
-              <div
-                className="text-xs cursor-pointer text-gray-500 hover:text-black border-b border-gray-400"
-                onClick={distributeAgain}
-              >
-                Duplicate Distribution
-              </div>
-            ) : null}
-          </div>
-          <div className="flex gap-2">
-            <Cancel
-              poolMeta={poolMeta}
-              dPoolAddress={dPoolAddress}
-              isOwner={isOwner}
-              poolId={poolId}
-              getPoolDetail={getPoolDetail}
-            />
-
-            <Distribute
-              poolMeta={poolMeta}
-              dPoolAddress={dPoolAddress}
-              poolId={poolId}
-              getPoolDetail={getPoolDetail}
-              submittable={submittable}
-              tokenMeta={tokenMeta}
-              addressTotal={poolList.length}
-            />
-          </div>
+          {isOwner ? (
+            <div
+              className="text-xs cursor-pointer text-gray-400 hover:text-gray-500 "
+              onClick={distributeAgain}
+            >
+              Duplicate Distribution
+            </div>
+          ) : null}
+          <Cancel
+            poolMeta={poolMeta}
+            dPoolAddress={dPoolAddress}
+            isOwner={isOwner}
+            poolId={poolId}
+            getPoolDetail={getPoolDetail}
+          />
         </div>
       </div>
     </div>

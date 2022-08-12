@@ -1,20 +1,12 @@
 import { useWeb3React } from '@web3-react/core'
-import { BigNumber, ContractReceipt, ethers } from 'ethers'
+import { BigNumber } from 'ethers'
 import { useState, useMemo, useCallback } from 'react'
-import { toast } from 'react-toastify'
-import { ActionState } from '../../components/action'
+import { ActionState } from '../../type'
 import { ApproveToken } from '../../components/token/ApproveTokens'
 import { PoolState, DPoolEvent, TokenMeta, PermitCallData } from '../../type'
 import { Pool } from './PoolDetail'
-import useDPoolContract from '../../hooks/useDPool'
-import dPoolABI from '../../abis/dPool.json'
-import RenderActionButton from '../../components/action'
-import {
-  useCallContract,
-  useCallDPoolContract,
-} from '../../hooks/useContractCall'
-
-const contractIface = new ethers.utils.Interface(dPoolABI)
+import { useCallDPoolContract } from '../../hooks/useContractCall'
+import { Button } from '../../components/button'
 
 interface FundProps {
   poolMeta: Pool | undefined
@@ -44,17 +36,15 @@ export function Fund(props: FundProps) {
   )
     return null
   const { account } = useWeb3React()
-
   const callDPool = useCallDPoolContract(dPoolAddress)
-
   const distributor = BigNumber.from(poolMeta.distributor)
   const [fundState, setFundState] = useState<ActionState>(ActionState.WAIT)
   const [signatureData, setSignatureData] = useState<PermitCallData>()
+
   const nativeTokenAmount = useMemo(() => {
     if (!BigNumber.from(poolMeta.token).eq(0)) return BigNumber.from(0)
     return poolMeta.totalAmount
   }, [poolMeta])
-
 
   const callOption = useMemo(() => {
     const permitData = signatureData
@@ -132,37 +122,27 @@ export function Fund(props: FundProps) {
   )
     return null
   return (
-    <div className="flex gap-2 items-center justify-end">
-
+    <div className="flex w-full items-center justify-end flex-col">
       <ApproveToken
         token={tokenMeta.address}
         approveAmount={poolMeta.totalAmount}
         dPoolAddress={dPoolAddress}
         onApproved={(signatureData) => {
           setIsApproved(true)
-
           if (signatureData) {
             setSignatureData(signatureData)
           }
         }}
         selectClass="bg-neutral-200"
       />
-      <RenderActionButton
-        state={fundState}
-        stateMsgMap={{
-          [ActionState.WAIT]: distributor.eq(0)
-            ? 'Fund and Distribute'
-            : 'Fund',
-          [ActionState.ING]: 'Funding',
-          [ActionState.SUCCESS]: 'Funded',
-          [ActionState.FAILED]: 'Fund failed.Try again',
-        }}
-        onClick={isApproved ? fundPool : () => {}}
-        waitClass={`${
-          isApproved ? '' : 'text-gray-500 border-gray-400 cursor-not-allowed'
-
-        } `}
-      />
+      <Button
+        loading={fundState === ActionState.ING}
+        disable={!isApproved}
+        onClick={fundPool}
+        className="mt-2"
+      >
+        {distributor.eq(0) ? 'Fund and Distribute' : 'Fund'}
+      </Button>
     </div>
   )
 }
