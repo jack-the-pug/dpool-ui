@@ -40,8 +40,12 @@ export function Dialog(props: TDialogProps) {
         <dialog
           open={visible}
           ref={(el) => (dialogRef.current = el as TDialogElement)}
-          className={`z-20 fixed rounded-lg border border-black ${dialogClass}`}
-          style={{ transform: ' translate(0, -50%)', ...dialogStyle }}
+          className={`z-20 fixed rounded-lg border border-black overflow-y-auto ${dialogClass}`}
+          style={{
+            transform: 'translate(0, -50%)',
+            maxHeight: '70%',
+            ...dialogStyle,
+          }}
         >
           {children}
         </dialog>,

@@ -24,7 +24,7 @@ export default function useDPoolFactory() {
   }, [provider, contractAddress])
 
   const contract = useMemo(() => {
-    if (!signerOrProvider || !contractAddress) return null
+    if (!signerOrProvider || !contractAddress) return
     return new Contract(contractAddress, dPoolFactoryABI, signerOrProvider)
   }, [signerOrProvider, contractAddress])
   return contract

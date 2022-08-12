@@ -15,7 +15,8 @@ export function TranSactionHash(props: { hash: string }) {
 
   return (
     <a href={scanUrl} target="blank" className="text-xs text-green-500">
-      {hash.slice(0, 6)}...
+      {/* {hash} */}
+      View on Explorer
     </a>
   )
 }

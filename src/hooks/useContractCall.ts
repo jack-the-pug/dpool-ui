@@ -1,4 +1,3 @@
-import { useWeb3React } from '@web3-react/core'
 import { Contract, ContractReceipt, ethers } from 'ethers'
 import { useCallback } from 'react'
 import { toast } from 'react-toastify'
@@ -21,7 +20,7 @@ const dPoolInterface = new ethers.utils.Interface(DPoolABI)
 export function useCallContract(contract: Contract | undefined) {
   return useCallback(
     async (method: string, params: any[]): Promise<CallResult> => {
-      console.log('params', params)
+      console.log('call params', params)
       if (!contract)
         return {
           success: false,
@@ -36,7 +35,7 @@ export function useCallContract(contract: Contract | undefined) {
         }
       } catch (err: any) {
         const errMsg = typeof err === 'object' ? err.message : err
-        console.log('ERROR:', errMsg)
+        console.log('err', err)
         toast.error(errMsg)
         return {
           success: false,
@@ -62,7 +61,6 @@ export function useCallDPoolContract(dPoolAddress: string) {
         )
         .map((log) => {
           const parsedLog = dPoolInterface.parseLog(log)
-          console.log('parsedLog', parsedLog)
           return parsedLog
         })
         .filter((log) => log.name === eventName)

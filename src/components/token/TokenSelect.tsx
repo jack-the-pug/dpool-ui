@@ -107,7 +107,7 @@ export default function TokenSelect(props: TTokenSelectProps) {
                 onChange={(e) => setTokenAddress(e.target.value)}
                 className="my-5 outline-none focus:outline-none border-b border-gray-300 border-solid"
                 autoFocus
-                placeholder="Address"
+                placeholder="Token Address"
                 style={{ width: '380px' }}
               />
               <div className="divide-solid ">

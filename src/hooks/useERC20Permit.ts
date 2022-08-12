@@ -158,7 +158,6 @@ export function useERC20Permit(tokenAddress: string) {
     eip2612TokenContract.callStatic
       .permit(...testPermitData)
       .catch((err: Error) => {
-        console.error('callStatic.permit', err)
         if (
           err.message.includes('Transaction reverted without a reason string')
         ) {
@@ -200,7 +199,6 @@ export function useERC20Permit(tokenAddress: string) {
       } catch {
         try {
           // eg. sushi 1inch
-          console.log('getDomainSeperator')
           return await eip2612TokenContract['getDomainSeperator']()
         } catch {
           return
@@ -277,7 +275,7 @@ export function useERC20Permit(tokenAddress: string) {
     try {
       // eip2612
       const contractDomainSeparator = await getDomainSeparator()
-      console.log('contractDomainSeparator', contractDomainSeparator)
+
       if (contractDomainSeparator) {
         console.time('matchedVersionTime')
         const matchedVersion = await matchDomainSeparator(
@@ -285,7 +283,6 @@ export function useERC20Permit(tokenAddress: string) {
           name
         )
         console.timeEnd('matchedVersionTime')
-        console.log('matchedVersion', matchedVersion)
         if (matchedVersion !== undefined) {
           setPermitInfo({
             type: PermitType.AMOUNT,
