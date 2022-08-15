@@ -24,7 +24,9 @@ export function DistributeState({
   const colorClass = useMemo(() => stateColorMap[state], [state])
   return (
     <div className="flex">
-      <div className="ml-2 text-gray-500">{stateMsg[state]}</div>
+      <div className="ml-2 text-gray-500 text-xs flex items-center">
+        {stateMsg[state]}
+      </div>
       <div className="relative">
         <div
           className={`w-2 h-2 rounded-full cursor-pointer`}

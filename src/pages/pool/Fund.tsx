@@ -1,17 +1,12 @@
 import { useWeb3React } from '@web3-react/core'
-import { BigNumber, ContractReceipt, ethers } from 'ethers'
-import { useState, useMemo, useCallback, useEffect } from 'react'
-import { toast } from 'react-toastify'
-import { ActionState } from '../../components/action'
+import { BigNumber } from 'ethers'
+import { useState, useMemo, useCallback } from 'react'
+import { ActionState } from '../../type'
 import { ApproveToken } from '../../components/token/ApproveTokens'
-import { SignatureData, useERC20Permit } from '../../hooks/useERC20Permit'
 import { PoolState, DPoolEvent, TokenMeta, PermitCallData } from '../../type'
 import { Pool } from './PoolDetail'
-import useDPoolContract from '../../hooks/useDPool'
-import dPoolABI from '../../abis/dPool.json'
-import RenderActionButton from '../../components/action'
-
-const contractIface = new ethers.utils.Interface(dPoolABI)
+import { useCallDPoolContract } from '../../hooks/useContractCall'
+import { Button } from '../../components/button'
 
 interface FundProps {
   poolMeta: Pool | undefined
@@ -19,8 +14,9 @@ interface FundProps {
   tokenMeta: TokenMeta | undefined
   poolId: string
   getPoolDetail: Function
-  submittable: boolean
-  setSubmittable: (b: boolean) => void
+  isApproved: boolean
+  setIsApproved: (b: boolean) => void
+  getPoolEvent: Function
 }
 
 export function Fund(props: FundProps) {
@@ -30,8 +26,9 @@ export function Fund(props: FundProps) {
     tokenMeta,
     poolId,
     getPoolDetail,
-    setSubmittable,
-    submittable,
+    setIsApproved,
+    isApproved,
+    getPoolEvent,
   } = props
   if (
     !tokenMeta ||
@@ -41,97 +38,114 @@ export function Fund(props: FundProps) {
   )
     return null
   const { account } = useWeb3React()
-  const dPoolContract = useDPoolContract(dPoolAddress)
+  const callDPool = useCallDPoolContract(dPoolAddress)
   const distributor = BigNumber.from(poolMeta.distributor)
   const [fundState, setFundState] = useState<ActionState>(ActionState.WAIT)
   const [signatureData, setSignatureData] = useState<PermitCallData>()
+
   const nativeTokenAmount = useMemo(() => {
     if (!BigNumber.from(poolMeta.token).eq(0)) return BigNumber.from(0)
     return poolMeta.totalAmount
   }, [poolMeta])
 
-  const fundPool = useCallback(async () => {
-    if (!dPoolContract || !poolId) return
-    setFundState(ActionState.ING)
-    try {
-      let fundPoolByIdRes
-      // every one can distribute
-      if (distributor.eq(0)) {
-        if (signatureData) {
-          fundPoolByIdRes = await dPoolContract.distributeWithPermit(poolId, [
-            signatureData.token,
-            signatureData.value,
-            signatureData.deadline,
-            signatureData.v,
-            signatureData.r,
-            signatureData.s,
-          ])
-        } else {
-          fundPoolByIdRes = await dPoolContract.distribute(poolId)
-        }
-      } else {
-        fundPoolByIdRes = await dPoolContract.fund(poolId, {
-          value: nativeTokenAmount,
-        })
-      }
-      const transactionResponse: ContractReceipt = await fundPoolByIdRes.wait()
-      setFundState(ActionState.SUCCESS)
-      transactionResponse.logs
-        .filter(
-          (log) => log.address.toLowerCase() === dPoolAddress.toLowerCase()
-        )
-        .forEach((log) => {
-          const parseLog = contractIface.parseLog(log)
-          if (signatureData) {
-            if (parseLog.name === DPoolEvent.Distribute) {
-              getPoolDetail()
-            }
-          } else {
-            if (parseLog.name === DPoolEvent.Funded) {
-              getPoolDetail()
-            }
+  const callOption = useMemo(() => {
+    const permitData = signatureData
+      ? [
+          signatureData.token,
+          signatureData.value,
+          signatureData.deadline,
+          signatureData.v,
+          signatureData.r,
+          signatureData.s,
+        ]
+      : null
+    // fund and distribute
+    if (distributor.eq(0)) {
+      // with permit
+      return permitData
+        ? {
+            method: 'distributeWithPermit',
+            params: [poolId, permitData],
+            eventName: DPoolEvent.Distributed,
           }
-        })
-    } catch (err: any) {
-      console.error(err)
-      toast.error(typeof err === 'object' ? err.message : JSON.stringify(err))
-      setFundState(ActionState.FAILED)
+        : {
+            method: 'distribute',
+            params: [
+              poolId,
+              {
+                value: nativeTokenAmount,
+              },
+            ],
+            eventName: DPoolEvent.Distributed,
+          }
     }
-  }, [dPoolContract, poolId, nativeTokenAmount, signatureData])
+    // only fund
+    else {
+      return permitData
+        ? {
+            method: 'fundWithPermit',
+            params: [poolId, permitData],
+            eventName: DPoolEvent.Funded,
+          }
+        : {
+            method: 'fund',
+            params: [
+              poolId,
+              {
+                value: nativeTokenAmount,
+              },
+            ],
+            eventName: DPoolEvent.Funded,
+          }
+    }
+  }, [distributor, signatureData, poolId, nativeTokenAmount])
+
+  const fundPool = useCallback(async () => {
+    if (!callDPool || !poolId) return
+    setFundState(ActionState.ING)
+    const result = await callDPool(
+      callOption.method,
+      callOption.params,
+      callOption.eventName
+    )
+    if (!result.success) {
+      setFundState(ActionState.FAILED)
+      return
+    }
+    setFundState(ActionState.SUCCESS)
+    if (result.data.logs.length) {
+      getPoolEvent()
+      getPoolDetail()
+    }
+  }, [callOption, callDPool])
+
   if (
     !distributor.eq(0) &&
     account?.toLowerCase() !== poolMeta.distributor.toLowerCase()
   )
     return null
   return (
-    <div className="flex gap-2 items-center justify-start">
+    <div className="flex w-full items-center justify-end flex-col">
       <ApproveToken
         token={tokenMeta.address}
         approveAmount={poolMeta.totalAmount}
         dPoolAddress={dPoolAddress}
         onApproved={(signatureData) => {
-          setSubmittable(true)
+          setIsApproved(true)
           if (signatureData) {
             setSignatureData(signatureData)
           }
         }}
         selectClass="bg-neutral-200"
       />
-      <RenderActionButton
-        state={fundState}
-        stateMsgMap={{
-          [ActionState.WAIT]: distributor.eq(0)
-            ? 'Fund and Distribute'
-            : 'Fund',
-          [ActionState.ING]: 'Funding',
-          [ActionState.SUCCESS]: 'Funded',
-          [ActionState.FAILED]: 'Fund failed.Try again',
-        }}
-        onClick={submittable ? fundPool : () => {}}
-        waitClass={`${
-          submittable ? '' : 'text-gray-500 border-gray-400 cursor-not-allowed'
-        } `}
-      />
+      <Button
+        loading={fundState === ActionState.ING}
+        disable={!isApproved}
+        onClick={fundPool}
+        className="mt-2"
+      >
+        {distributor.eq(0) ? 'Fund and Distribute' : 'Fund'}
+      </Button>
     </div>
   )
 }

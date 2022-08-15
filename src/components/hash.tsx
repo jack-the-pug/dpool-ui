@@ -1,10 +1,14 @@
-import { useMemo } from 'react'
+import { ReactNode, useMemo } from 'react'
 import { hooks as metaMaskHooks } from '../connectors/metaMask'
 import { chains } from '../constants'
 const { useChainId } = metaMaskHooks
 
-export function TranSactionHash(props: { hash: string }) {
-  const { hash } = props
+export function TranSactionHash(props: {
+  hash: string
+  className?: string
+  children?: ReactNode
+}) {
+  const { hash, className, children } = props
 
   const chainId = useChainId()
   const scanUrl = useMemo(() => {
@@ -14,14 +18,22 @@ export function TranSactionHash(props: { hash: string }) {
   }, [hash, chainId])
 
   return (
-    <a href={scanUrl} target="blank" className="text-xs text-green-500">
-      {hash.slice(0, 6)}...
+    <a
+      href={scanUrl}
+      target="blank"
+      className={`text-xs text-green-500 ${className}`}
+    >
+      {children || hash}
     </a>
   )
 }
 
-export function AddressLink(props: { address: string; name?: string }) {
-  const { address, name } = props
+export function AddressLink(props: {
+  address: string
+  name?: string
+  className?: string
+}) {
+  const { address, name, className } = props
   const chainId = useChainId()
   const scanUrl = useMemo(() => {
     if (!chainId) return
@@ -30,7 +42,7 @@ export function AddressLink(props: { address: string; name?: string }) {
   }, [address, chainId])
 
   return (
-    <a href={scanUrl} target="blank" className="text-green-500">
+    <a href={scanUrl} target="blank" className={`text-green-500 ${className}`}>
       {name || address}
     </a>
   )

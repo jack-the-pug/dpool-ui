@@ -1,16 +1,16 @@
-import { BigNumber, ContractReceipt, ethers } from 'ethers'
+import { BigNumber, ethers } from 'ethers'
 import { useCallback } from 'react'
 import { hooks as metaMaskHooks } from '../../../connectors/metaMask'
 import useDPoolFactory from '../../../hooks/useDPoolFactory'
-import { chains } from '../../../constants'
 import dPoolFactoryABI from '../../../abis/dPoolFactory.json'
 import { isAddress } from 'ethers/lib/utils'
-import Action, { ActionState } from '../../../components/action'
 import { useState } from 'react'
-import { DPoolFactoryEvent } from '../../../type'
+import { ActionState, DPoolFactoryEvent } from '../../../type'
 import useDPoolAddress from '../../../hooks/useDPoolAddress'
 import { AddressLink } from '../../../components/hash'
 import { toast } from 'react-toastify'
+import { Button } from '../../../components/button'
+import { useCallContract } from '../../../hooks/useContractCall'
 
 const { useChainId, useAccount } = metaMaskHooks
 
@@ -27,6 +27,7 @@ export default function dPoolFactory() {
   )
   const [tempDPoolAddress, setTempDPoolAddress] = useState<string>()
   const contractIface = new ethers.utils.Interface(dPoolFactoryABI)
+  const callDPoolFactory = useCallContract(dPoolFactory)
   const createPool = useCallback(async () => {
     if (!dPoolFactory) {
       toast.error(`Unsupported chain: ${chainId}`)
@@ -36,25 +37,20 @@ export default function dPoolFactory() {
       toast.error(`Please connect your wallet first`)
       return
     }
-    try {
-      setCreateDPoolState(ActionState.ING)
-      const contractReq = await dPoolFactory.create()
-      const contractRes: ContractReceipt = await contractReq.wait()
-      const { logs: _logs } = contractRes
-      const logs = _logs.filter((log) =>
-        BigNumber.from(log.address).eq(chains[chainId].dPoolFactoryAddress)
-      )
-      logs.forEach((log) => {
-        const parseLog = contractIface.parseLog(log)
-        if (parseLog.name === DPoolFactoryEvent.DistributionPoolCreated) {
-          const dPoolAddress = parseLog.args.contractAddress.toLowerCase()
-          setTempDPoolAddress(dPoolAddress)
-          setCreateDPoolState(ActionState.SUCCESS)
-        }
-      })
-    } catch {
+    setCreateDPoolState(ActionState.ING)
+    const result = await callDPoolFactory('create', [])
+    if (!result.success) {
       setCreateDPoolState(ActionState.FAILED)
+      return
     }
+    result.data.logs.forEach((log) => {
+      const parseLog = contractIface.parseLog(log)
+      if (parseLog.name === DPoolFactoryEvent.DistributionPoolCreated) {
+        const dPoolAddress = parseLog.args.contractAddress.toLowerCase()
+        setTempDPoolAddress(dPoolAddress)
+        setCreateDPoolState(ActionState.SUCCESS)
+      }
+    })
   }, [dPoolFactory, account, chainId])
 
   const findMyPool = useCallback(async () => {
@@ -102,16 +98,12 @@ export default function dPoolFactory() {
       <div className="my-8 flex gap-8">
         <div className="flex flex-col py-8 px-4 border border-gray-500 rounded-md">
           <div className="text-sm text-gray-500 mb-4">First time user?</div>
-          <Action
-            state={createDPoolState}
-            stateMsgMap={{
-              [ActionState.WAIT]: 'Create dPool',
-              [ActionState.ING]: 'Creating',
-              [ActionState.FAILED]: 'Failed.Retry',
-              [ActionState.SUCCESS]: 'Created',
-            }}
+          <Button
+            loading={createDPoolState === ActionState.ING}
             onClick={createPool}
-          />
+          >
+            Create dPool
+          </Button>
         </div>
         <div className="flex flex-col py-8 px-4 border border-gray-500 rounded-md">
           <div className="text-sm text-gray-500 mb-4">
@@ -119,7 +111,7 @@ export default function dPoolFactory() {
           </div>
           <button
             onClick={findMyPool}
-            className="border border-gray-900 px-2 rounded-md"
+            className="border border-gray-900 px-2 rounded-md py-1"
           >
             {retrievePoolMsg}
           </button>

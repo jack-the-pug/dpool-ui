@@ -5,7 +5,6 @@ import { chains } from '../constants'
 import { TokenMeta as TTokenMeta } from '../type'
 import { hooks as metaMaskHooks } from '../connectors/metaMask'
 import useSignerOrProvider from './useSignOrProvider'
-import { useBalance } from './useBalance'
 import { LOCAL_STORAGE_KEY } from '../store/storeKey'
 import ERC20ABI from '../abis/erc20.json'
 
@@ -15,9 +14,23 @@ const { useAccount, useChainId, useProvider } = metaMaskHooks
 export default function useTokenMeta() {
   const account = useAccount()
   const chainId = useChainId()
+  const provider = useProvider()
   const signerOrProvider = useSignerOrProvider()
-  const nativeTokenBalance = useBalance(account)
+  const [tokens, setTokens] = useState(
+    JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY.TOKEN_LIST) || '{}')
+  )
 
+  const getTokenBalance = useCallback(
+    async (tokenAddress: string, address = account) => {
+      if (!address || !provider) return BigNumber.from(0)
+      if (BigNumber.from(tokenAddress).eq(0)) {
+        return provider.getBalance(address)
+      }
+      const tokenContract = getERC20TokenContract(tokenAddress)!
+      return await tokenContract.balanceOf(address)
+    },
+    [account, provider]
+  )
   const getERC20TokenContract = useCallback(
     (tokenAddress: string) => {
       if (!signerOrProvider || !tokenAddress || !isAddress(tokenAddress))
@@ -26,11 +39,6 @@ export default function useTokenMeta() {
     },
     [signerOrProvider]
   )
-
-  const [tokens, setTokens] = useState(
-    JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY.TOKEN_LIST) || '{}')
-  )
-
   const setToken = useCallback<TSetToken>(
     (token: TTokenMeta) => {
       const _tokens = { ...tokens, [token.address.toLowerCase()]: token }
@@ -50,20 +58,19 @@ export default function useTokenMeta() {
           address: constants.AddressZero,
           decimals: chains[chainId].decimals,
           symbol: chains[chainId].symbol,
-          balance: nativeTokenBalance || BigNumber.from(0),
           chainId,
         }
         return nativeToken
       }
-
+      if (tokens[address.toLowerCase()]) {
+        return tokens[address.toLowerCase()]
+      }
       const tokenContract = getERC20TokenContract(address)!
       const decimals = await tokenContract.decimals()
       const symbol = await tokenContract.symbol()
-      const balance = await tokenContract.balanceOf(account)
       const token = {
         symbol,
         decimals,
-        balance,
         address,
         chainId: chainId,
       }
@@ -77,5 +84,6 @@ export default function useTokenMeta() {
     getToken,
     setToken,
     getERC20TokenContract,
+    getTokenBalance,
   } as const
 }

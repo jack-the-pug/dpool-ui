@@ -1,19 +1,11 @@
 import { BigNumber, ethers, utils } from 'ethers'
-import {
-  Dispatch,
-  SetStateAction,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
-import Action, { ActionState } from '../action'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useApproveToken } from '../../hooks/useApproveToken'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import useTokenMeta from '../../hooks/useTokenMeta'
-import { PermitCallData, TokenMeta } from '../../type'
+import { ActionState, PermitCallData, TokenMeta } from '../../type'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
-import { SignatureData, useERC20Permit } from '../../hooks/useERC20Permit'
+import { useERC20Permit } from '../../hooks/useERC20Permit'
 import { AddressLink } from '../hash'
 import { EosIconsBubbleLoading } from '../icon'
 
@@ -46,11 +38,9 @@ export default function ApproveTokens(props: {
       )
   )
   useEffect(() => {
-    console.log('tokensApproveState changed')
     for (let i = 0; i < tokensApproveState.length; i++) {
       if (!tokensApproveState[i].isApproved) return
     }
-    console.log('onTokensApproved')
     onTokensApproved(tokensApproveState)
   }, [tokensApproveState])
   if (!dPoolAddress) return null
@@ -93,7 +83,6 @@ export function ApproveToken(props: ApproveTokenProps) {
 
   const [signatureData, setSignatureData] = useState<PermitCallData>()
   const [tokenMeta, setTokenMeta] = useState<TokenMeta>()
-  const [approveTx, setApproveTx] = useState<string>()
   const [approveType, setApproveType] = useState<ApproveType>(ApproveType.LIMIT)
   const [approveState, setApproveState] = useState<ActionState>(
     ActionState.WAIT
@@ -117,7 +106,6 @@ export function ApproveToken(props: ApproveTokenProps) {
   }, [getApprovedAmount])
 
   const handleApprove = useCallback(async () => {
-    console.log('Approve')
     if (!tokenMeta) return
     setApproveState(ActionState.ING)
     const approveTokenReq = await approveToken(
@@ -126,31 +114,31 @@ export function ApproveToken(props: ApproveTokenProps) {
         ? shouldApproveAmount
         : ethers.constants.MaxUint256
     )
-    const [isApproved, tx] = approveTokenReq
+    const [isApproved] = approveTokenReq
     setApproveState(isApproved ? ActionState.SUCCESS : ActionState.FAILED)
-    if (isApproved && tx) {
-      setApproveTx(tx)
-    }
   }, [tokenMeta, approveType, shouldApproveAmount, approveToken])
   const handleSign = useCallback(async () => {
     setApproveState(ActionState.ING)
-    const signatureData = await getSignatureData(
-      shouldApproveAmount,
-      dPoolAddress
-    )
-    console.log('signatureData', signatureData)
-    if (signatureData) {
-      const { tokenAddress, amount, v, r, s, deadline } = signatureData
-      setSignatureData({
-        token: tokenAddress,
-        value: amount,
-        deadline,
-        r,
-        v,
-        s,
-      })
-      setApproveState(ActionState.SUCCESS)
-    } else {
+    try {
+      const signatureData = await getSignatureData(
+        shouldApproveAmount,
+        dPoolAddress
+      )
+      if (signatureData) {
+        const { tokenAddress, amount, v, r, s, deadline } = signatureData
+        setSignatureData({
+          token: tokenAddress,
+          value: amount,
+          deadline,
+          r,
+          v,
+          s,
+        })
+        setApproveState(ActionState.SUCCESS)
+      } else {
+        setApproveState(ActionState.FAILED)
+      }
+    } catch {
       setApproveState(ActionState.FAILED)
     }
   }, [token, getSignatureData, shouldApproveAmount, dPoolAddress])

@@ -53,8 +53,6 @@ input:checked + .slider:before {
   transform: translateX(16px);
 }
 
-td {
-  padding: 0px !important;
-  padding-right: 10px !important;
-  margin: 0;
+tr:nth-child(even) {
+  background: #f3f4f6;
 }

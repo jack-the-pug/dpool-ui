@@ -28,7 +28,10 @@ function PoolSetting(props: {
       distributor: distributorAddress,
       date,
     }
-    if (!isAddress(distributorAddress)) {
+    if (
+      !isAddress(distributorAddress) ||
+      distributionType === DistributionType.Pull
+    ) {
       config.distributor = ''
     }
     setPoolConfig(config)

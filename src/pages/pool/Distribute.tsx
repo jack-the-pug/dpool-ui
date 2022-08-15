@@ -1,16 +1,11 @@
 import { useWeb3React } from '@web3-react/core'
-import { BigNumber, ContractReceipt, ethers } from 'ethers'
-import { useState, useCallback, useEffect } from 'react'
-import { toast } from 'react-toastify'
-import { ActionState } from '../../components/action'
+import { BigNumber } from 'ethers'
+import { useState, useCallback } from 'react'
+import { ActionState } from '../../type/index'
 import { PoolState, DPoolEvent, TokenMeta } from '../../type'
 import { Pool } from './PoolDetail'
-import useDPoolContract from '../../hooks/useDPool'
-import dPoolABI from '../../abis/dPool.json'
-import RenderActionButton from '../../components/action'
-import { useERC20Permit } from '../../hooks/useERC20Permit'
-
-const contractIface = new ethers.utils.Interface(dPoolABI)
+import { useCallDPoolContract } from '../../hooks/useContractCall'
+import { Button } from '../../components/button'
 
 interface DistributeProps {
   poolMeta: Pool | undefined
@@ -19,6 +14,7 @@ interface DistributeProps {
   getPoolDetail: Function
   submittable: boolean
   tokenMeta: TokenMeta | undefined
+  getPoolEvent: Function
 }
 export function Distribute(props: DistributeProps) {
   const {
@@ -28,65 +24,48 @@ export function Distribute(props: DistributeProps) {
     poolId,
     getPoolDetail,
     tokenMeta,
+    getPoolEvent,
   } = props
   if (!tokenMeta || !dPoolAddress || !poolMeta) return null
   const { account, chainId } = useWeb3React()
   const [distributionState, setDistributionState] = useState<ActionState>(
     ActionState.WAIT
   )
-  const dPoolContract = useDPoolContract(dPoolAddress)
-  const [distributeTx, setDistributeTx] = useState<string>()
+
+  const callDPool = useCallDPoolContract(dPoolAddress)
+
   const distributePool = useCallback(async () => {
-    if (!dPoolContract || !poolId || !chainId) return
+    if (!poolId || !chainId) return
     setDistributionState(ActionState.ING)
-    const successClaimedAddress: string[] = []
 
-    try {
-      const distributionPoolByIdRes = await dPoolContract.distribute(poolId)
-
-      const transactionResponse: ContractReceipt =
-        await distributionPoolByIdRes.wait()
-      setDistributeTx(transactionResponse.transactionHash)
-      setDistributionState(ActionState.SUCCESS)
-
-      transactionResponse.logs
-        .filter(
-          (log) => log.address.toLowerCase() === dPoolAddress?.toLowerCase()
-        )
-        .forEach((log) => {
-          const parseLog = contractIface.parseLog(log)
-
-          if (parseLog.name === DPoolEvent.Claimed) {
-            successClaimedAddress.push(parseLog.args[1])
-          }
-        })
-      getPoolDetail()
-    } catch (err: any) {
-      toast.error(typeof err === 'object' ? err.message : JSON.stringify(err))
+    const result = await callDPool(
+      'distribute',
+      [poolId],
+      DPoolEvent.Distributed
+    )
+    if (!result.success) {
       setDistributionState(ActionState.FAILED)
+      return
     }
-  }, [dPoolContract, chainId, poolMeta])
+    setDistributionState(ActionState.SUCCESS)
+    if (result.data.logs.length) {
+      getPoolDetail()
+      getPoolEvent()
+    }
+  }, [callDPool, chainId, poolMeta])
   if (!account) return null
-  if (poolMeta.state === PoolState.Closed) return null
+  if (poolMeta.state !== PoolState.Funded) return null
   const distributor = BigNumber.from(poolMeta.distributor)
   if (distributor.eq(0)) return null
   if (account.toLowerCase() !== poolMeta.distributor.toLowerCase()) return null
   return (
-    <RenderActionButton
-      state={distributionState}
-      stateMsgMap={{
-        [ActionState.WAIT]: 'Distribute',
-        [ActionState.ING]: 'Distributing',
-        [ActionState.SUCCESS]: 'Distributed',
-        [ActionState.FAILED]: 'Distribute failed.Try again',
-      }}
-      tx={distributeTx}
-      onClick={submittable ? distributePool : () => {}}
-      waitClass={
-        submittable
-          ? 'text-green-500 border-green-500'
-          : 'text-gray-500 border-gray-400 cursor-not-allowed'
-      }
-    />
+    <Button
+      disable={!submittable}
+      loading={distributionState === ActionState.ING}
+      onClick={distributePool}
+      className="mt-8"
+    >
+      Distribute
+    </Button>
   )
 }

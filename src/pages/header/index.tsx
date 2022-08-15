@@ -18,24 +18,28 @@ export default function LayoutHeader() {
       <div>
         <Link
           to="/"
-          className={`border-solid border-gray-400 rounded p-1.5 py-0.5 inline-block border text-gray-500 ${
-            pathname === '/' ? 'text-black' : ''
+          className={`border-solid  rounded p-1.5 py-0.5 inline-block border text-gray-500 ${
+            pathname === '/' ? 'text-black border-black' : 'border-gray-400'
           }`}
         >
           Create
         </Link>
         <Link
           to="/distributions"
-          className={`border-solid border-gray-400 rounded p-1.5 py-0.5 inline-block border ml-4 text-gray-500 ${
-            pathname.includes('/distributions') ? 'text-black' : ''
+          className={`border-solid  rounded p-1.5 py-0.5 inline-block border ml-4 text-gray-500 ${
+            pathname.includes('/distributions')
+              ? 'text-black border-black'
+              : 'border-gray-400'
           }`}
         >
           Distributions
         </Link>
         <Link
           to="/addressBook"
-          className={`border-solid border-gray-400 rounded p-1.5 py-0.5 inline-block border ml-4 text-gray-500 ${
-            pathname.includes('/addressBook') ? 'text-black' : ''
+          className={`border-solid  rounded p-1.5 py-0.5 inline-block border ml-4 text-gray-500 ${
+            pathname.includes('/addressBook')
+              ? 'text-black border-black'
+              : 'border-gray-400'
           }`}
         >
           Address Book

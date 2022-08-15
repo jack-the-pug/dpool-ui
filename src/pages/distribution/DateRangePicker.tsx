@@ -14,7 +14,7 @@ const getDateObj = (date: Date) => {
 }
 export default function DateRangePicker(props: TDateRangePickerProps) {
   const { setDate } = props
-  const { y, m, d, h, mi } = getDateObj(new Date(Date.now() + 1000 * 60))
+  const { y, m, d, h, mi } = getDateObj(new Date(Date.now() + 1000 * 60 * 10))
   const [startDate, setStartDate] = useState<string>(
     `${y}-${m}-${d}T${h}:${mi}`
   )

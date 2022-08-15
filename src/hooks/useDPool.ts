@@ -25,7 +25,7 @@ export default function useDPool(poolAddress: string | undefined) {
       !isAddress(poolAddress) ||
       !isContractExist
     )
-      return null
+      return
     return new Contract(poolAddress, dPoolABI, signerOrProvider)
   }, [signerOrProvider, poolAddress, isContractExist])
   return contract
