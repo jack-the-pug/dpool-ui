@@ -2,8 +2,10 @@ import { Contract, ContractReceipt, ethers } from 'ethers'
 import { useCallback } from 'react'
 import { toast } from 'react-toastify'
 import { DPoolEvent } from '../type'
-import useDPoolContract from './useDPool'
 import DPoolABI from '../abis/dPool.json'
+import { useWeb3React } from '@web3-react/core'
+import { useDPoolContract } from './useContract'
+import { TranSactionHash } from '../components/hash'
 
 interface CallFailed {
   success: false
@@ -18,17 +20,32 @@ type CallResult = CallFailed | CallSuccess
 
 const dPoolInterface = new ethers.utils.Interface(DPoolABI)
 export function useCallContract(contract: Contract | undefined) {
+  const { provider } = useWeb3React()
   return useCallback(
     async (method: string, params: any[]): Promise<CallResult> => {
       console.log('call params', params)
-      if (!contract)
+      if (!contract || !provider)
         return {
           success: false,
           errMsg: 'contract not found',
         }
       try {
         const request = await contract[method](...params)
-        const response: ContractReceipt = await request.wait()
+        // wait block confirm
+        const response: ContractReceipt = await request.wait(1)
+        const { transactionHash } = response
+        toast.success(
+          <div>
+            Transaction Confirmed:
+            <br></br>
+            <TranSactionHash hash={transactionHash}>
+              {transactionHash.slice(0, 30)}...
+            </TranSactionHash>
+          </div>,
+          { autoClose: false }
+        )
+        // wait rpc node sync
+        await request.wait(5)
         return {
           success: true,
           data: response,
@@ -43,7 +60,7 @@ export function useCallContract(contract: Contract | undefined) {
         }
       }
     },
-    [contract]
+    [contract, provider]
   )
 }
 

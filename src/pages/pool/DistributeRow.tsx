@@ -6,7 +6,6 @@ import useAddressBook from '../../hooks/useAddressBook'
 import { TokenMeta, PoolState, DPoolEvent } from '../../type'
 import { formatCurrencyAmount } from '../../utils/number'
 import { Pool } from './PoolDetail'
-import useDPoolContract from '../../hooks/useDPool'
 import { useCallDPoolContract } from '../../hooks/useContractCall'
 import { Button } from '../../components/button'
 import { format } from 'date-fns'
@@ -15,6 +14,7 @@ import { MdiArrowTopRight } from '../../components/icon'
 import { ActionEvent } from './PoolList'
 import { useDateDistance } from '../../hooks/useDateDistance'
 import { DateDistance } from '../../components/dateDistance'
+import { useDPoolContract } from '../../hooks/useContract'
 
 export interface Claimer {
   address: string

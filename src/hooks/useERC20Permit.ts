@@ -10,6 +10,7 @@ import {
 } from 'ethers/lib/utils'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import EIP2612 from '../abis/eip2612.json'
+import { useEIP2612Contract } from './useContract'
 
 export enum PermitType {
   AMOUNT = 1,
@@ -147,12 +148,8 @@ export function useERC20Permit(tokenAddress: string) {
   >()
   const [domainType, setDomainType] = useState(EIP712_DOMAIN_TYPE)
 
-  const eip2612TokenContract = useMemo(() => {
-    if (!provider) return
-    return new Contract(tokenAddress, EIP2612, provider)
-  }, [provider, tokenAddress])
+  const eip2612TokenContract = useEIP2612Contract(tokenAddress)
 
-  // TODO:is permit method exist.
   useEffect(() => {
     if (!eip2612TokenContract) return
     eip2612TokenContract.callStatic

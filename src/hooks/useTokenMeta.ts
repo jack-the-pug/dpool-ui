@@ -39,6 +39,7 @@ export default function useTokenMeta() {
     },
     [signerOrProvider]
   )
+
   const setToken = useCallback<TSetToken>(
     (token: TTokenMeta) => {
       const _tokens = { ...tokens, [token.address.toLowerCase()]: token }
