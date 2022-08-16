@@ -3,18 +3,21 @@ import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { Link, useParams } from 'react-router-dom'
 import { DPoolEvent, DPoolLocalStorageMeta } from '../../type'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
-import useDPool from '../../hooks/useDPool'
 import { BigNumber } from 'ethers'
 import { EosIconsBubbleLoading } from '../../components/icon'
 import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
 import { PoolDetail } from './PoolDetail'
+import { useDPoolContract } from '../../hooks/useContract'
+import { useGraph } from '../../hooks/useGraph'
 const { useChainId } = metaMaskHooks
 export default function PoolList() {
   const chainId = useChainId()
   const { dPoolAddress } = useDPoolAddress()
+  const dPoolContract = useDPoolContract(dPoolAddress)
+
   // local pool meta data in this chain
   const [poolList, setPoolList] = useState<DPoolLocalStorageMeta[]>([])
-  const dPoolContract = useDPool(dPoolAddress)
+
   const [isLoading, setIsLoading] = useState<boolean>(false)
   useEffect(() => {
     if (!dPoolAddress) return
@@ -103,16 +106,23 @@ export interface ActionEvent {
 export function PoolDetailList() {
   const { poolIds: _poolIds } = useParams()
   const { dPoolAddress } = useDPoolAddress()
-  const dPoolContract = useDPool(dPoolAddress)
+  const { getCreatedDPoolEventByAddress } = useGraph()
+  const dPoolContract = useDPoolContract(dPoolAddress)
+
   const eventList = [
     DPoolEvent.Created,
     DPoolEvent.Claimed,
     DPoolEvent.Funded,
     DPoolEvent.Distributed,
   ]
+  const startBlock = useMemo(() => {
+    if (!dPoolAddress) return undefined
+    return getCreatedDPoolEventByAddress(dPoolAddress)
+  }, [dPoolAddress, getCreatedDPoolEventByAddress])
   const [eventMetaDataList, setEventMetaDataList] = useState<ActionEvent[][]>(
     () => eventList.map(() => [])
   )
+
   const poolIds = useMemo((): string[] => {
     if (!_poolIds) return []
     try {
@@ -132,15 +142,30 @@ export function PoolDetailList() {
     async (eventName: DPoolEvent) => {
       if (!dPoolContract || poolIdsMap.size === 0) return []
       const nowBlock = await dPoolContract.provider.getBlockNumber()
-      const events = await dPoolContract.queryFilter(
-        dPoolContract.filters[eventName](),
-        nowBlock - 1000 > 0 ? nowBlock - 1000 : 0,
-        nowBlock
-      )
-      if (!events) return []
+      const allEvents = []
+      // if has startBlock. get all event from dPool deployment block to now block
+      if (startBlock) {
+        for (let i = startBlock.blockNumber; i <= nowBlock; i += 10000) {
+          allEvents.push(
+            ...(await dPoolContract.queryFilter(
+              dPoolContract.filters[eventName](),
+              i,
+              i + 10000
+            ))
+          )
+        }
+      } else {
+        allEvents.push(
+          ...(await dPoolContract.queryFilter(
+            dPoolContract.filters[eventName](),
+            nowBlock - 10000 > 0 ? nowBlock - 10000 : 0,
+            nowBlock
+          ))
+        )
+      }
       const list: ActionEvent[] = []
-      for (let i = 0; i < events.length; i++) {
-        const event = events[i]
+      for (let i = 0; i < allEvents.length; i++) {
+        const event = allEvents[i]
         if (!event.args) continue
         if (!poolIdsMap.has(event.args.poolId.toString())) continue
         const { from } = await event.getTransaction()
@@ -155,15 +180,17 @@ export function PoolDetailList() {
       }
       return list
     },
-    [dPoolContract, poolIdsMap]
+    [dPoolContract, poolIdsMap, startBlock]
   )
   const getPoolEvents = useCallback(
-    async () => await Promise.all(eventList.map(getPoolEvent)),
+    async () =>
+      setEventMetaDataList(await Promise.all(eventList.map(getPoolEvent))),
     [getPoolEvent]
   )
   useEffect(() => {
-    getPoolEvents().then(setEventMetaDataList)
+    getPoolEvents()
   }, [getPoolEvent])
+
   if (!poolIds.length) return null
   return (
     <div className="flex flex-col gap-20 mb-10">
