@@ -24,7 +24,7 @@ function App() {
                 position="top-left"
                 closeOnClick={false}
                 autoClose={6000}
-                toastClassName="break-all bg-neutral-200 z-50"
+                toastClassName="bg-neutral-200 z-50"
               />,
               document.body
             )}

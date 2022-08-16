@@ -1,19 +1,19 @@
 import { isAddress } from 'ethers/lib/utils'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import useDPoolFactory from './useDPoolFactory'
 
 import { BigNumber } from 'ethers'
 import { chains } from '../constants'
 
 import { hooks as metaMaskHooks } from '../connectors/metaMask'
+import { useDPoolFactoryContract } from './useContract'
 const { useAccount, useChainId } = metaMaskHooks
 
 export default function useDPoolAddress() {
   const [address, setAddress] = useState<string>()
   const [isOwner, setIsOwner] = useState<boolean>(true)
   const [searchParams, setSearchParams] = useSearchParams()
-  const dPoolFactory = useDPoolFactory()
+  const dPoolFactory = useDPoolFactoryContract()
   const account = useAccount()
   const chainId = useChainId()
   const DP_KEY = useMemo(() => {

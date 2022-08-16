@@ -2,23 +2,22 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { Link, useParams } from 'react-router-dom'
 import { DPoolEvent, DPoolLocalStorageMeta } from '../../type'
-
 import useDPoolAddress from '../../hooks/useDPoolAddress'
-import useDPool from '../../hooks/useDPool'
-import { BigNumber, Event } from 'ethers'
+import { BigNumber } from 'ethers'
 import { EosIconsBubbleLoading } from '../../components/icon'
 import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
 import { PoolDetail } from './PoolDetail'
-import { useWeb3React } from '@web3-react/core'
-
+import { useDPoolContract } from '../../hooks/useContract'
+import { useGraph } from '../../hooks/useGraph'
 const { useChainId } = metaMaskHooks
-
 export default function PoolList() {
   const chainId = useChainId()
   const { dPoolAddress } = useDPoolAddress()
+  const dPoolContract = useDPoolContract(dPoolAddress)
+
   // local pool meta data in this chain
   const [poolList, setPoolList] = useState<DPoolLocalStorageMeta[]>([])
-  const dPoolContract = useDPool(dPoolAddress)
+
   const [isLoading, setIsLoading] = useState<boolean>(false)
   useEffect(() => {
     if (!dPoolAddress) return
@@ -58,6 +57,7 @@ export default function PoolList() {
       setIsLoading(false)
     })
   }, [dPoolContract, chainId, dPoolAddress])
+
   if (isLoading) {
     return <EosIconsBubbleLoading width="5em" height="5em" />
   }
@@ -95,38 +95,33 @@ export default function PoolList() {
   )
 }
 
-interface ActionEvent {
+export interface ActionEvent {
   name: DPoolEvent
   timestamp: number
   transactionHash: string
   poolId: string | number
-}
-
-export type ClaimEvent = ActionEvent & {
-  claimer: string
-}
-export type FundEvent = ActionEvent & {
-  funder: string
-}
-export type CreateEvent = ActionEvent & {
-  creator: string
-}
-export type DistributeEvent = ActionEvent & {
-  distributor: string
+  from: string
 }
 
 export function PoolDetailList() {
   const { poolIds: _poolIds } = useParams()
-  const { provider } = useWeb3React()
   const { dPoolAddress } = useDPoolAddress()
-  const dPoolContract = useDPool(dPoolAddress)
+  const { getCreatedDPoolEventByAddress } = useGraph()
+  const dPoolContract = useDPoolContract(dPoolAddress)
 
-  const [createEventList, setCreateEventList] = useState<CreateEvent[]>([])
-  const [claimedEventList, setClaimedEventList] = useState<ClaimEvent[]>([])
-  const [fundEventList, setFundEventList] = useState<FundEvent[]>([])
-  const [distributeEventList, setDistributeEventList] = useState<
-    DistributeEvent[]
-  >([])
+  const eventList = [
+    DPoolEvent.Created,
+    DPoolEvent.Claimed,
+    DPoolEvent.Funded,
+    DPoolEvent.Distributed,
+  ]
+  const startBlock = useMemo(() => {
+    if (!dPoolAddress) return undefined
+    return getCreatedDPoolEventByAddress(dPoolAddress)
+  }, [dPoolAddress, getCreatedDPoolEventByAddress])
+  const [eventMetaDataList, setEventMetaDataList] = useState<ActionEvent[][]>(
+    () => eventList.map(() => [])
+  )
 
   const poolIds = useMemo((): string[] => {
     if (!_poolIds) return []
@@ -143,103 +138,57 @@ export function PoolDetailList() {
     return map
   }, [poolIds])
 
-  const getPoolEvent = useCallback(() => {
-    if (!dPoolContract) return
-    if (poolIdsMap.size === 0) return
-    // claim event
-    dPoolContract
-      .queryFilter(dPoolContract.filters[DPoolEvent.Claimed]())
-      .then(async (claimEvents) => {
-        if (!claimEvents) return
-        const claimedList: ClaimEvent[] = []
-        for (let i = 0; i < claimEvents.length; i++) {
-          const claimEvent = claimEvents[i]
-          if (!claimEvent.args) continue
-          if (!poolIdsMap.has(claimEvent.args.poolId.toString())) continue
-          const { claimer, poolId } = claimEvent.args
-          const block = await claimEvent.getBlock()
-          claimedList.push({
-            name: DPoolEvent.Claimed,
-            transactionHash: claimEvent.transactionHash,
-            timestamp: block.timestamp,
-            poolId: poolId.toNumber(),
-            claimer,
-          })
+  const getPoolEvent = useCallback(
+    async (eventName: DPoolEvent) => {
+      if (!dPoolContract || poolIdsMap.size === 0) return []
+      const nowBlock = await dPoolContract.provider.getBlockNumber()
+      const allEvents = []
+      // if has startBlock. get all event from dPool deployment block to now block
+      if (startBlock) {
+        for (let i = startBlock.blockNumber; i <= nowBlock; i += 10000) {
+          allEvents.push(
+            ...(await dPoolContract.queryFilter(
+              dPoolContract.filters[eventName](),
+              i,
+              i + 10000
+            ))
+          )
         }
-        setClaimedEventList(claimedList)
-      })
-
-    // fund
-    dPoolContract
-      .queryFilter(dPoolContract.filters[DPoolEvent.Funded]())
-      .then(async (fundEvents) => {
-        if (!fundEvents) return
-        const fundedList = []
-        for (let i = 0; i < fundEvents.length; i++) {
-          const fundEvent = fundEvents[i]
-          if (!fundEvent.args) continue
-          if (!poolIdsMap.has(fundEvent.args.poolId.toString())) continue
-          const { funder, poolId } = fundEvent.args
-          const block = await fundEvent.getBlock()
-          fundedList.push({
-            name: DPoolEvent.Funded,
-            transactionHash: fundEvent.transactionHash,
-            timestamp: block.timestamp,
-            funder,
-            poolId: poolId.toNumber(),
-          })
-        }
-        setFundEventList(fundedList)
-      })
-
-    // create
-    dPoolContract
-      .queryFilter(dPoolContract.filters[DPoolEvent.Created]())
-      .then(async (events) => {
-        if (!events) return
-        const list: CreateEvent[] = []
-        for (let i = 0; i < events.length; i++) {
-          const event = events[i]
-          if (!event.args) continue
-          if (!poolIdsMap.has(event.args.poolId.toString())) continue
-          const { from } = await event.getTransaction()
-          const { timestamp } = await event.getBlock()
-          list.push({
-            name: DPoolEvent.Created,
-            transactionHash: event.transactionHash,
-            creator: from,
-            poolId: event.args.poolId.toNumber(),
-            timestamp,
-          })
-        }
-        setCreateEventList(list)
-      })
-    // distribute
-    dPoolContract
-      .queryFilter(dPoolContract.filters[DPoolEvent.Distributed]())
-      .then(async (events) => {
-        if (!events) return
-        const list: DistributeEvent[] = []
-        for (let i = 0; i < events.length; i++) {
-          const event = events[i]
-          if (!event.args) continue
-          if (!poolIdsMap.has(event.args.poolId.toString())) continue
-          const { from } = await event.getTransaction()
-          const { timestamp } = await event.getBlock()
-          list.push({
-            name: DPoolEvent.Created,
-            transactionHash: event.transactionHash,
-            distributor: from,
-            poolId: event.args.poolId.toNumber(),
-            timestamp,
-          })
-        }
-        setDistributeEventList(list)
-      })
-  }, [dPoolContract, poolIdsMap])
-
+      } else {
+        allEvents.push(
+          ...(await dPoolContract.queryFilter(
+            dPoolContract.filters[eventName](),
+            nowBlock - 10000 > 0 ? nowBlock - 10000 : 0,
+            nowBlock
+          ))
+        )
+      }
+      const list: ActionEvent[] = []
+      for (let i = 0; i < allEvents.length; i++) {
+        const event = allEvents[i]
+        if (!event.args) continue
+        if (!poolIdsMap.has(event.args.poolId.toString())) continue
+        const { from } = await event.getTransaction()
+        const { timestamp } = await event.getBlock()
+        list.push({
+          name: eventName,
+          transactionHash: event.transactionHash,
+          poolId: event.args.poolId.toNumber(),
+          timestamp,
+          from,
+        })
+      }
+      return list
+    },
+    [dPoolContract, poolIdsMap, startBlock]
+  )
+  const getPoolEvents = useCallback(
+    async () =>
+      setEventMetaDataList(await Promise.all(eventList.map(getPoolEvent))),
+    [getPoolEvent]
+  )
   useEffect(() => {
-    getPoolEvent()
+    getPoolEvents()
   }, [getPoolEvent])
 
   if (!poolIds.length) return null
@@ -249,19 +198,19 @@ export function PoolDetailList() {
         <PoolDetail
           poolId={id}
           key={id}
-          createEvent={createEventList.find(
+          createEvent={eventMetaDataList[0].find(
             (e) => e.poolId.toString() === id.toString()
           )}
-          fundEvent={fundEventList.find(
+          claimEventList={eventMetaDataList[1].filter(
             (e) => e.poolId.toString() === id.toString()
           )}
-          distributeEvent={distributeEventList.find(
+          fundEvent={eventMetaDataList[2].find(
             (e) => e.poolId.toString() === id.toString()
           )}
-          claimEventList={claimedEventList.filter(
+          distributeEvent={eventMetaDataList[3].find(
             (e) => e.poolId.toString() === id.toString()
           )}
-          getPoolEvent={getPoolEvent}
+          getPoolEvent={getPoolEvents}
         />
       ))}
     </div>

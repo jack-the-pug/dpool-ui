@@ -9,6 +9,7 @@ export interface Chain {
   dPoolFactoryAddress: string
   scan: string
   urls: string[]
+  graphUrl?: string
 }
 
 interface Chains {
@@ -58,7 +59,9 @@ const RinkeBy: Chain = {
   dPoolFactoryAddress: '0x43677d1e464EF3121B4Ea4Ff89133f71e05238e1',
   scan: 'https://rinkeby.etherscan.io',
   urls: ['https://rpc.ankr.com/eth_rinkeby'],
+  graphUrl: 'https://api.studio.thegraph.com/query/32849/dpool/v0.0.1',
 }
+
 export const chains: Chains = {
   1: Mainnet,
   137: Polygon,

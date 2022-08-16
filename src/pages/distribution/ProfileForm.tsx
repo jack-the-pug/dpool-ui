@@ -1,10 +1,15 @@
 import { BigNumber, utils } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
 import { useState, useCallback, useMemo, useEffect } from 'react'
+import { toast } from 'react-toastify'
 import { IconoirDeleteCircledOutline } from '../../components/icon'
 import useAddressBook from '../../hooks/useAddressBook'
 import { PoolRow, TokenMeta } from '../../type/index'
-import { formatCurrencyAmount, parsed2NumberString } from '../../utils/number'
+import {
+  formatCurrencyAmount,
+  parsed2NumberString,
+  parsedNumberByDecimal,
+} from '../../utils/number'
 import { TPoolRow } from './CreatePool'
 
 interface TProfileProps {
@@ -142,7 +147,10 @@ export function Profile(props: TProfileProps) {
               {userInputTotal.gt(0)
                 ? utils
                     .parseUnits(
-                      parsed2NumberString(inputAmount),
+                      parsedNumberByDecimal(
+                        parsed2NumberString(inputAmount),
+                        tokenMetaList[0].decimals
+                      ),
                       tokenMetaList[0]?.decimals
                     )
                     .mul(10000) // Retain two decimal places

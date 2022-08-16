@@ -159,7 +159,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         LOCAL_STORAGE_KEY.LOCAL_POOL_META_LIST,
         JSON.stringify(localPoolMetaList)
       )
-      localStorage.removeItem(LOCAL_STORAGE_KEY.DISTRIBUTE_CATCH_DATA)
     },
     [poolMeta, dPoolAddress, chainId, account]
   )
@@ -352,7 +351,11 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     }
     setCreatePoolState(ActionState.SUCCESS)
   }, [createPoolOption, callDPool])
-
+  useEffect(() => {
+    if (createPoolState === ActionState.SUCCESS) {
+      localStorage.removeItem(LOCAL_STORAGE_KEY.DISTRIBUTE_CATCH_DATA)
+    }
+  }, [createPoolState])
   useEffect(() => {
     if (!poolIds || poolIds.length === 0) return
     onCreateSuccess(poolIds)
