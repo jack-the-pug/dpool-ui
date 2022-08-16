@@ -1,7 +1,6 @@
 import { BigNumber, ethers } from 'ethers'
 import { useCallback } from 'react'
 import { hooks as metaMaskHooks } from '../../../connectors/metaMask'
-import useDPoolFactory from '../../../hooks/useDPoolFactory'
 import dPoolFactoryABI from '../../../abis/dPoolFactory.json'
 import { isAddress } from 'ethers/lib/utils'
 import { useState } from 'react'
@@ -11,13 +10,14 @@ import { AddressLink } from '../../../components/hash'
 import { toast } from 'react-toastify'
 import { Button } from '../../../components/button'
 import { useCallContract } from '../../../hooks/useContractCall'
+import { useDPoolFactoryContract } from '../../../hooks/useContract'
 
 const { useChainId, useAccount } = metaMaskHooks
 
 export default function dPoolFactory() {
   const account = useAccount()
   const chainId = useChainId()
-  const dPoolFactory = useDPoolFactory()
+  const dPoolFactory = useDPoolFactoryContract()
   const { dPoolAddress, setDPoolAddress, getDPoolAddressByAccount } =
     useDPoolAddress()
   const [retrievePoolMsg, setRetrievePoolMsg] =

@@ -159,8 +159,8 @@ export function ApproveToken(props: ApproveTokenProps) {
   return (
     <div className="w-full rounded-lg cursor-pointer flex justify-between items-center bg-neutral-200 px-2 py-1">
       <div className="text-xs text-gray-500 ">
-        allow the <AddressLink address={dPoolAddress} name="dPool Protocol" />{' '}
-        to use your{' '}
+        Allow the <AddressLink address={dPoolAddress} name="dPool" /> to use
+        your{' '}
         {isSupportPermit ? (
           `${utils.formatUnits(shouldApproveAmount, tokenMeta?.decimals)} ${
             tokenMeta ? tokenMeta.symbol : ''

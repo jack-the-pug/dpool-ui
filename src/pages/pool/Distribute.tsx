@@ -9,7 +9,7 @@ import { Button } from '../../components/button'
 
 interface DistributeProps {
   poolMeta: Pool | undefined
-  dPoolAddress: string | undefined
+  dPoolAddress: string
   poolId: string
   getPoolDetail: Function
   submittable: boolean
@@ -26,18 +26,15 @@ export function Distribute(props: DistributeProps) {
     tokenMeta,
     getPoolEvent,
   } = props
-  if (!tokenMeta || !dPoolAddress || !poolMeta) return null
+
   const { account, chainId } = useWeb3React()
   const [distributionState, setDistributionState] = useState<ActionState>(
     ActionState.WAIT
   )
-
   const callDPool = useCallDPoolContract(dPoolAddress)
-
   const distributePool = useCallback(async () => {
     if (!poolId || !chainId) return
     setDistributionState(ActionState.ING)
-
     const result = await callDPool(
       'distribute',
       [poolId],
@@ -53,11 +50,14 @@ export function Distribute(props: DistributeProps) {
       getPoolEvent()
     }
   }, [callDPool, chainId, poolMeta])
-  if (!account) return null
+
+  if (!tokenMeta || !poolMeta) return null
   if (poolMeta.state !== PoolState.Funded) return null
   const distributor = BigNumber.from(poolMeta.distributor)
   if (distributor.eq(0)) return null
+  if (!account) return null
   if (account.toLowerCase() !== poolMeta.distributor.toLowerCase()) return null
+
   return (
     <Button
       disable={!submittable}

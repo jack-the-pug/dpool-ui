@@ -1,15 +1,8 @@
 import { BigNumber, utils } from 'ethers'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
-import {
-  BasePool,
-  DPoolEvent,
-  GetPoolRes,
-  PoolState,
-  TokenMeta,
-} from '../../type'
-import useDPoolContract from '../../hooks/useDPool'
-import { EosIconsBubbleLoading, MdiArrowTopRight } from '../../components/icon'
+import { BasePool, GetPoolRes, PoolState, TokenMeta } from '../../type'
+import { EosIconsBubbleLoading } from '../../components/icon'
 import { useNavigate } from 'react-router-dom'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import useTokenMeta from '../../hooks/useTokenMeta'
@@ -21,8 +14,9 @@ import { Distribute } from './Distribute'
 import { Claimer, DistributeRow } from './DistributeRow'
 import { DateRange } from '../distribution/DateRangePicker'
 import { DistributeState } from './DistributeState'
-import { ClaimEvent, CreateEvent, DistributeEvent, FundEvent } from './PoolList'
-import { AddressLink, TranSactionHash } from '../../components/hash'
+import { ActionEvent } from './PoolList'
+import { PoolEvent } from './PoolEvent'
+import { useDPoolContract } from '../../hooks/useContract'
 
 export type Pool = BasePool & {
   state: PoolState
@@ -32,10 +26,10 @@ const { useAccount, useChainId } = metaMaskHooks
 
 interface PoolDetailProps {
   poolId: string
-  createEvent: CreateEvent | undefined
-  fundEvent: FundEvent | undefined
-  distributeEvent: DistributeEvent | undefined
-  claimEventList: ClaimEvent[]
+  createEvent: ActionEvent | undefined
+  fundEvent: ActionEvent | undefined
+  distributeEvent: ActionEvent | undefined
+  claimEventList: ActionEvent[]
   getPoolEvent: Function
 }
 
@@ -48,14 +42,15 @@ export function PoolDetail(props: PoolDetailProps) {
     claimEventList,
     getPoolEvent,
   } = props
+  if (!poolId) return <p>PoolId not found</p>
+
   const navigate = useNavigate()
   const { dPoolAddress, isOwner } = useDPoolAddress()
-
   const { getToken } = useTokenMeta()
   const account = useAccount()
   const chainId = useChainId()
-  const [isLoading, setIsLoading] = useState<boolean>(true)
   const dPoolContract = useDPoolContract(dPoolAddress)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
   const [isApproved, setIsApproved] = useState<boolean>(false)
 
   const [poolMeta, setPoolMeta] = useState<Pool>()
@@ -131,7 +126,6 @@ export function PoolDetail(props: PoolDetailProps) {
 
   const distributeAgain = useCallback(() => {
     if (!poolMeta || !tokenMeta) return
-
     const poolList = poolMeta.claimers.map(
       (address: string, index: number): TPoolRow => ({
         address,
@@ -160,10 +154,10 @@ export function PoolDetail(props: PoolDetailProps) {
         <EosIconsBubbleLoading width="5em" height="5em" />
       </p>
     )
-  if (!poolId) return <p>PoolId not found</p>
+  if (!account) return <p>Please connect your wallet first</p>
   if (!poolMeta) return <p>Distribute not found</p>
   return (
-    <div className="flex justify-center">
+    <div className="flex justify-center z-0 transition-all ease-in-out">
       <div className="w-full break-all flex flex-1 flex-col items-center bg-white px-4 py-2 rounded-lg">
         <div className="my-5 w-full relative items-center flex justify-center">
           <div className="flex">
@@ -196,8 +190,7 @@ export function PoolDetail(props: PoolDetailProps) {
                 tokenMeta={tokenMeta}
                 poolId={poolId}
                 claimEvent={claimEventList.find(
-                  (e) =>
-                    e.claimer.toLowerCase() === claimer.address.toLowerCase()
+                  (e) => e.from.toLowerCase() === claimer.address.toLowerCase()
                 )}
                 getPoolEvent={getPoolEvent}
                 getPoolDetail={getPoolDetail}
@@ -210,88 +203,33 @@ export function PoolDetail(props: PoolDetailProps) {
           <DateRange start={poolMeta.startTime} end={poolMeta.deadline} />
         </section>
         <section className="w-full mt-10 text-xs border border-gray-300 divide-solid divide-y divide-gray-300 rounded-md ">
-          {createEvent && (
-            <div className="flex justify-between text-gray-400 px-2 py-3">
-              <div className="flex items-center">
-                CREATE
-                <TranSactionHash
-                  hash={createEvent.transactionHash}
-                  className="text-gray-400 flex ml-2 items-center"
-                >
-                  TX <MdiArrowTopRight />
-                </TranSactionHash>
-              </div>
-              <div>
-                {'BY '}
-                <AddressLink
-                  address={createEvent.creator}
-                  className="text-gray-400"
-                />
-              </div>
-            </div>
-          )}
-          {fundEvent && (
-            <div className="flex justify-between text-gray-400 px-2 py-3">
-              <div className="flex items-center">
-                FUND
-                <TranSactionHash
-                  hash={fundEvent.transactionHash}
-                  className="text-gray-400 flex ml-2 items-center"
-                >
-                  TX <MdiArrowTopRight />
-                </TranSactionHash>
-              </div>
-              <div>
-                {'BY '}
-                <AddressLink
-                  address={fundEvent.funder}
-                  className="text-gray-400"
-                />
-              </div>
-            </div>
-          )}
-          {distributeEvent && (
-            <div className="flex justify-between text-gray-400 px-2 py-3">
-              <div className="flex items-center">
-                DISTRIBUTE
-                <TranSactionHash
-                  hash={distributeEvent.transactionHash}
-                  className="text-gray-400 flex ml-2 items-center"
-                >
-                  TX <MdiArrowTopRight />
-                </TranSactionHash>
-              </div>
-              <div>
-                {'BY '}
-                <AddressLink
-                  address={distributeEvent.distributor}
-                  className="text-gray-400"
-                />
-              </div>
-            </div>
-          )}
+          <PoolEvent event={createEvent} label="Created" />
+          <PoolEvent event={fundEvent} label="Funded" />
+          <PoolEvent event={distributeEvent} label="Distributed" />
         </section>
-        <div className="w-full mt-10 text-black">
-          <Fund
-            poolMeta={poolMeta}
-            dPoolAddress={dPoolAddress}
-            tokenMeta={tokenMeta}
-            poolId={poolId}
-            getPoolDetail={getPoolDetail}
-            isApproved={isApproved}
-            setIsApproved={setIsApproved}
-            getPoolEvent={getPoolEvent}
-          />
-          <Distribute
-            poolMeta={poolMeta}
-            dPoolAddress={dPoolAddress}
-            poolId={poolId}
-            getPoolDetail={getPoolDetail}
-            submittable={submittable}
-            tokenMeta={tokenMeta}
-            getPoolEvent={getPoolEvent}
-          />
-        </div>
+        {dPoolAddress && (
+          <div className="w-full mt-10 text-black">
+            <Fund
+              poolMeta={poolMeta}
+              dPoolAddress={dPoolAddress}
+              tokenMeta={tokenMeta}
+              poolId={poolId}
+              getPoolDetail={getPoolDetail}
+              isApproved={isApproved}
+              setIsApproved={setIsApproved}
+              getPoolEvent={getPoolEvent}
+            />
+            <Distribute
+              poolMeta={poolMeta}
+              dPoolAddress={dPoolAddress}
+              poolId={poolId}
+              getPoolDetail={getPoolDetail}
+              submittable={submittable}
+              tokenMeta={tokenMeta}
+              getPoolEvent={getPoolEvent}
+            />
+          </div>
+        )}
         <div className="flex mt-4 gap-2 w-full justify-between">
           {isOwner ? (
             <div
