@@ -1,15 +1,8 @@
 import { BigNumber, utils } from 'ethers'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
-import {
-  BasePool,
-  DPoolEvent,
-  GetPoolRes,
-  PoolState,
-  TokenMeta,
-} from '../../type'
-import useDPoolContract from '../../hooks/useDPool'
-import { EosIconsBubbleLoading, MdiArrowTopRight } from '../../components/icon'
+import { BasePool, GetPoolRes, PoolState, TokenMeta } from '../../type'
+import { EosIconsBubbleLoading } from '../../components/icon'
 import { useNavigate } from 'react-router-dom'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import useTokenMeta from '../../hooks/useTokenMeta'
@@ -22,10 +15,8 @@ import { Claimer, DistributeRow } from './DistributeRow'
 import { DateRange } from '../distribution/DateRangePicker'
 import { DistributeState } from './DistributeState'
 import { ActionEvent } from './PoolList'
-import { AddressLink, TranSactionHash } from '../../components/hash'
-import { useDateDistance } from '../../hooks/useDateDistance'
-import { Popover } from 'react-tiny-popover'
 import { PoolEvent } from './PoolEvent'
+import { useDPoolContract } from '../../hooks/useContract'
 
 export type Pool = BasePool & {
   state: PoolState
@@ -52,13 +43,14 @@ export function PoolDetail(props: PoolDetailProps) {
     getPoolEvent,
   } = props
   if (!poolId) return <p>PoolId not found</p>
+
   const navigate = useNavigate()
   const { dPoolAddress, isOwner } = useDPoolAddress()
   const { getToken } = useTokenMeta()
   const account = useAccount()
   const chainId = useChainId()
-  const [isLoading, setIsLoading] = useState<boolean>(false)
   const dPoolContract = useDPoolContract(dPoolAddress)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
   const [isApproved, setIsApproved] = useState<boolean>(false)
 
   const [poolMeta, setPoolMeta] = useState<Pool>()
@@ -134,7 +126,6 @@ export function PoolDetail(props: PoolDetailProps) {
 
   const distributeAgain = useCallback(() => {
     if (!poolMeta || !tokenMeta) return
-
     const poolList = poolMeta.claimers.map(
       (address: string, index: number): TPoolRow => ({
         address,
@@ -212,9 +203,9 @@ export function PoolDetail(props: PoolDetailProps) {
           <DateRange start={poolMeta.startTime} end={poolMeta.deadline} />
         </section>
         <section className="w-full mt-10 text-xs border border-gray-300 divide-solid divide-y divide-gray-300 rounded-md ">
-          <PoolEvent event={createEvent} label="created" />
-          <PoolEvent event={fundEvent} label="funded" />
-          <PoolEvent event={distributeEvent} label="distributed" />
+          <PoolEvent event={createEvent} label="Created" />
+          <PoolEvent event={fundEvent} label="Funded" />
+          <PoolEvent event={distributeEvent} label="Distributed" />
         </section>
         {dPoolAddress && (
           <div className="w-full mt-10 text-black">

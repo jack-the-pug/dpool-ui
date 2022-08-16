@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 
 export function useDateDistance(date: Date | undefined) {
   const [distance, setDistance] = useState<string>('')
-  const [delay, setDelay] = useState<number>(1000)
   useEffect(() => {
     if (!date) return
     setDistance(formatDistanceToNow(date, { includeSeconds: true }))
@@ -17,20 +16,11 @@ export function useDateDistance(date: Date | undefined) {
         clearInterval(timer)
         return
       }
-      if (ms > 1000 * 60) {
-        setDelay(1000 * 60)
-        return
-      }
-
-      if (ms >= 1000 * 10) {
-        setDelay(1000 * 10)
-        return
-      }
-    }, delay)
+    }, 1000 * 60)
     return () => {
       clearInterval(timer)
     }
-  }, [delay])
+  }, [])
 
   return distance
 }
