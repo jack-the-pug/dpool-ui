@@ -131,8 +131,11 @@ export function PoolDetailList() {
   const getPoolEvent = useCallback(
     async (eventName: DPoolEvent) => {
       if (!dPoolContract || poolIdsMap.size === 0) return []
+      const nowBlock = await dPoolContract.provider.getBlockNumber()
       const events = await dPoolContract.queryFilter(
-        dPoolContract.filters[eventName]()
+        dPoolContract.filters[eventName](),
+        nowBlock - 1000 > 0 ? nowBlock - 1000 : 0,
+        nowBlock
       )
       if (!events) return []
       const list: ActionEvent[] = []
@@ -155,11 +158,11 @@ export function PoolDetailList() {
     [dPoolContract, poolIdsMap]
   )
   const getPoolEvents = useCallback(
-    () => Promise.all(eventList.map(getPoolEvent)).then(setEventMetaDataList),
-    [getPoolEvent, setEventMetaDataList]
+    async () => await Promise.all(eventList.map(getPoolEvent)),
+    [getPoolEvent]
   )
   useEffect(() => {
-    getPoolEvents()
+    getPoolEvents().then(setEventMetaDataList)
   }, [getPoolEvent])
   if (!poolIds.length) return null
   return (
