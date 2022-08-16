@@ -24,6 +24,7 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "6",
+    "react-tiny-popover": "^7.1.0",
     "react-toastify": "^9.0.3",
     "recoil": "^0.7.4"
   },

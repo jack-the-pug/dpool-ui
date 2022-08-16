@@ -24,7 +24,11 @@ import { toast } from 'react-toastify'
 import DPoolFactory from './dPoolFactory/index'
 import { isAddress } from 'ethers/lib/utils'
 
-import { formatCurrencyAmount, parsed2NumberString } from '../../utils/number'
+import {
+  formatCurrencyAmount,
+  parsed2NumberString,
+  parsedNumberByDecimal,
+} from '../../utils/number'
 import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
 
 export type TPoolRow = PoolRow & {
@@ -87,20 +91,20 @@ export default function PoolsList() {
     return !!tableHeaderInputList[0] && !isNaN(Number(tableHeaderInputList[0]))
   }, [tableHeaderInputList[0]])
 
-  const userInputTotal: BigNumber = useMemo(
-    () =>
-      poolList.reduce(
-        (pre, cur) =>
-          pre.add(
-            utils.parseUnits(
-              parsed2NumberString(cur.userInputAmount),
-              tokenMetaList[0]?.decimals
-            )
+  const baseUserInputTotal: BigNumber = useMemo(() => {
+    if (!tokenMetaList[0]) return BigNumber.from(0)
+    return poolList.reduce((pre, cur) => {
+      return pre.add(
+        utils.parseUnits(
+          parsedNumberByDecimal(
+            parsed2NumberString(cur.userInputAmount),
+            tokenMetaList[0].decimals
           ),
-        BigNumber.from(0)
-      ),
-    [poolList, tokenMetaList[0]]
-  )
+          tokenMetaList[0]?.decimals
+        )
+      )
+    }, BigNumber.from(0))
+  }, [poolList, tokenMetaList[0]])
 
   const parsedTokenAmounts: BigNumber[][] = useMemo(() => {
     /**
@@ -110,33 +114,46 @@ export default function PoolsList() {
      *  percent mode: user input number is percentage.   ActualTokenNumber = inputNumber / sumOfEachRowInputNumber * tableHeaderInputList[0]
      */
     const baseAmountTotal = utils.parseUnits(
-      parsed2NumberString(tableHeaderInputList[0]),
+      parsedNumberByDecimal(
+        parsed2NumberString(tableHeaderInputList[0]),
+        tokenMetaList[0]?.decimals || 0
+      ),
       tokenMetaList[0]?.decimals
     )
     const tokenAmounts = Array(tokenMetaList.length)
     tokenAmounts[0] = poolList.map((row) => {
       const baseAmount = utils.parseUnits(
-        parsed2NumberString(row.userInputAmount),
+        parsedNumberByDecimal(
+          parsed2NumberString(row.userInputAmount),
+          tokenMetaList[0]?.decimals
+        ),
         tokenMetaList[0]?.decimals
       )
       if (baseAmount.eq(0)) return BigNumber.from(0)
-      return isPercentMode && userInputTotal.gt(0)
-        ? baseAmount.mul(baseAmountTotal).div(userInputTotal)
+      return isPercentMode && baseUserInputTotal.gt(0)
+        ? baseAmount.mul(baseAmountTotal).div(baseUserInputTotal)
         : baseAmount
     })
+
     // if has second token
     if (tokenMetaList[1]) {
       const totalAmount = utils.parseUnits(
-        parsed2NumberString(tableHeaderInputList[1]),
+        parsedNumberByDecimal(
+          parsed2NumberString(tableHeaderInputList[1]),
+          tokenMetaList[1].decimals
+        ),
         tokenMetaList[1].decimals
       )
       tokenAmounts[1] = poolList.map((row) => {
         const baseAmount = utils.parseUnits(
-          parsed2NumberString(row.userInputAmount),
+          parsedNumberByDecimal(
+            parsed2NumberString(row.userInputAmount),
+            tokenMetaList[0]?.decimals
+          ),
           tokenMetaList[0]?.decimals
         )
-        return userInputTotal.gt(0)
-          ? baseAmount.mul(totalAmount).div(userInputTotal)
+        return baseUserInputTotal.gt(0)
+          ? baseAmount.mul(totalAmount).div(baseUserInputTotal)
           : BigNumber.from(0)
       })
     }
@@ -260,11 +277,10 @@ export default function PoolsList() {
     const poolAddressMap = new Map()
     _pool.forEach((row) => poolAddressMap.set(row.address.toLowerCase(), row))
     const pool: TPoolRow[] = Array.from(poolAddressMap.values())
-
     // dPool contract need sort by address.
     pool.sort((a, b) => (BigNumber.from(a.address).gt(b.address) ? 1 : -1))
-    const claimer = pool.map((row) => row.address)
 
+    const claimer = pool.map((row) => row.address)
     let [startTime, endTime] = date
     if (
       poolConfig.distributionType === DistributionType.Push &&
@@ -361,11 +377,15 @@ export default function PoolsList() {
     }
     if (!claimer.length || !amounts.length) return 'no claimers'
     if (isFundNow && !isTokenBalanceEnough) return 'balance not enough'
+    for (let i = 0; i < parsedTokenAmountsTotal.length; i++) {
+      if (parsedTokenAmountsTotal[0].eq(0)) return 'total amount can not be 0'
+    }
     return true
   }, [createPoolCallData, poolConfig, isOwner, isTokenBalanceEnough])
 
   const getTokensBalance = useCallback(async () => {
     const balanceList: BigNumber[] = []
+    if (!tokenMetaList[0]) return balanceList
     for (let i = 0; i < tokenMetaList.length; i++) {
       const balance = await getTokenBalance(tokenMetaList[i].address)
       balanceList.push(balance)
@@ -526,7 +546,7 @@ export default function PoolsList() {
                 parsedTokenAmounts={parsedTokenAmounts}
                 isPercentMode={isPercentMode}
                 tokenMetaList={tokenMetaList}
-                userInputTotal={userInputTotal}
+                userInputTotal={baseUserInputTotal}
               />
             ))}
           </div>

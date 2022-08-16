@@ -20,7 +20,6 @@ export const formatCurrencyAmount = (
     amount,
     tokenMeta ? tokenMeta.decimals : 18
   )
-
   const [integer, _fractional] = readableAmount.split('.')
   let fractional = ''
   if (_fractional) {
@@ -35,4 +34,13 @@ export const formatCurrencyAmount = (
     fractional = _fractional.substring(0, zeroLen + formatLen)
   }
   return `${integer.replace(kilobitsReg, ',')}.${fractional}`
+}
+
+export function parsedNumberByDecimal(strNumber: string, decimal: number) {
+  const [intPart, decimalPart] = strNumber.split('.')
+  if (!decimalPart) return strNumber
+  if (decimalPart.length > decimal) {
+    return `${intPart}.${decimalPart.slice(0, decimal)}`
+  }
+  return strNumber
 }

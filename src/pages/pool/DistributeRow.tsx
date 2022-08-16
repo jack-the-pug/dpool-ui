@@ -9,10 +9,12 @@ import { Pool } from './PoolDetail'
 import useDPoolContract from '../../hooks/useDPool'
 import { useCallDPoolContract } from '../../hooks/useContractCall'
 import { Button } from '../../components/button'
-import { ClaimEvent } from './PoolList'
 import { format } from 'date-fns'
 import { TranSactionHash } from '../../components/hash'
 import { MdiArrowTopRight } from '../../components/icon'
+import { ActionEvent } from './PoolList'
+import { useDateDistance } from '../../hooks/useDateDistance'
+import { DateDistance } from '../../components/dateDistance'
 
 export interface Claimer {
   address: string
@@ -23,7 +25,7 @@ interface ClaimProps {
   claimer: Claimer
   poolId: string
   index: number
-  claimEvent: ClaimEvent | undefined
+  claimEvent: ActionEvent | undefined
   poolMeta: Pool | undefined
   dPoolAddress: string | undefined
   tokenMeta: TokenMeta | undefined
@@ -96,6 +98,7 @@ export function RenderClaim(props: ClaimProps) {
   const callDPool = useCallDPoolContract(dPoolAddress)
   const [claimState, setClaimState] = useState<ActionState>(ActionState.WAIT)
   const [claimedTx, setClaimedTx] = useState<string>()
+
   const [shouldClaimAmount, setShouldClaimAmount] = useState<BigNumber>(
     claimer.amount
   )
@@ -120,7 +123,7 @@ export function RenderClaim(props: ClaimProps) {
   }, [getClaimedAmount, claimEvent])
 
   const claim = useCallback(async () => {
-    if (!dPoolContract || !poolId || !chainId) return
+    if (!dPoolContract || !poolId || !chainId || !account) return
     setClaimState(ActionState.ING)
     const result = await callDPool(
       'claimSinglePool',
@@ -137,12 +140,6 @@ export function RenderClaim(props: ClaimProps) {
       setClaimState(ActionState.SUCCESS)
       getPoolEvent()
       // last one
-      console.log(
-        'poolMeta.totalAmount',
-        poolMeta.totalAmount,
-        claimer.amount,
-        poolMeta.totalAmount.sub(claimer.amount).eq(0)
-      )
       if (poolMeta.totalAmount.sub(claimer.amount).eq(0)) {
         getPoolDetail()
       }
@@ -171,9 +168,7 @@ export function RenderClaim(props: ClaimProps) {
           >
             TX <MdiArrowTopRight />
           </TranSactionHash>
-          <div className="text-xs">
-            {format(new Date(claimEvent.timestamp * 1000), 'L-dd/KK:mm')}
-          </div>
+          <DateDistance date={new Date(claimEvent.timestamp * 1000)} />
         </div>
       )
 
@@ -194,15 +189,7 @@ export function RenderClaim(props: ClaimProps) {
       )
     }
     return 'NULL'
-  }, [
-    shouldClaimAmount,
-    poolMeta,
-    claim,
-    claimState,
-    claimedTx,
-    claimEvent,
-    claimedTx,
-  ])
+  }, [shouldClaimAmount, poolMeta, claim, claimState, claimEvent, claimedTx])
   return (
     <>
       <td className="text-sm">
