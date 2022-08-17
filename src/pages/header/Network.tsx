@@ -23,19 +23,23 @@ export default function NetworkAction() {
       if (desiredChainId === chainId) return
       if (desiredChainId === -1 && chainId !== undefined) return
       setLoading(true)
-      if (connector instanceof Network) {
-        await connector.activate(
-          desiredChainId === -1 ? undefined : desiredChainId
-        )
-      } else {
-        await connector.activate(
-          desiredChainId === -1
-            ? undefined
-            : getAddChainParameters(desiredChainId)
-        )
+      try {
+        if (connector instanceof Network) {
+          await connector.activate(
+            desiredChainId === -1 ? undefined : desiredChainId
+          )
+        } else {
+          await connector.activate(
+            desiredChainId === -1
+              ? undefined
+              : getAddChainParameters(desiredChainId)
+          )
+        }
+        setLoading(false)
+        setIsSwitchChain(false)
+      } catch {
+        setLoading(false)
       }
-      setLoading(false)
-      setIsSwitchChain(false)
     },
     [connector, chainId]
   )
