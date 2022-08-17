@@ -440,7 +440,7 @@ export default function PoolsList() {
 
   useEffect(() => {
     setDPoolFactoryVisible(() => !dPoolAddress)
-  }, [dPoolAddress])
+  }, [dPoolAddress, isOwner])
 
   useEffect(() => {
     if (!isOwner) {

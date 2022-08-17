@@ -1,11 +1,12 @@
+import { useWeb3React } from '@web3-react/core'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { hooks as metaMaskHooks, metaMask } from '../../connectors/metaMask'
 
-const { useAccount, useIsActive } = metaMaskHooks
+const { useIsActive } = metaMaskHooks
 
 export default function Connector() {
-  const account = useAccount()
+  const { account } = useWeb3React()
   const isActive = useIsActive()
 
   const [isConnect, setIsConnect] = useState<boolean>(false)
@@ -25,15 +26,23 @@ export default function Connector() {
   }, [metaMask])
 
   useEffect(() => {
-    if (isActive) {
+    if (isActive && !account) {
       connect()
+      return
     }
-  }, [isActive])
+    if (!isActive && account) {
+      setIsConnect(false)
+      return
+    }
+    if (isActive && account) {
+      setIsConnect(true)
+    }
+  }, [isActive, account])
   useEffect(() => {
     void metaMask.connectEagerly()
   }, [])
 
-  if (!isConnect) {
+  if (!isConnect || !account) {
     return (
       <button
         onClick={() => connect()}
@@ -55,11 +64,7 @@ export default function Connector() {
       {isAddressHover ? (
         <button onClick={() => setIsConnect(false)}>Disconnect</button>
       ) : (
-        <div>
-          {account
-            ? `${account?.slice(0, 6)}...${account?.slice(38).toUpperCase()}`
-            : 'Connect Wallet'}
-        </div>
+        `${account?.slice(0, 6)}...${account?.slice(38).toUpperCase()}`
       )}
     </div>
   )
