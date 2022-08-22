@@ -1,11 +1,12 @@
 import { useWeb3React } from '@web3-react/core'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { Chain, chains, getAddChainParameters } from '../../constants'
 import { Dialog } from '../../components/dialog'
 import { Network } from '@web3-react/network'
 import { EosIconsBubbleLoading } from '../../components/icon'
-const { useChainId, useProvider } = metaMaskHooks
+import { toast } from 'react-toastify'
+const { useChainId } = metaMaskHooks
 export default function NetworkAction() {
   const chainId = useChainId()
   const [isSwitchChain, setIsSwitchChain] = useState(false)
@@ -13,7 +14,7 @@ export default function NetworkAction() {
   const chainName = useMemo(() => {
     if (!chainId) return '...'
     const chainMeta = chains[chainId]
-    if (!chainMeta) return chainId
+    if (!chainMeta) return 'Switch Chain'
     return chainMeta.name
   }, [chainId])
   const { connector } = useWeb3React()
@@ -49,6 +50,11 @@ export default function NetworkAction() {
     (key) => chains[Number(key)]
   ).filter((chain) => chain.chainId !== chainId)
 
+  useEffect(() => {
+    if (!chainId) return
+    if (chains[chainId]) return
+    toast.warning(<div>Unsupported chain</div>)
+  }, [chainId])
   return (
     <>
       <button

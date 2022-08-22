@@ -23,7 +23,7 @@ export function useContract(
 export function useDPoolFactoryContract() {
   const { chainId } = useWeb3React()
   const address = useMemo(() => {
-    if (!chainId) return
+    if (!chainId || !chains[chainId]) return
     return chains[chainId].dPoolFactoryAddress
   }, [chainId])
   return useContract(address, DPoolFactoryABI)
