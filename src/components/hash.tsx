@@ -12,7 +12,7 @@ export function TranSactionHash(props: {
 
   const chainId = useChainId()
   const scanUrl = useMemo(() => {
-    if (!chainId) return
+    if (!chainId || !chains[chainId]) return
     const scan = chains[chainId].scan
     return `${scan}/tx/${hash}`
   }, [hash, chainId])
@@ -36,7 +36,7 @@ export function AddressLink(props: {
   const { address, name, className } = props
   const chainId = useChainId()
   const scanUrl = useMemo(() => {
-    if (!chainId) return
+    if (!chainId || !chains[chainId]) return
     const scan = chains[chainId].scan
     return `${scan}/address/${address}`
   }, [address, chainId])

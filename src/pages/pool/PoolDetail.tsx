@@ -29,6 +29,7 @@ interface PoolDetailProps {
   createEvent: ActionEvent | undefined
   fundEvent: ActionEvent | undefined
   distributeEvent: ActionEvent | undefined
+  cancelEvent: ActionEvent | undefined
   claimEventList: ActionEvent[]
   getPoolEvent: Function
 }
@@ -40,6 +41,7 @@ export function PoolDetail(props: PoolDetailProps) {
     fundEvent,
     distributeEvent,
     claimEventList,
+    cancelEvent,
     getPoolEvent,
   } = props
   if (!poolId) return <p>PoolId not found</p>
@@ -82,7 +84,6 @@ export function PoolDetail(props: PoolDetailProps) {
     setIsLoading(true)
     try {
       const poolRes: GetPoolRes = await dPoolContract.getPoolById(poolId)
-      console.log('poolRes', poolRes[0])
       const {
         amounts,
         claimedAmount,
@@ -202,11 +203,14 @@ export function PoolDetail(props: PoolDetailProps) {
         <section className="text-xs w-full flex flex-col gap-4 mt-20">
           <DateRange start={poolMeta.startTime} end={poolMeta.deadline} />
         </section>
-        <section className="w-full mt-10 text-xs border border-gray-300 divide-solid divide-y divide-gray-300 rounded-md ">
-          <PoolEvent event={createEvent} label="Created" />
-          <PoolEvent event={fundEvent} label="Funded" />
-          <PoolEvent event={distributeEvent} label="Distributed" />
-        </section>
+        {createEvent || fundEvent || distributeEvent || cancelEvent ? (
+          <section className="w-full mt-10 text-xs border border-gray-300 divide-solid divide-y divide-gray-300 rounded-md ">
+            <PoolEvent event={createEvent} label="Created" />
+            <PoolEvent event={fundEvent} label="Funded" />
+            <PoolEvent event={distributeEvent} label="Distributed" />
+            <PoolEvent event={cancelEvent} label="Canceled" />
+          </section>
+        ) : null}
         {dPoolAddress && (
           <div className="w-full mt-10 text-black">
             <Fund

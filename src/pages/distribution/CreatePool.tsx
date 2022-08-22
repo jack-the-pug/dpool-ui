@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MaterialSymbolsAdd } from '../../components/icon'
 import { usePageClose } from '../../hooks/usePageClose'
 
-import { BigNumber, constants, utils } from 'ethers'
+import { BigNumber, constants, ethers, utils } from 'ethers'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import {
   PoolRow,
@@ -30,6 +30,8 @@ import {
   parsedNumberByDecimal,
 } from '../../utils/number'
 import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
+import { Provider } from 'urql'
+import { useWeb3React } from '@web3-react/core'
 
 export type TPoolRow = PoolRow & {
   key?: number | string
@@ -440,7 +442,7 @@ export default function PoolsList() {
 
   useEffect(() => {
     setDPoolFactoryVisible(() => !dPoolAddress)
-  }, [dPoolAddress])
+  }, [dPoolAddress, isOwner])
 
   useEffect(() => {
     if (!isOwner) {
@@ -470,6 +472,11 @@ export default function PoolsList() {
     if (typeof callDataCheck !== 'boolean') return
     setConfirmVisible(true)
   }, [callDataCheck])
+
+  const onDistributeSuccess = useCallback(() => {
+    setPoolList([createPoolEmptyItem()])
+    setTableHeaderInputList([])
+  }, [])
 
   return dPoolFactoryVisible ? (
     <DPoolFactory />
@@ -609,6 +616,7 @@ export default function PoolsList() {
           isTokenBalanceEnough={isTokenBalanceEnough}
           dPoolAddress={dPoolAddress}
           distributionType={poolConfig.distributionType}
+          onDistributeSuccess={onDistributeSuccess}
         />
       ) : null}
     </div>

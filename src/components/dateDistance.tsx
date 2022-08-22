@@ -25,7 +25,7 @@ export function DateDistance(props: { date: Date }) {
           arrowClassName="popover-arrow"
         >
           <div className="bg-black text-gray-200 opacity-70 px-2 py-1 text-xs rounded-sm">
-            {format(date, 'Pp')}
+            {format(date, 'P kk:mm:ss')}
           </div>
         </ArrowContainer>
       )}
@@ -33,10 +33,9 @@ export function DateDistance(props: { date: Date }) {
       <div
         onMouseEnter={() => setShowFullDate(true)}
         onMouseLeave={() => setShowFullDate(false)}
-        className="cursor-pointer"
+        className="cursor-pointer ml-1"
       >
-        <span className="mx-1">{distance}</span>
-        ago
+        {distance}
       </div>
     </Popover>
   )

@@ -1,5 +1,10 @@
 import { BigNumber } from 'ethers'
 
+export enum ChainId {
+  RinkeBy = 4,
+  Polygon = 137,
+  Mumbai = 800001,
+}
 export interface PoolRow {
   address: string
   userInputAmount: string

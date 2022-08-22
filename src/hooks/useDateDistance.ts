@@ -5,12 +5,13 @@ export function useDateDistance(date: Date | undefined) {
   const [distance, setDistance] = useState<string>('')
   useEffect(() => {
     if (!date) return
-    setDistance(formatDistanceToNow(date, { includeSeconds: true }))
-  }, [])
-  useEffect(() => {
-    if (!date) return
+    setDistance(
+      formatDistanceToNow(date, { includeSeconds: true, addSuffix: true })
+    )
     const timer = setInterval(() => {
-      setDistance(() => formatDistanceToNow(date, { includeSeconds: true }))
+      setDistance(() =>
+        formatDistanceToNow(date, { includeSeconds: true, addSuffix: true })
+      )
       const ms = Date.now() - date.getTime()
       if (ms > 1000 * 60 * 60) {
         clearInterval(timer)

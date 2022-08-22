@@ -1,5 +1,6 @@
 import type { AddEthereumChainParameter } from '@web3-react/types'
 import { constants } from 'ethers'
+import { ChainId } from './type'
 
 export interface Chain {
   chainId: number
@@ -9,6 +10,7 @@ export interface Chain {
   dPoolFactoryAddress: string
   scan: string
   urls: string[]
+  isTestNet: boolean
   graphUrl?: string
 }
 
@@ -18,12 +20,13 @@ interface Chains {
 
 const Mainnet: Chain = {
   chainId: 1,
-  name: 'Ethereum Mainnet',
+  name: 'Ethereum',
   symbol: 'ETH',
   decimals: 18,
   dPoolFactoryAddress: constants.AddressZero,
   scan: 'https://etherscan.io/tx/',
   urls: [],
+  isTestNet: false,
 }
 
 const Polygon: Chain = {
@@ -37,7 +40,11 @@ const Polygon: Chain = {
     'https://rpc-mainnet.matic.network',
     'https://matic-mainnet.chainstacklabs.com',
   ],
+  graphUrl:
+    'https://api.thegraph.com/subgraphs/name/socemtzmdrmndfg/dpoolpolygon',
+  isTestNet: false,
 }
+
 const Mumbai: Chain = {
   chainId: 80001,
   name: 'Mumbai',
@@ -49,6 +56,7 @@ const Mumbai: Chain = {
     'https://polygontestapi.terminet.io/rpc',
     'https://rpc.ankr.com/polygon_mumbai',
   ],
+  isTestNet: true,
 }
 
 const RinkeBy: Chain = {
@@ -59,16 +67,17 @@ const RinkeBy: Chain = {
   dPoolFactoryAddress: '0x43677d1e464EF3121B4Ea4Ff89133f71e05238e1',
   scan: 'https://rinkeby.etherscan.io',
   urls: ['https://rpc.ankr.com/eth_rinkeby'],
-  graphUrl: 'https://api.studio.thegraph.com/query/32849/dpool/v0.0.1',
+  graphUrl:
+    'https://api.thegraph.com/subgraphs/name/socemtzmdrmndfg/dpoolrinkeby',
+  isTestNet: true,
 }
 
 export const chains: Chains = {
-  1: Mainnet,
+  // 1: Mainnet,
   137: Polygon,
   4: RinkeBy,
   80001: Mumbai,
 }
-
 export function getAddChainParameters(
   chainId: number
 ): AddEthereumChainParameter | number {
@@ -85,4 +94,28 @@ export function getAddChainParameters(
     rpcUrls: chainInformation.urls,
     blockExplorerUrls: [chainInformation.scan],
   }
+}
+
+export const API_LIST: {
+  [key in ChainId]: {
+    key: string
+    url: string
+  }
+} = {
+  [ChainId.Polygon]: {
+    key: import.meta.env.VITE_POLYGON_SCAN_KEY,
+    url: 'https://api.polygonscan.com',
+  },
+  [ChainId.Mumbai]: {
+    key: import.meta.env.VITE_POLYGON_SCAN_KEY,
+    url: 'https://api-testnet.polygonscan.com',
+  },
+  [ChainId.RinkeBy]: {
+    key: import.meta.env.VITE_ETHEREUM_SCAN_KEY,
+    url: 'https://api-rinkeby.etherscan.io',
+  },
+  // [ChainId.Ethereum]: {
+  //   key: import.meta.env.VITE_ETHEREUM_SCAN_KEY,
+  //   url: 'https://api.etherscan.io',
+  // },
 }

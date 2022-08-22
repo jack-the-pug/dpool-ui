@@ -174,6 +174,8 @@ export function RenderClaim(props: ClaimProps) {
 
     if (poolMeta.state === PoolState.Initialized) return <div>Wait Fund</div>
     if (shouldClaimAmount.eq(0) || claimedTx) return <div>Received</div>
+    if (poolMeta.state === PoolState.Closed && shouldClaimAmount.gt(0))
+      return <div>NULL</div>
     if (startTime === 2 ** 48 - 1) return <div>Wait Distribute</div>
     if (nowTime < startTime) return <div>Not Started</div>
     if (nowTime >= deadline) return <div>Expired</div>
