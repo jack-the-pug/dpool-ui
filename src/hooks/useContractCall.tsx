@@ -1,11 +1,12 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { Contract, ContractReceipt, ethers } from 'ethers'
 import { toast } from 'react-toastify'
 import { DPoolEvent } from '../type'
 import DPoolABI from '../abis/dPool.json'
-import { useWeb3React } from '@web3-react/core'
 import { useDPoolContract } from './useContract'
 import { TranSactionHash } from '../components/hash'
+import { useWeb3React } from '@web3-react/core'
+import { chains } from '../constants'
 
 interface CallFailed {
   success: false
@@ -20,11 +21,11 @@ type CallResult = CallFailed | CallSuccess
 
 const dPoolInterface = new ethers.utils.Interface(DPoolABI)
 export function useCallContract(contract: Contract | undefined) {
-  const { provider } = useWeb3React()
+  const { chainId } = useWeb3React()
   return useCallback(
     async (method: string, params: any[]): Promise<CallResult> => {
-      console.log('call params', params)
-      if (!contract || !provider)
+      console.log('call contract params', params)
+      if (!contract || !chainId || !chains[chainId])
         return {
           success: false,
           errMsg: 'contract not found',
@@ -44,8 +45,9 @@ export function useCallContract(contract: Contract | undefined) {
           </div>,
           { autoClose: false }
         )
-        // wait rpc node sync
-        await request.wait(5)
+
+        await request.wait(chains[chainId].isTestNet ? 2 : 5)
+
         return {
           success: true,
           data: response,
@@ -60,7 +62,7 @@ export function useCallContract(contract: Contract | undefined) {
         }
       }
     },
-    [contract, provider]
+    [contract, chainId]
   )
 }
 

@@ -125,6 +125,7 @@ export default function TokenSelect(props: TTokenSelectProps) {
                     className="transition-all duration-300 flex flex-col ease-in-out rounded-md cursor-pointer p-2 hover:mx-2 hover:scale-110  hover:bg-gray-100"
                   >
                     <div> {token.symbol}</div>
+
                     {BigNumber.from(token.address).eq(0) ? null : (
                       <span className="text-gray-500 italic  text-xs">
                         {token.address}

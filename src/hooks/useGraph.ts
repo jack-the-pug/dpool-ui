@@ -15,7 +15,7 @@ const CreatedDPoolQuery = `
     }
   }
 `
-interface CreatedDPool {
+export interface CreatedDPool {
   id: string
   creator: string
   dPoolAddress: string
@@ -29,7 +29,7 @@ export function useGraph() {
   const [createdDPool, setCreatedDPool] = useState<CreatedDPool[]>([])
 
   const url = useMemo(() => {
-    if (!chainId) return
+    if (!chainId || !chains[chainId]) return
     return chains[chainId].graphUrl
   }, [chainId])
   const graphClient = useMemo(() => {
@@ -59,7 +59,7 @@ export function useGraph() {
       )
       setCreatedDPool(typeRes)
     })
-  }, [getCreatedDPool, graphClient])
+  }, [getCreatedDPool])
   const getCreatedDPoolEventByAddress = useCallback(
     (dPoolAddress: string) =>
       createdDPool.find(
@@ -68,6 +68,5 @@ export function useGraph() {
       ),
     [createdDPool]
   )
-
   return { getCreatedDPoolEventByAddress }
 }

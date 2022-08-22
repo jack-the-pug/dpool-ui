@@ -1,6 +1,6 @@
 import { BigNumber, constants, Contract } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { chains } from '../constants'
 import { TokenMeta as TTokenMeta } from '../type'
 import { hooks as metaMaskHooks } from '../connectors/metaMask'
@@ -53,7 +53,7 @@ export default function useTokenMeta() {
   )
   const getToken = useCallback(
     async (address: string): Promise<TTokenMeta | undefined> => {
-      if (!chainId) return
+      if (!chainId || !chains[chainId]) return
       if (BigNumber.from(address).eq(0)) {
         const nativeToken: TTokenMeta = {
           address: constants.AddressZero,

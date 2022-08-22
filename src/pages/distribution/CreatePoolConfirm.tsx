@@ -45,6 +45,7 @@ interface CreatePoolConfirmProps {
   callData: readonly PoolCreateCallData[]
   dPoolAddress: string
   distributionType: DistributionType
+  onDistributeSuccess: Function
 }
 
 const { useAccount, useChainId } = metaMaskHooks
@@ -59,6 +60,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     tokenBalanceList,
     isTokenBalanceEnough,
     dPoolAddress,
+    onDistributeSuccess,
   } = props
   const chainId = useChainId()
   const account = useAccount()
@@ -349,6 +351,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     if (ids.length) {
       setPoolIds(ids)
     }
+
     setCreatePoolState(ActionState.SUCCESS)
   }, [createPoolOption, callDPool])
   useEffect(() => {
@@ -374,7 +377,11 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     if (createPoolState !== ActionState.ING) {
       setVisible(false)
     }
-  }, [createPoolState, setVisible])
+    // if success. clear table
+    if (createPoolState === ActionState.SUCCESS) {
+      onDistributeSuccess()
+    }
+  }, [createPoolState, setVisible, onDistributeSuccess])
 
   const onTokensApproved = useCallback((state: ApproveState[]) => {
     setIsTokensApproved(true)
