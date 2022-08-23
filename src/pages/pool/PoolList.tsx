@@ -216,7 +216,7 @@ export function PoolDetailList() {
             (e) => e.name === DPoolEvent.Distributed
           )}
           claimEventList={eventMetaDataList.filter(
-            (e) => e.name === DPoolEvent.Claimed
+            (e) => e.name === DPoolEvent.Claimed && e.poolId.toString() === id
           )}
           getPoolEvent={getPoolEvents}
         />
