@@ -45,8 +45,8 @@ export function useCallContract(contract: Contract | undefined) {
           </div>,
           { autoClose: false }
         )
-
         await request.wait(chains[chainId].isTestNet ? 2 : 6)
+
 
         return {
           success: true,

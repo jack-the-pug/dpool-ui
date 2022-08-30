@@ -228,6 +228,7 @@ export function PoolDetailList() {
               e.name === DPoolEvent.Claimed &&
               e.poolId.toString() === id.toString()
           )}
+  
           getPoolEvent={getPoolEvents}
         />
       ))}
