@@ -8,11 +8,9 @@ import { formatCurrencyAmount } from '../../utils/number'
 import { Pool } from './PoolDetail'
 import { useCallDPoolContract } from '../../hooks/useContractCall'
 import { Button } from '../../components/button'
-import { format } from 'date-fns'
 import { TranSactionHash } from '../../components/hash'
 import { MdiArrowTopRight } from '../../components/icon'
 import { ActionEvent } from './PoolList'
-import { useDateDistance } from '../../hooks/useDateDistance'
 import { DateDistance } from '../../components/dateDistance'
 import { useDPoolContract } from '../../hooks/useContract'
 
@@ -140,7 +138,7 @@ export function RenderClaim(props: ClaimProps) {
       setClaimState(ActionState.SUCCESS)
       getPoolEvent()
       // last one
-      if (poolMeta.totalAmount.sub(claimer.amount).eq(0)) {
+      if (poolMeta.totalAmount.sub(poolMeta.claimedAmount).eq(claimer.amount)) {
         getPoolDetail()
       }
     }
@@ -161,14 +159,15 @@ export function RenderClaim(props: ClaimProps) {
     const isClaimer = claimer.address.toLowerCase() === account?.toLowerCase()
     if (claimEvent)
       return (
-        <div className="flex">
+        <div className="flex items-center">
+          <span className="mr-1"> Claim</span>
+          <DateDistance date={new Date(claimEvent.timestamp * 1000)} />.
           <TranSactionHash
             hash={claimEvent.transactionHash}
-            className="text-gray-400 flex items-center mr-2"
+            className="text-gray-400 flex items-center ml-2"
           >
             TX <MdiArrowTopRight />
           </TranSactionHash>
-          <DateDistance date={new Date(claimEvent.timestamp * 1000)} />
         </div>
       )
 

@@ -24,7 +24,7 @@ export default function useTokenMeta() {
     async (tokenAddress: string, address = account) => {
       if (!address || !provider) return BigNumber.from(0)
       if (BigNumber.from(tokenAddress).eq(0)) {
-        return provider.getBalance(address)
+        return await provider.getBalance(address)
       }
       const tokenContract = getERC20TokenContract(tokenAddress)!
       return await tokenContract.balanceOf(address)

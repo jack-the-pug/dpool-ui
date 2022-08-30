@@ -373,14 +373,14 @@ export default function PoolsList() {
     const startTime = callData[PoolCreator.StartTime]
     const endTime = callData[PoolCreator.EndTime]
     if (distributionType === DistributionType.Pull) {
-      if (endTime <= startTime) return 'end time must be after the start time '
+      if (endTime <= startTime) return 'End time must be after the start time '
       const nowTime = Math.round(Date.now() / 1000)
-      if (nowTime >= startTime) return 'start time must in future'
+      if (nowTime >= startTime) return 'Start time must in future'
     }
-    if (!claimer.length || !amounts.length) return 'no claimers'
-    if (isFundNow && !isTokenBalanceEnough) return 'balance not enough'
+    if (!claimer.length || !amounts.length) return 'No claimers'
+    if (isFundNow && !isTokenBalanceEnough) return 'Insufficient balance'
     for (let i = 0; i < parsedTokenAmountsTotal.length; i++) {
-      if (parsedTokenAmountsTotal[0].eq(0)) return 'total amount can not be 0'
+      if (parsedTokenAmountsTotal[0].eq(0)) return 'Total amount can not be 0'
     }
     return true
   }, [createPoolCallData, poolConfig, isOwner, isTokenBalanceEnough])

@@ -1,5 +1,5 @@
 import { useWeb3React } from '@web3-react/core'
-import { BigNumber, constants, Contract } from 'ethers'
+import { BigNumber, constants } from 'ethers'
 import {
   defaultAbiCoder,
   hexlify,
@@ -8,8 +8,7 @@ import {
   splitSignature,
   toUtf8Bytes,
 } from 'ethers/lib/utils'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import EIP2612 from '../abis/eip2612.json'
+import { useCallback, useEffect, useState } from 'react'
 import { useEIP2612Contract } from './useContract'
 
 export enum PermitType {
@@ -195,7 +194,7 @@ export function useERC20Permit(tokenAddress: string) {
         return await eip2612TokenContract['getDomainSeparator']()
       } catch {
         try {
-          // eg. sushi 1inch
+          // eg. polygon sushi 1Inch
           return await eip2612TokenContract['getDomainSeperator']()
         } catch {
           return
@@ -328,8 +327,7 @@ export function useERC20Permit(tokenAddress: string) {
         !account ||
         !chainId ||
         !permitInfo ||
-        nonce === undefined ||
-        !eip2612TokenContract
+        nonce === undefined
       )
         return null
       const signatureDeadline = Math.floor(Date.now() / 1000) + 20 * 60

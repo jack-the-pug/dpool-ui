@@ -17,6 +17,7 @@ import { DistributeState } from './DistributeState'
 import { ActionEvent } from './PoolList'
 import { PoolEvent } from './PoolEvent'
 import { useDPoolContract } from '../../hooks/useContract'
+import { AddressLink } from '../../components/hash'
 
 export type Pool = BasePool & {
   state: PoolState
@@ -175,7 +176,14 @@ export function PoolDetail(props: PoolDetailProps) {
               <td>Index</td>
               <td className="py-3">Address</td>
               <td>
-                Amount/<span>{tokenMeta?.symbol}</span>
+                Amount/
+                {tokenMeta && (
+                  <AddressLink
+                    address={tokenMeta?.address}
+                    name={tokenMeta?.symbol}
+                    className="  text-gray-600"
+                  />
+                )}
               </td>
               <td>State</td>
             </tr>
