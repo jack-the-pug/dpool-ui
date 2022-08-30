@@ -21,7 +21,7 @@ export function Button(props: ButtonProps) {
       className={`w-full flex justify-center items-center border  rounded-md whitespace-nowrap   px-2 py-1 
       ${
         disable || loading
-          ? 'border-gray-500 text-gray-500 cursor-not-allowed'
+          ? 'border-gray-400 text-gray-400 cursor-not-allowed'
           : 'cursor-pointer  border-black text-black hover:text-green-500 hover:border-green-500'
       }
       ${loading && 'cursor-wait'}

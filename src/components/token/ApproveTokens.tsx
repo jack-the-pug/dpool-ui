@@ -157,7 +157,7 @@ export function ApproveToken(props: ApproveTokenProps) {
 
   if (isApproved || BigNumber.from(token).eq(0)) return null
   return (
-    <div className="w-full rounded-lg cursor-pointer flex justify-between items-center bg-neutral-200 px-2 py-1">
+    <div className="w-full rounded-lg cursor-pointer flex justify-between items-center bg-neutral-200 px-1 py-1">
       <div className="text-xs text-gray-500 ">
         Allow the <AddressLink address={dPoolAddress} name="dPool" /> to use
         your{' '}
@@ -183,13 +183,13 @@ export function ApproveToken(props: ApproveTokenProps) {
         )}
       </div>
       {approveState === ActionState.ING ? (
-        <div className="bg-white px-2 rounded-lg ml-1 text-lg flex items-center">
+        <div className="rounded-lg ml-1 text py-1 px-2 flex items-center bg-green-500 text-white w-28 justify-center">
           <EosIconsBubbleLoading className="mr-1" /> Approve
         </div>
       ) : (
         <div
           onClick={isSupportPermit ? handleSign : handleApprove}
-          className="bg-white px-2 rounded-lg ml-1 text-lg"
+          className="rounded-lg ml-1 text py-1 px-2 bg-green-500 text-white w-28 flex justify-center"
         >
           Approve
         </div>

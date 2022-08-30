@@ -154,13 +154,13 @@ export function RenderClaim(props: ClaimProps) {
   ])
 
   const actionCell = useMemo(() => {
-    const { startTime, deadline } = poolMeta
+    const { startTime, deadline, state } = poolMeta
     const nowTime = Date.now() / 1000
     const isClaimer = claimer.address.toLowerCase() === account?.toLowerCase()
     if (claimEvent)
       return (
         <div className="flex items-center">
-          <span className="mr-1"> Claim</span>
+          <span className="mr-1"> Claimed</span>
           <DateDistance date={new Date(claimEvent.timestamp * 1000)} />.
           <TranSactionHash
             hash={claimEvent.transactionHash}
@@ -171,14 +171,19 @@ export function RenderClaim(props: ClaimProps) {
         </div>
       )
 
-    if (poolMeta.state === PoolState.Initialized) return <div>Wait Fund</div>
+    if (state === PoolState.Initialized) return <div>Unfunded</div>
     if (shouldClaimAmount.eq(0) || claimedTx) return <div>Received</div>
-    if (poolMeta.state === PoolState.Closed && shouldClaimAmount.gt(0))
-      return <div>NULL</div>
-    if (startTime === 2 ** 48 - 1) return <div>Wait Distribute</div>
-    if (nowTime < startTime) return <div>Not Started</div>
-    if (nowTime >= deadline) return <div>Expired</div>
-    if (isClaimer && poolMeta.state === PoolState.Funded) {
+
+    if (startTime !== 2 ** 48 - 1) {
+      if (nowTime < startTime) return <div>Not Started</div>
+      if (
+        nowTime >= deadline ||
+        (state === PoolState.Closed && !shouldClaimAmount.eq(0))
+      )
+        return <div>Expired</div>
+    }
+    if (!isClaimer && shouldClaimAmount.gt(0)) return <div>Unclaimed</div>
+    if (isClaimer && state === PoolState.Funded) {
       return (
         <Button
           loading={claimState === ActionState.ING}
@@ -189,7 +194,6 @@ export function RenderClaim(props: ClaimProps) {
         </Button>
       )
     }
-    return 'NULL'
   }, [shouldClaimAmount, poolMeta, claim, claimState, claimEvent, claimedTx])
   return (
     <>
