@@ -1,12 +1,13 @@
 import { useWeb3React } from '@web3-react/core'
 import { BigNumber } from 'ethers'
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { ActionState } from '../../type'
 import { ApproveToken } from '../../components/token/ApproveTokens'
 import { PoolState, DPoolEvent, TokenMeta, PermitCallData } from '../../type'
 import { Pool } from './PoolDetail'
 import { useCallDPoolContract } from '../../hooks/useContractCall'
 import { Button } from '../../components/button'
+import useTokenMeta from '../../hooks/useTokenMeta'
 
 interface FundProps {
   poolMeta: Pool | undefined
@@ -38,10 +39,16 @@ export function Fund(props: FundProps) {
   )
     return null
   const { account } = useWeb3React()
+  const { getTokenBalance } = useTokenMeta()
   const callDPool = useCallDPoolContract(dPoolAddress)
   const distributor = BigNumber.from(poolMeta.distributor)
   const [fundState, setFundState] = useState<ActionState>(ActionState.WAIT)
   const [signatureData, setSignatureData] = useState<PermitCallData>()
+  const [tokenBalance, setTokenBalance] = useState<BigNumber>(BigNumber.from(0))
+
+  useEffect(() => {
+    getTokenBalance(tokenMeta.address).then(setTokenBalance)
+  }, [tokenMeta, getTokenBalance])
 
   const nativeTokenAmount = useMemo(() => {
     if (!BigNumber.from(poolMeta.token).eq(0)) return BigNumber.from(0)
@@ -125,7 +132,7 @@ export function Fund(props: FundProps) {
   )
     return null
   return (
-    <div className="flex w-full items-center justify-end flex-col">
+    <div className="flex w-full  flex-col">
       <ApproveToken
         token={tokenMeta.address}
         approveAmount={poolMeta.totalAmount}
@@ -140,12 +147,15 @@ export function Fund(props: FundProps) {
       />
       <Button
         loading={fundState === ActionState.ING}
-        disable={!isApproved}
+        disable={!isApproved || tokenBalance.lt(poolMeta.totalAmount)}
         onClick={fundPool}
         className="mt-2"
       >
         {distributor.eq(0) ? 'Fund and Distribute' : 'Fund'}
       </Button>
+      {tokenBalance.lt(poolMeta.totalAmount) && (
+        <span className="text-xs text-red-500 my-1">Insufficient balance</span>
+      )}
     </div>
   )
 }
