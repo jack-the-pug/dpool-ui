@@ -204,19 +204,29 @@ export function PoolDetailList() {
           key={id}
           poolId={id}
           createEvent={eventMetaDataList.find(
-            (e) => e.name === DPoolEvent.Created
+            (e) =>
+              e.name === DPoolEvent.Created &&
+              e.poolId.toString() === id.toString()
           )}
           fundEvent={eventMetaDataList.find(
-            (e) => e.name === DPoolEvent.Funded
+            (e) =>
+              e.name === DPoolEvent.Funded &&
+              e.poolId.toString() === id.toString()
           )}
           cancelEvent={eventMetaDataList.find(
-            (e) => e.name === DPoolEvent.Canceled
+            (e) =>
+              e.name === DPoolEvent.Canceled &&
+              e.poolId.toString() === id.toString()
           )}
           distributeEvent={eventMetaDataList.find(
-            (e) => e.name === DPoolEvent.Distributed
+            (e) =>
+              e.name === DPoolEvent.Distributed &&
+              e.poolId.toString() === id.toString()
           )}
           claimEventList={eventMetaDataList.filter(
-            (e) => e.name === DPoolEvent.Claimed && e.poolId.toString() === id
+            (e) =>
+              e.name === DPoolEvent.Claimed &&
+              e.poolId.toString() === id.toString()
           )}
           getPoolEvent={getPoolEvents}
         />

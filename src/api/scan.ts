@@ -10,6 +10,7 @@ export async function getContractTx(
   poolIds?: string[]
 ) {
   const api = API_LIST[chainId]
+  if (!api) return []
   const req = await fetch(
     `${api.url}/api?module=logs&action=getLogs&fromBlock=${startBlock}&toBlock=${endBlock}&address=${contractAddress}&apikey=${api.key}
     `
