@@ -192,10 +192,6 @@ export function PoolDetailList() {
     getPoolEvents()
   }, [getPoolEvents])
 
-  useEffect(() => {
-    console.log('eventMetaDataList', eventMetaDataList)
-  }, [eventMetaDataList])
-
   if (!poolIds.length) return null
   return (
     <div className="flex flex-col gap-20 mb-10">
@@ -228,7 +224,6 @@ export function PoolDetailList() {
               e.name === DPoolEvent.Claimed &&
               e.poolId.toString() === id.toString()
           )}
-  
           getPoolEvent={getPoolEvents}
         />
       ))}

@@ -43,6 +43,8 @@ export function Fund(props: FundProps) {
   const callDPool = useCallDPoolContract(dPoolAddress)
   const distributor = BigNumber.from(poolMeta.distributor)
   const [fundState, setFundState] = useState<ActionState>(ActionState.WAIT)
+  const [fundAndDistributeState, setFundAndDistributeState] =
+    useState<ActionState>(ActionState.WAIT)
   const [signatureData, setSignatureData] = useState<PermitCallData>()
   const [tokenBalance, setTokenBalance] = useState<BigNumber>(BigNumber.from(0))
 
@@ -54,9 +56,8 @@ export function Fund(props: FundProps) {
     if (!BigNumber.from(poolMeta.token).eq(0)) return BigNumber.from(0)
     return poolMeta.totalAmount
   }, [poolMeta])
-
-  const callOption = useMemo(() => {
-    const permitData = signatureData
+  const permitData = useMemo(() => {
+    return signatureData
       ? [
           signatureData.token,
           signatureData.value,
@@ -66,65 +67,68 @@ export function Fund(props: FundProps) {
           signatureData.s,
         ]
       : null
-    // fund and distribute
-    if (distributor.eq(0)) {
-      // with permit
-      return permitData
-        ? {
-            method: 'distributeWithPermit',
-            params: [poolId, permitData],
-            eventName: DPoolEvent.Distributed,
-          }
-        : {
-            method: 'distribute',
-            params: [
-              poolId,
-              {
-                value: nativeTokenAmount,
-              },
-            ],
-            eventName: DPoolEvent.Distributed,
-          }
-    }
-    // only fund
-    else {
-      return permitData
-        ? {
-            method: 'fundWithPermit',
-            params: [poolId, permitData],
-            eventName: DPoolEvent.Funded,
-          }
-        : {
-            method: 'fund',
-            params: [
-              poolId,
-              {
-                value: nativeTokenAmount,
-              },
-            ],
-            eventName: DPoolEvent.Funded,
-          }
-    }
-  }, [distributor, signatureData, poolId, nativeTokenAmount])
-
-  const fundPool = useCallback(async () => {
-    if (!callDPool || !poolId) return
+  }, [signatureData])
+  const fundOnly = useCallback(async () => {
+    if (!callDPool) return
+    const callOption = permitData
+      ? {
+          method: 'fundWithPermit',
+          params: [poolId, permitData],
+          eventName: DPoolEvent.Funded,
+        }
+      : {
+          method: 'fund',
+          params: [
+            poolId,
+            {
+              value: nativeTokenAmount,
+            },
+          ],
+          eventName: DPoolEvent.Funded,
+        }
     setFundState(ActionState.ING)
     const result = await callDPool(
       callOption.method,
       callOption.params,
       callOption.eventName
     )
-    if (!result.success) {
-      setFundState(ActionState.FAILED)
-      return
-    }
+    if (!result.success) return setFundState(ActionState.FAILED)
     setFundState(ActionState.SUCCESS)
     if (result.data.logs.length) {
       getPoolEvent()
       getPoolDetail()
     }
-  }, [callOption, callDPool])
+  }, [signatureData, poolId, nativeTokenAmount, permitData, callDPool])
+  const fundAndDistribute = useCallback(async () => {
+    const callOption = permitData
+      ? {
+          method: 'distributeWithPermit',
+          params: [poolId, permitData],
+          eventName: DPoolEvent.Distributed,
+        }
+      : {
+          method: 'distribute',
+          params: [
+            poolId,
+            {
+              value: nativeTokenAmount,
+            },
+          ],
+          eventName: DPoolEvent.Distributed,
+        }
+    setFundAndDistributeState(ActionState.ING)
+    const result = await callDPool(
+      callOption.method,
+      callOption.params,
+      callOption.eventName
+    )
+    if (!result.success) return setFundAndDistributeState(ActionState.FAILED)
+    setFundAndDistributeState(ActionState.SUCCESS)
+    if (result.data.logs.length) {
+      getPoolEvent()
+      getPoolDetail()
+    }
+  }, [permitData, poolId, nativeTokenAmount])
 
   if (
     !distributor.eq(0) &&
@@ -145,14 +149,32 @@ export function Fund(props: FundProps) {
         }}
         selectClass="bg-neutral-200"
       />
-      <Button
-        loading={fundState === ActionState.ING}
-        disable={!isApproved || tokenBalance.lt(poolMeta.totalAmount)}
-        onClick={fundPool}
-        className="mt-2"
-      >
-        {distributor.eq(0) ? 'Fund and Distribute' : 'Fund'}
-      </Button>
+      <div className="flex items-center mt-2 gap-4">
+        <Button
+          loading={fundState === ActionState.ING}
+          disable={
+            !isApproved ||
+            tokenBalance.lt(poolMeta.totalAmount) ||
+            fundAndDistributeState === ActionState.ING
+          }
+          onClick={fundOnly}
+        >
+          {distributor.eq(0) ? 'Fund only' : 'Fund'}
+        </Button>
+        {distributor.eq(0) && (
+          <Button
+            loading={fundAndDistributeState === ActionState.ING}
+            disable={
+              !isApproved ||
+              tokenBalance.lt(poolMeta.totalAmount) ||
+              fundState === ActionState.ING
+            }
+            onClick={fundAndDistribute}
+          >
+            Fund and Distribute
+          </Button>
+        )}
+      </div>
       {tokenBalance.lt(poolMeta.totalAmount) && (
         <span className="text-xs text-red-500 my-1">Insufficient balance</span>
       )}

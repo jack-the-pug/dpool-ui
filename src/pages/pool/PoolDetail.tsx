@@ -85,6 +85,7 @@ export function PoolDetail(props: PoolDetailProps) {
     setIsLoading(true)
     try {
       const poolRes: GetPoolRes = await dPoolContract.getPoolById(poolId)
+      console.log('poolRes', poolRes[0])
       const {
         amounts,
         claimedAmount,

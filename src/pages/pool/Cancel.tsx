@@ -47,7 +47,7 @@ export function Cancel(props: CancelProps) {
   }
   return (
     <div
-      className="flex items-center cursor-pointer text-gray-400 hover:text-red-500 "
+      className="flex items-center cursor-pointer text-red-500 text-xs "
       onClick={cancelState !== ActionState.ING ? cancelPool : undefined}
     >
       {cancelState === ActionState.ING && (
