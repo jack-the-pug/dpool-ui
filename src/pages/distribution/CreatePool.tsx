@@ -279,8 +279,6 @@ export default function PoolsList() {
     const poolAddressMap = new Map()
     _pool.forEach((row) => poolAddressMap.set(row.address.toLowerCase(), row))
     const pool: TPoolRow[] = Array.from(poolAddressMap.values())
-    // dPool contract need sort by address.
-    pool.sort((a, b) => (BigNumber.from(a.address).gt(b.address) ? 1 : -1))
 
     const claimer = pool.map((row) => row.address)
     let [startTime, endTime] = date
@@ -594,11 +592,10 @@ export default function PoolsList() {
           )}
           <button
             onClick={typeof callDataCheck === 'boolean' ? onConfirm : undefined}
-            className={`border border-gray-900 px-2 rounded-md hover:bg-gray-100 ${
-              typeof callDataCheck === 'boolean'
-                ? 'text-black'
-                : 'text-gray-500 cursor-not-allowed'
-            }`}
+            className={`border border-gray-900 px-2 rounded-md hover:bg-gray-100 ${typeof callDataCheck === 'boolean'
+              ? 'text-black'
+              : 'text-gray-500 cursor-not-allowed'
+              }`}
           >
             Preview Distributions
           </button>
