@@ -169,6 +169,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     if (!poolMeta) return
 
     const sortedCallData = callData.map((data) => {
+      data = [...data]
       const claimers = data[PoolCreator.Claimers]
       const amounts = data[PoolCreator.Amounts]
       const claimerAmountList = claimers.map((address, index) => ({ address, amount: BigNumber.from(amounts[index]) }))
