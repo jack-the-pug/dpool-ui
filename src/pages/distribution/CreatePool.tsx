@@ -317,7 +317,7 @@ export default function PoolsList() {
       ]
       callDataList.push(callData)
     }
-    return callDataList
+    return callDataList.map((d) => [...d])
   }, [
     poolConfig,
     poolName,
