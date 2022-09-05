@@ -167,16 +167,27 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
 
   const createPoolOption = useMemo(() => {
     if (!poolMeta) return
+
+    const sortedCallData = callData.map((data) => {
+      data = [...data]
+      const claimers = data[PoolCreator.Claimers]
+      const amounts = data[PoolCreator.Amounts]
+      const claimerAmountList = claimers.map((address, index) => ({ address, amount: BigNumber.from(amounts[index]) }))
+      claimerAmountList.sort((a, b) => BigNumber.from(a.address).gt(b.address) ? 1 : -1)
+      data[PoolCreator.Claimers] = claimerAmountList.map(row => row.address)
+      data[PoolCreator.Amounts] = claimerAmountList.map(row => row.amount)
+      return data
+    })
     const permitData = permitCallDataList
       .filter((d) => !!d)
       .map((sign) => {
         const { r, s, v, value, token, deadline } = sign!
         return [token, value, deadline, v, r, s]
       })
-    if (callData.length === 1) {
-      const token = callData[0][PoolCreator.Token]
-      const claimers = callData[0][PoolCreator.Claimers]
-      const amounts = callData[0][PoolCreator.Amounts]
+    if (sortedCallData.length === 1) {
+      const token = sortedCallData[0][PoolCreator.Token]
+      const claimers = sortedCallData[0][PoolCreator.Claimers]
+      const amounts = sortedCallData[0][PoolCreator.Amounts]
       const isEther = BigNumber.from(token).eq(0)
       if (poolMeta.config.isFundNow) {
         if (distributionType === DistributionType.Push) {
@@ -212,7 +223,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
             return {
               method: 'create',
               params: [
-                callData[0],
+                sortedCallData[0],
                 {
                   value: nativeTokenValue,
                 },
@@ -223,13 +234,13 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
             if (permitData.length) {
               return {
                 method: 'createWithPermit',
-                params: [callData[0], permitData[0]],
+                params: [sortedCallData[0], permitData[0]],
                 event: DPoolEvent.Created,
               }
             } else {
               return {
                 method: 'create',
-                params: [callData[0]],
+                params: [sortedCallData[0]],
                 event: DPoolEvent.Created,
               }
             }
@@ -238,7 +249,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       } else {
         return {
           method: 'create',
-          params: [callData[0]],
+          params: [sortedCallData[0]],
           event: DPoolEvent.Created,
         }
       }
@@ -251,14 +262,14 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               params: [
                 [
                   [
-                    callData[0][PoolCreator.Token],
-                    callData[0][PoolCreator.Claimers],
-                    callData[0][PoolCreator.Amounts],
+                    sortedCallData[0][PoolCreator.Token],
+                    sortedCallData[0][PoolCreator.Claimers],
+                    sortedCallData[0][PoolCreator.Amounts],
                   ],
                   [
-                    callData[1][PoolCreator.Token],
-                    callData[1][PoolCreator.Claimers],
-                    callData[1][PoolCreator.Amounts],
+                    sortedCallData[1][PoolCreator.Token],
+                    sortedCallData[1][PoolCreator.Claimers],
+                    sortedCallData[1][PoolCreator.Amounts],
                   ],
                 ],
                 permitData,
@@ -274,14 +285,14 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               params: [
                 [
                   [
-                    callData[0][PoolCreator.Token],
-                    callData[0][PoolCreator.Claimers],
-                    callData[0][PoolCreator.Amounts],
+                    sortedCallData[0][PoolCreator.Token],
+                    sortedCallData[0][PoolCreator.Claimers],
+                    sortedCallData[0][PoolCreator.Amounts],
                   ],
                   [
-                    callData[1][PoolCreator.Token],
-                    callData[1][PoolCreator.Claimers],
-                    callData[1][PoolCreator.Amounts],
+                    sortedCallData[1][PoolCreator.Token],
+                    sortedCallData[1][PoolCreator.Claimers],
+                    sortedCallData[1][PoolCreator.Amounts],
                   ],
                 ],
                 {
@@ -296,7 +307,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
             return {
               method: 'batchCreateWithPermit',
               params: [
-                callData,
+                sortedCallData,
                 permitData,
                 {
                   value: nativeTokenValue,
@@ -308,7 +319,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
             return {
               method: 'batchCreate',
               params: [
-                callData,
+                sortedCallData,
                 {
                   value: nativeTokenValue,
                 },
@@ -320,7 +331,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       } else {
         return {
           method: 'batchCreate',
-          params: [callData],
+          params: [sortedCallData],
           event: DPoolEvent.Created,
         }
       }
@@ -449,12 +460,11 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
             {tokenMetaList.map((tokenMeta, index) => (
               <div className="flex" key={tokenMeta.address}>
                 <div
-                  className={`${
-                    tokenBalanceList[index] &&
+                  className={`${tokenBalanceList[index] &&
                     tokenBalanceList[index].lt(tokenTotalAmounts[index])
-                      ? 'text-red-500'
-                      : ''
-                  }`}
+                    ? 'text-red-500'
+                    : ''
+                    }`}
                 >
                   {formatCurrencyAmount(
                     tokenBalanceList[index] || BigNumber.from(0),
@@ -469,7 +479,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       ) : null}
       <div>
         {BigNumber.from(poolMeta.config.distributor).gt(0) &&
-        poolMeta.config.distributor.toLowerCase() !== account?.toLowerCase() ? (
+          poolMeta.config.distributor.toLowerCase() !== account?.toLowerCase() ? (
           <div className="flex justify-between my-4">
             <div>Distributor:</div>
             <div>{poolMeta.config.distributor}</div>
@@ -513,8 +523,8 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               {distributionType === DistributionType.Pull
                 ? 'Create Pool'
                 : poolMeta!.config.isFundNow
-                ? 'Distribute Now'
-                : 'Create Distribution'}
+                  ? 'Distribute Now'
+                  : 'Create Distribution'}
             </Button>
             <div className="flex justify-center text-gray-500 text-sm my-2">
               <div>Pay {poolMeta.config.isFundNow ? 'Now' : 'Later'}</div>
