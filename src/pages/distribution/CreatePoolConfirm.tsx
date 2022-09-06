@@ -23,7 +23,7 @@ import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
 import { useCallDPoolContract } from '../../hooks/useContractCall'
 import { LogDescription } from 'ethers/lib/utils'
 import { Button } from '../../components/button'
-import { TranSactionHash } from '../../components/hash'
+import { AddressLink, TranSactionHash } from '../../components/hash'
 
 interface PoolMeta {
   name: string
@@ -479,7 +479,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       ) : null}
       <div>
         {BigNumber.from(poolMeta.config.distributor).gt(0) &&
-          poolMeta.config.distributor.toLowerCase() !== account?.toLowerCase() ? (
+        poolMeta.config.distributor.toLowerCase() !== account?.toLowerCase() ? (
           <div className="flex justify-between my-4">
             <div>Distributor:</div>
             <div>{poolMeta.config.distributor}</div>
@@ -523,8 +523,8 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               {distributionType === DistributionType.Pull
                 ? 'Create Pool'
                 : poolMeta!.config.isFundNow
-                  ? 'Distribute Now'
-                  : 'Create Distribution'}
+                ? 'Distribute Now'
+                : 'Create Distribution'}
             </Button>
             <div className="flex justify-center text-gray-500 text-sm my-2">
               <div>Pay {poolMeta.config.isFundNow ? 'Now' : 'Later'}</div>

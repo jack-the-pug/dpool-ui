@@ -8,7 +8,7 @@ import { formatCurrencyAmount } from '../../utils/number'
 import { Pool } from './PoolDetail'
 import { useCallDPoolContract } from '../../hooks/useContractCall'
 import { Button } from '../../components/button'
-import { TranSactionHash } from '../../components/hash'
+import { AddressLink, TranSactionHash } from '../../components/hash'
 import { MdiArrowTopRight } from '../../components/icon'
 import { ActionEvent } from './PoolList'
 import { DateDistance } from '../../components/dateDistance'
@@ -57,7 +57,12 @@ export function DistributeRow(props: ClaimProps) {
         )}
       </td>
       <td className="text-sm">
-        {claimer.address}
+        <AddressLink
+          address={claimer.address}
+          className="text-xs text-gray-500"
+        >
+          {claimer.address}
+        </AddressLink>
         {addressName(claimer.address) ? (
           <span className="text-sm text-gray-500 px-1">
             ({addressName(claimer.address)})

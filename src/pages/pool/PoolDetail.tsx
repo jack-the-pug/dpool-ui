@@ -181,9 +181,10 @@ export function PoolDetail(props: PoolDetailProps) {
                 {tokenMeta && (
                   <AddressLink
                     address={tokenMeta?.address}
-                    name={tokenMeta?.symbol}
                     className="  text-gray-600"
-                  />
+                  >
+                    {tokenMeta?.symbol}
+                  </AddressLink>
                 )}
               </td>
               <td>State</td>
