@@ -53,7 +53,7 @@ export function PoolDetail(props: PoolDetailProps) {
   const { getToken } = useTokenMeta()
   const account = useAccount()
   const chainId = useChainId()
-  const getPoolDetail = useGetPoolDetail(dPoolAddress)
+  const _getPoolDetail = useGetPoolDetail(dPoolAddress)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [isApproved, setIsApproved] = useState<boolean>(false)
 
@@ -78,15 +78,18 @@ export function PoolDetail(props: PoolDetailProps) {
     const tokenAddress = poolMeta.token
     getToken(tokenAddress).then((meta) => meta && setTokenMeta(meta))
   }, [poolMeta, getToken])
+  const getPoolDetail = useCallback(() => {
+    setIsLoading(true)
+    _getPoolDetail(poolId).then(poolDetail => {
+      if (poolDetail) {
+        setPoolMeta(poolDetail)
+      }
+    }).finally(() => setIsLoading(false))
+  }, [_getPoolDetail])
 
   useEffect(() => {
     if (dPoolAddress && poolId && chainId) {
-      setIsLoading(true)
-      getPoolDetail(poolId).then(poolDetail => {
-        if (poolDetail) {
-          setPoolMeta(poolDetail)
-        }
-      }).finally(() => setIsLoading(false))
+      getPoolDetail()
     }
   }, [getPoolDetail, account, poolId, chainId])
 
