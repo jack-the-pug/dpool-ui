@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { Link, useParams } from 'react-router-dom'
-import { DPoolEvent, DPoolLocalStorageMeta, GetPoolRes } from '../../type'
+import { DPoolEvent, DPoolLocalStorageMeta } from '../../type'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import { BigNumber, ethers } from 'ethers'
 import { EosIconsBubbleLoading } from '../../components/icon'
@@ -43,11 +43,11 @@ export default function PoolList() {
 
   const getPoolFromContract = useCallback(() => {
     if (!dPoolContract || !chainId || !dPoolAddress) return
-
     dPoolContract.lastPoolId().then((id: BigNumber) => {
       setPoolIds(() => Array(id.toNumber()).fill(0).map((_, index) => `${index + 1}`).reverse())
     })
   }, [dPoolContract, chainId, dPoolAddress])
+
 
   useEffect(() => {
     setIsLoading(true)

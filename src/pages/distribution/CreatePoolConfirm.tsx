@@ -423,8 +423,8 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         style={{ borderSpacing: '20px' }}
       >
         <thead>
-          <tr className="border-b border-black border-dotted w-full my-2">
-            <td>Address</td>
+          <tr className="border-b border-black border-dotted w-full my-2 bg-gray-100">
+            <td className='py-2'>Address</td>
             {tokenMetaList.map((tokenMeta) => (
               <td>
                 <AddressLink address={tokenMeta.address} className="text-black">
@@ -475,12 +475,11 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               <td className="text-gray-500">Balance:</td>
               {tokenMetaList.map((tokenMeta, index) => (
                 <td
-                  className={`${
-                    tokenBalanceList[index] &&
+                  className={`${tokenBalanceList[index] &&
                     tokenBalanceList[index].lt(tokenTotalAmounts[index])
-                      ? 'text-red-500'
-                      : ''
-                  } py-2`}
+                    ? 'text-red-500'
+                    : ''
+                    } py-2`}
                   key={tokenMeta.address}
                 >
                   {formatCurrencyAmount(
@@ -496,7 +495,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
 
       <div>
         {BigNumber.from(poolMeta.config.distributor).gt(0) &&
-        poolMeta.config.distributor.toLowerCase() !== account?.toLowerCase() ? (
+          poolMeta.config.distributor.toLowerCase() !== account?.toLowerCase() ? (
           <div className="flex justify-between my-4">
             <div>Distributor:</div>
             <div>{poolMeta.config.distributor}</div>
@@ -540,8 +539,8 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               {distributionType === DistributionType.Pull
                 ? 'Create Pool'
                 : poolMeta!.config.isFundNow
-                ? 'Distribute Now'
-                : 'Create Distribution'}
+                  ? 'Distribute Now'
+                  : 'Create Distribution'}
             </Button>
             <div className="flex justify-center text-gray-500 text-sm my-2">
               <div>Pay {poolMeta.config.isFundNow ? 'Now' : 'Later'}</div>
