@@ -75,9 +75,10 @@ export default function useTokenMeta() {
         address,
         chainId: chainId,
       }
+      setToken(token)
       return token
     },
-    [tokens, chainId, getERC20TokenContract]
+    [tokens, chainId, getERC20TokenContract, setToken]
   )
   const tokenList = useMemo<TTokenMeta[]>(() => Object.values(tokens), [tokens])
   return {
