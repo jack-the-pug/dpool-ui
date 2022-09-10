@@ -89,7 +89,7 @@ export function Profile(props: TProfileProps) {
     if (e.code === 'ArrowDown') {
       setHoverSelectAddressIndex(n => (n + 1) % len)
     } else if (e.code === 'ArrowUp') {
-      setHoverSelectAddressIndex(n => (n - 1) % len)
+      setHoverSelectAddressIndex(n => (n - 1) >= 0 ? n - 1 : len - 1)
     } else if (e.code === 'Enter') {
       setAddress(addressBookFiltered[hoverSelectAddressIndex].address)
       setFocusInputNumber(-1)
