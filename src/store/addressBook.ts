@@ -20,7 +20,7 @@ export const deleteBookRow = async (id: string) => {
 }
 
 export const getBook = async () => {
-  const val = await values()
+  const val = (await values()).filter(v => v.address && v.id)
   val.sort((a, b) => a.index - b.index)
   return val
 }

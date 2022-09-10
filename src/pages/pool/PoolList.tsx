@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { DPoolEvent } from '../../type'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import { BigNumber, ethers } from 'ethers'
@@ -12,7 +12,6 @@ import { getContractTx } from '../../api/scan'
 import { useWeb3React } from '@web3-react/core'
 import DPoolABI from '../../abis/dPool.json'
 import { useGetPoolDetail } from '../../hooks/useGetPoolDetail'
-import { DistributeState } from './DistributeState'
 import { PoolSummary } from './Pool'
 
 const dPoolInterface = new ethers.utils.Interface(DPoolABI)

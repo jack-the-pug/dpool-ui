@@ -63,7 +63,6 @@ export interface BasePool {
   name: string
   startTime: number
   deadline: number
-  escrowedAmount: BigNumber
 }
 
 export type GetPoolRes = [BasePool, PoolState]
