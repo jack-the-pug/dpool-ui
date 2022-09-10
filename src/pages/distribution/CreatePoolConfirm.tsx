@@ -461,7 +461,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         </tbody>
         <tfoot>
           <tr className="my-2 border-t border-black border-dotted w-full bg-white">
-            <td className="text-gray-500">
+            <td className="text-gray-500 pl-2">
               Total: {renderUIData.length} Recipient(s)
             </td>
             {tokenTotalAmounts.map((total, index) => (
@@ -496,22 +496,20 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       <div>
         {BigNumber.from(poolMeta.config.distributor).gt(0) &&
           poolMeta.config.distributor.toLowerCase() !== account?.toLowerCase() ? (
-          <div className="flex justify-between my-4">
-            <div>Distributor:</div>
-            <div>{poolMeta.config.distributor}</div>
+          <div className="flex justify-between  px-2 my-2">
+            <div className='text-gray-500'>Distributor:</div>
+            <div> <AddressLink address={poolMeta.config.distributor}>{poolMeta.config.distributor}</AddressLink></div>
           </div>
         ) : null}
         {distributionType === DistributionType.Push ? null : (
-          <div className="flex justify-between my-4">
-            <div>Date Range:</div>
-            <div className="flex flex-col text-sm">
-              <span className="ml-1 text">
-                {format(new Date(poolMeta.config.date[0] * 1000), 'Pp')}
-              </span>
-
-              <span className="ml-1">
-                {format(new Date(poolMeta.config.date[1] * 1000), 'Pp')}
-              </span>
+          <div className="flex flex-col justify-between  px-2">
+            <div className='flex justify-between my-2'>
+              <div className='text-gray-500'>Start:</div>
+              <div> {format(new Date(poolMeta.config.date[0] * 1000), 'Pp')}</div>
+            </div>
+            <div className='flex justify-between my-2'>
+              <div className='text-gray-500'>End:</div>
+              <div> {format(new Date(poolMeta.config.date[1] * 1000), 'Pp')}</div>
             </div>
           </div>
         )}
