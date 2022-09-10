@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { Link, useParams } from 'react-router-dom'
-import { DPoolEvent, DPoolLocalStorageMeta } from '../../type'
+import { DPoolEvent } from '../../type'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import { BigNumber, ethers } from 'ethers'
 import { EosIconsBubbleLoading } from '../../components/icon'
-import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
 import { Pool, PoolDetail } from './PoolDetail'
 import { useDPoolContract } from '../../hooks/useContract'
 import { useGraph } from '../../hooks/useGraph'
@@ -13,6 +12,8 @@ import { getContractTx } from '../../api/scan'
 import { useWeb3React } from '@web3-react/core'
 import DPoolABI from '../../abis/dPool.json'
 import { useGetPoolDetail } from '../../hooks/useGetPoolDetail'
+import { DistributeState } from './DistributeState'
+import { PoolSummary } from './Pool'
 
 const dPoolInterface = new ethers.utils.Interface(DPoolABI)
 const { useChainId } = metaMaskHooks
@@ -24,22 +25,8 @@ export default function PoolList() {
   // local pool meta data in this chain
   const [poolIds, setPoolIds] = useState<string[]>([])
   const [poolMetaList, setPoolMetaList] = useState<Pool[]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  useEffect(() => {
-    if (!dPoolAddress) return
-    const formatPoolList: DPoolLocalStorageMeta[] = JSON.parse(
-      localStorage.getItem(LOCAL_STORAGE_KEY.LOCAL_POOL_META_LIST) || '[]'
-    )
-      .filter((pool: DPoolLocalStorageMeta) => {
-        if (!dPoolAddress) return true
-        return (
-          pool.dPoolAddress.toLowerCase() === dPoolAddress.toLowerCase() &&
-          pool.chainId === chainId
-        )
-      })
-      .reverse()
-    setPoolIds(() => formatPoolList.map(data => data.poolIds).flat())
-  }, [chainId, dPoolAddress, dPoolContract])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+
 
   const getPoolFromContract = useCallback(() => {
     if (!dPoolContract || !chainId || !dPoolAddress) return
@@ -47,7 +34,9 @@ export default function PoolList() {
       setPoolIds(() => Array(id.toNumber()).fill(0).map((_, index) => `${index + 1}`).reverse())
     })
   }, [dPoolContract, chainId, dPoolAddress])
-
+  useEffect(() => {
+    getPoolFromContract()
+  }, [chainId, getPoolFromContract])
 
   useEffect(() => {
     setIsLoading(true)
@@ -58,6 +47,7 @@ export default function PoolList() {
     })
       .finally(() => setIsLoading(false))
   }, [poolIds, getPoolDetail])
+
   if (isLoading) {
     return <EosIconsBubbleLoading width="5em" height="5em" />
   }
@@ -65,21 +55,22 @@ export default function PoolList() {
   return (
     <div className="flex flex-col w-full break-all  flex-1  items-center">
       {poolMetaList.length ? (
-        poolMetaList.map((pool, index) => {
-          return (
-            <Link
-              key={`${pool.poolId}-${index}`}
-              to={pool.poolId}
-
-              className="flex px-4 py-1 hover:bg-gray-100 hover:scale-110 transition-all ease-in-out rounded-sm"
-            >
-              <div className="mr-4 text-gray-500">{index + 1}</div>
-              <div className="flex cursor-pointer">
-                <div className="ml-2">{pool.name}</div>
-              </div>
-            </Link>
-          )
-        })
+        <div className='bg-white px-4 py-2 rounded-lg'>
+          <table>
+            <thead>
+              <tr className='bg-gray-100 '>
+                <td className='py-2'>Name</td>
+                <td><span className='ml-2'>State</span></td>
+                <td>PoolAmount</td>
+                <td>ClaimedAmount</td>
+                <td></td>
+              </tr>
+            </thead>
+            <tbody>
+              {poolMetaList.map((pool) => <PoolSummary pool={pool} key={pool.poolId} />)}
+            </tbody>
+          </table>
+        </div>
       ) : (
         <p>Distributions Not Found</p>
       )}
