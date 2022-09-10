@@ -39,10 +39,10 @@ export default function PoolList() {
 
   useEffect(() => {
     setIsLoading(true)
-    Promise.all(poolIds.map(getPoolDetail)).then(poolMetas => {
-      poolMetas = poolMetas.filter(data => data !== undefined)
+    Promise.all(poolIds.map(getPoolDetail)).then(poolMetaList => {
+      poolMetaList = poolMetaList.filter(data => data !== undefined)
       // @ts-ignore
-      setPoolMetaList(poolMetas)
+      setPoolMetaList(poolMetaList)
     })
       .finally(() => setIsLoading(false))
   }, [poolIds, getPoolDetail])
