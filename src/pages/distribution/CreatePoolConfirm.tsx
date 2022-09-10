@@ -24,6 +24,7 @@ import { useCallDPoolContract } from '../../hooks/useContractCall'
 import { LogDescription } from 'ethers/lib/utils'
 import { Button } from '../../components/button'
 import { AddressLink, TranSactionHash } from '../../components/hash'
+import { EstimateGas } from '../../components/estimateGas'
 
 interface PoolMeta {
   name: string
@@ -367,9 +368,10 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     if (ids.length) {
       setPoolIds(ids)
     }
-
     setCreatePoolState(ActionState.SUCCESS)
   }, [createPoolOption, callDPool])
+
+
   useEffect(() => {
     if (createPoolState === ActionState.SUCCESS) {
       localStorage.removeItem(LOCAL_STORAGE_KEY.DISTRIBUTE_CATCH_DATA)
@@ -540,6 +542,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
                   ? 'Distribute Now'
                   : 'Create Distribution'}
             </Button>
+            {createPoolOption ? <EstimateGas method={createPoolOption.method} arg={createPoolOption.params} /> : null}
             <div className="flex justify-center text-gray-500 text-sm my-2">
               <div>Pay {poolMeta.config.isFundNow ? 'Now' : 'Later'}</div>
             </div>
