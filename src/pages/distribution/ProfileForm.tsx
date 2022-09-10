@@ -97,10 +97,9 @@ export function Profile(props: TProfileProps) {
   }, [focusInputNumber, addressBookFiltered, hoverSelectAddressIndex])
   const renderAddressNode = useCallback((addressMeta: AddressBookRow) => {
     const len = address.length
-    const matchedStr = address
     const notMatchedStr = addressMeta.address.substring(len)
     return <div>
-      {len ? <span className='text-green-500'>{matchedStr}</span> : null}
+      {len ? <span className='text-green-500'>{addressMeta.address.substring(0, len)}</span> : null}
       <span>{notMatchedStr}</span>
       <span className='text-gray-500'>{`(${addressMeta.name})`}</span>
     </div>
