@@ -15,6 +15,7 @@ export interface TokenMeta {
   decimals: number
   address: string
   chainId: number
+  userAdd?: boolean
 }
 
 export enum ActionState {

@@ -47,10 +47,11 @@ export default function TokenSelect(props: TTokenSelectProps) {
   }, [tokenMeta, nativeTokenMeta])
 
   const tokenList = useMemo(() => {
+    const _sourceTokenList = sourceTokenList.filter((token) => token.chainId === chainId && token.userAdd)
     const list = nativeTokenMeta
-      ? [nativeTokenMeta, ...sourceTokenList]
-      : sourceTokenList
-    return list.filter((token) => token.chainId === chainId)
+      ? [nativeTokenMeta, ..._sourceTokenList]
+      : _sourceTokenList
+    return list
   }, [sourceTokenList, nativeTokenMeta, chainId])
 
   const getTokenMeta = useCallback(
@@ -58,15 +59,8 @@ export default function TokenSelect(props: TTokenSelectProps) {
       if (!provider?.provider || !tokenAddress || !chainId) return
       if (!utils.isAddress(tokenAddress)) return
       setLoading(true)
-      // native token
-      if (BigNumber.from(tokenAddress).eq(0) && nativeTokenMeta) {
-        setLoading(false)
-        return nativeTokenMeta
-      }
-      //  erc20 token
       const tokenMeta: TTokenMeta = (await getToken(tokenAddress))!
       setLoading(false)
-
       return tokenMeta
     },
     [chainId, account, nativeTokenMeta, getToken]

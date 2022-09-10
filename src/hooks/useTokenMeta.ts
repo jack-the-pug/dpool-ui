@@ -1,14 +1,13 @@
 import { BigNumber, constants, Contract } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { chains } from '../constants'
-import { TokenMeta as TTokenMeta } from '../type'
+import { TokenMeta } from '../type'
 import { hooks as metaMaskHooks } from '../connectors/metaMask'
 import useSignerOrProvider from './useSignOrProvider'
-import { LOCAL_STORAGE_KEY } from '../store/storeKey'
 import ERC20ABI from '../abis/erc20.json'
-
-type TSetToken = (token: TTokenMeta) => void
+import { get, set, values } from 'idb-keyval'
+type TSetToken = (token: TokenMeta) => void
 
 const { useAccount, useChainId, useProvider } = metaMaskHooks
 export default function useTokenMeta() {
@@ -16,10 +15,15 @@ export default function useTokenMeta() {
   const chainId = useChainId()
   const provider = useProvider()
   const signerOrProvider = useSignerOrProvider()
-  const [tokens, setTokens] = useState(
-    JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY.TOKEN_LIST) || '{}')
-  )
-
+  const [tokens, setTokens] = useState<TokenMeta[]>([])
+  const getTokensByStore = useCallback(async () => {
+    const storeValues = await values()
+    const tokenList = storeValues.filter((data) => data.symbol && data.decimals)
+    setTokens(tokenList)
+  }, [chainId])
+  useEffect(() => {
+    getTokensByStore()
+  }, [getTokensByStore])
   const getTokenBalance = useCallback(
     async (tokenAddress: string, address = account) => {
       if (!address || !provider) return BigNumber.from(0)
@@ -41,46 +45,44 @@ export default function useTokenMeta() {
   )
 
   const setToken = useCallback<TSetToken>(
-    (token: TTokenMeta) => {
-      const _tokens = { ...tokens, [token.address.toLowerCase()]: token }
-      setTokens(_tokens)
-      localStorage.setItem(
-        LOCAL_STORAGE_KEY.TOKEN_LIST,
-        JSON.stringify(_tokens)
-      )
+    (token: TokenMeta) => {
+      const localTokenKey = `token-${chainId}-${token.address.toLowerCase()}`
+      token.userAdd = true
+      set(localTokenKey, token)
+      getTokensByStore()
     },
-    [tokens]
+    [tokens, getTokensByStore]
   )
   const getToken = useCallback(
-    async (address: string): Promise<TTokenMeta | undefined> => {
+    async (address: string): Promise<TokenMeta | undefined> => {
       if (!chainId || !chains[chainId]) return
+      const localTokenKey = `token:${chainId}-${address.toLowerCase()}`
+      let tokenMeta: TokenMeta | undefined = await get(localTokenKey)
+      if (tokenMeta) return tokenMeta
       if (BigNumber.from(address).eq(0)) {
-        const nativeToken: TTokenMeta = {
+        tokenMeta = {
           address: constants.AddressZero,
           decimals: chains[chainId].decimals,
           symbol: chains[chainId].symbol,
           chainId,
         }
-        return nativeToken
+      } else {
+        const tokenContract = getERC20TokenContract(address)!
+        const decimals = await tokenContract.decimals()
+        const symbol = await tokenContract.symbol()
+        tokenMeta = {
+          symbol,
+          decimals,
+          address,
+          chainId: chainId,
+        }
       }
-      if (tokens[address.toLowerCase()]) {
-        return tokens[address.toLowerCase()]
-      }
-      const tokenContract = getERC20TokenContract(address)!
-      const decimals = await tokenContract.decimals()
-      const symbol = await tokenContract.symbol()
-      const token = {
-        symbol,
-        decimals,
-        address,
-        chainId: chainId,
-      }
-      setToken(token)
-      return token
+      set(localTokenKey, tokenMeta)
+      return tokenMeta
     },
-    [tokens, chainId, getERC20TokenContract, setToken]
+    [tokens, chainId, getERC20TokenContract]
   )
-  const tokenList = useMemo<TTokenMeta[]>(() => Object.values(tokens), [tokens])
+  const tokenList = useMemo(() => tokens.filter(token => token.chainId === chainId), [tokens, chainId])
   return {
     tokenList,
     getToken,
