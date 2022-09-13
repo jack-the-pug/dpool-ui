@@ -73,7 +73,9 @@ export default function dPoolFactory() {
       <div className="flex flex-col items-center">
         <p>
           Congrats! Your dedicated dPool contract is deployed:{' '}
-          <AddressLink address={tempDPoolAddress} children={undefined} />
+          <AddressLink address={tempDPoolAddress}>
+            {tempDPoolAddress}
+          </AddressLink>
         </p>
         <div
           onClick={() => {
