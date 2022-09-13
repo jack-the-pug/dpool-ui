@@ -21,7 +21,7 @@ export function TranSactionHash(props: {
     <a
       href={scanUrl}
       target="blank"
-      className={`text-xs text-green-500 ${className}`}
+      className={`text-xs  ${className || 'text-green-500'}`}
     >
       {children || hash}
     </a>
@@ -30,10 +30,10 @@ export function TranSactionHash(props: {
 
 export function AddressLink(props: {
   address: string
-  name?: string
+  children: ReactNode
   className?: string
 }) {
-  const { address, name, className } = props
+  const { address, children, className } = props
   const chainId = useChainId()
   const scanUrl = useMemo(() => {
     if (!chainId || !chains[chainId]) return
@@ -42,8 +42,12 @@ export function AddressLink(props: {
   }, [address, chainId])
 
   return (
-    <a href={scanUrl} target="blank" className={`text-green-500 ${className}`}>
-      {name || address}
+    <a
+      href={scanUrl}
+      target="blank"
+      className={`${className || 'text-green-500 '}`}
+    >
+      {children || address}
     </a>
   )
 }

@@ -27,19 +27,17 @@ export function DistributeState({
       <div className="ml-2 text-gray-500 text-xs flex items-center">
         {stateMsg[state]}
       </div>
-      <div className="relative">
+      {state === PoolState.Funded && <div className="relative">
         <div
           className={`w-2 h-2 rounded-full cursor-pointer`}
           title={title}
           style={{ background: colorClass }}
         ></div>
-        {state === PoolState.Funded ? (
-          <div
-            className="w-2 h-2 absolute left-0 top-0 rounded-full cursor-pointer animate-ping "
-            style={{ background: colorClass }}
-          ></div>
-        ) : null}
-      </div>
+        <div
+          className="w-2 h-2 absolute left-0 top-0 rounded-full cursor-pointer animate-ping "
+          style={{ background: colorClass }}
+        ></div>
+      </div>}
     </div>
   )
 }

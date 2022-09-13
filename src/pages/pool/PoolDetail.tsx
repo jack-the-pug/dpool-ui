@@ -1,7 +1,7 @@
 import { BigNumber, utils } from 'ethers'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
-import { BasePool, GetPoolRes, PoolState, TokenMeta } from '../../type'
+import { BasePool, PoolState, TokenMeta } from '../../type'
 import { EosIconsBubbleLoading } from '../../components/icon'
 import { useNavigate } from 'react-router-dom'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
@@ -16,11 +16,12 @@ import { DateRange } from '../distribution/DateRangePicker'
 import { DistributeState } from './DistributeState'
 import { ActionEvent } from './PoolList'
 import { PoolEvent } from './PoolEvent'
-import { useDPoolContract } from '../../hooks/useContract'
 import { AddressLink } from '../../components/hash'
+import { useGetPoolDetail } from '../../hooks/useGetPoolDetail'
 
 export type Pool = BasePool & {
   state: PoolState
+  poolId: string
 }
 
 const { useAccount, useChainId } = metaMaskHooks
@@ -52,7 +53,7 @@ export function PoolDetail(props: PoolDetailProps) {
   const { getToken } = useTokenMeta()
   const account = useAccount()
   const chainId = useChainId()
-  const dPoolContract = useDPoolContract(dPoolAddress)
+  const _getPoolDetail = useGetPoolDetail(dPoolAddress)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [isApproved, setIsApproved] = useState<boolean>(false)
 
@@ -77,55 +78,20 @@ export function PoolDetail(props: PoolDetailProps) {
     const tokenAddress = poolMeta.token
     getToken(tokenAddress).then((meta) => meta && setTokenMeta(meta))
   }, [poolMeta, getToken])
-
-  // format table data
-  const getPoolDetail = useCallback(async () => {
-    if (!dPoolContract || !poolId) return
-    setPoolMeta(undefined)
+  const getPoolDetail = useCallback(() => {
     setIsLoading(true)
-    try {
-      const poolRes: GetPoolRes = await dPoolContract.getPoolById(poolId)
-      console.log('poolRes', poolRes[0])
-      const {
-        amounts,
-        claimedAmount,
-        claimers,
-        deadline,
-        distributor,
-        totalAmount,
-        name,
-        startTime,
-        escrowedAmount,
-        token,
-      } = poolRes[0]
-      const state = poolRes[1]
-      const _poolMeta = {
-        amounts,
-        claimedAmount,
-        claimers,
-        deadline,
-        distributor,
-        totalAmount,
-        name,
-        startTime,
-        escrowedAmount,
-        token,
-        state,
+    _getPoolDetail(poolId).then(poolDetail => {
+      if (poolDetail) {
+        setPoolMeta(poolDetail)
       }
-      if (startTime !== 0) {
-        setPoolMeta(_poolMeta)
-      }
-      setIsLoading(false)
-    } catch {
-      setIsLoading(false)
-    }
-  }, [dPoolContract, account, poolId, chainId])
+    }).finally(() => setIsLoading(false))
+  }, [_getPoolDetail])
 
   useEffect(() => {
-    if (dPoolAddress && dPoolContract && poolId && chainId) {
+    if (dPoolAddress && poolId && chainId) {
       getPoolDetail()
     }
-  }, [dPoolContract, account, poolId, chainId])
+  }, [getPoolDetail, account, poolId, chainId])
 
   const distributeAgain = useCallback(() => {
     if (!poolMeta || !tokenMeta) return
@@ -181,9 +147,10 @@ export function PoolDetail(props: PoolDetailProps) {
                 {tokenMeta && (
                   <AddressLink
                     address={tokenMeta?.address}
-                    name={tokenMeta?.symbol}
                     className="  text-gray-600"
-                  />
+                  >
+                    {tokenMeta?.symbol}
+                  </AddressLink>
                 )}
               </td>
               <td>State</td>

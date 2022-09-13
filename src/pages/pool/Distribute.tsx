@@ -6,6 +6,7 @@ import { PoolState, DPoolEvent, TokenMeta } from '../../type'
 import { Pool } from './PoolDetail'
 import { useCallDPoolContract } from '../../hooks/useContractCall'
 import { Button } from '../../components/button'
+import { EstimateGas } from '../../components/estimateGas'
 
 interface DistributeProps {
   poolMeta: Pool | undefined
@@ -59,13 +60,16 @@ export function Distribute(props: DistributeProps) {
   if (account.toLowerCase() !== poolMeta.distributor.toLowerCase()) return null
 
   return (
-    <Button
-      disable={!submittable}
-      loading={distributionState === ActionState.ING}
-      onClick={distributePool}
-      className="mt-8"
-    >
-      Distribute
-    </Button>
+    <>
+      <Button
+        disable={!submittable}
+        loading={distributionState === ActionState.ING}
+        onClick={distributePool}
+        className="mt-8"
+      >
+        Distribute
+      </Button>
+      <EstimateGas method="distribute" arg={[poolId]} />
+    </>
   )
 }

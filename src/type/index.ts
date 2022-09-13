@@ -15,6 +15,7 @@ export interface TokenMeta {
   decimals: number
   address: string
   chainId: number
+  userAdd?: boolean
 }
 
 export enum ActionState {
@@ -63,7 +64,6 @@ export interface BasePool {
   name: string
   startTime: number
   deadline: number
-  escrowedAmount: BigNumber
 }
 
 export type GetPoolRes = [BasePool, PoolState]

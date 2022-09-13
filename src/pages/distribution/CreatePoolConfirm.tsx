@@ -23,7 +23,8 @@ import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
 import { useCallDPoolContract } from '../../hooks/useContractCall'
 import { LogDescription } from 'ethers/lib/utils'
 import { Button } from '../../components/button'
-import { TranSactionHash } from '../../components/hash'
+import { AddressLink, TranSactionHash } from '../../components/hash'
+import { EstimateGas } from '../../components/estimateGas'
 
 interface PoolMeta {
   name: string
@@ -172,10 +173,15 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       data = [...data]
       const claimers = data[PoolCreator.Claimers]
       const amounts = data[PoolCreator.Amounts]
-      const claimerAmountList = claimers.map((address, index) => ({ address, amount: BigNumber.from(amounts[index]) }))
-      claimerAmountList.sort((a, b) => BigNumber.from(a.address).gt(b.address) ? 1 : -1)
-      data[PoolCreator.Claimers] = claimerAmountList.map(row => row.address)
-      data[PoolCreator.Amounts] = claimerAmountList.map(row => row.amount)
+      const claimerAmountList = claimers.map((address, index) => ({
+        address,
+        amount: BigNumber.from(amounts[index]),
+      }))
+      claimerAmountList.sort((a, b) =>
+        BigNumber.from(a.address).gt(b.address) ? 1 : -1
+      )
+      data[PoolCreator.Claimers] = claimerAmountList.map((row) => row.address)
+      data[PoolCreator.Amounts] = claimerAmountList.map((row) => row.amount)
       return data
     })
     const permitData = permitCallDataList
@@ -362,9 +368,10 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     if (ids.length) {
       setPoolIds(ids)
     }
-
     setCreatePoolState(ActionState.SUCCESS)
   }, [createPoolOption, callDPool])
+
+
   useEffect(() => {
     if (createPoolState === ActionState.SUCCESS) {
       localStorage.removeItem(LOCAL_STORAGE_KEY.DISTRIBUTE_CATCH_DATA)
@@ -412,14 +419,34 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         <div className="font-medium font-xl">{poolMeta.name}</div>
         <ZondiconsClose onClick={onClosePage} className="cursor-pointer" />
       </h1>
-      <div className="border-b border-black border-dotted w-full my-2"></div>
-      <table className="border-collapse" style={{ borderSpacing: '20px' }}>
+
+      <table
+        className="border-collapse w-full mt-4"
+        style={{ borderSpacing: '20px' }}
+      >
+        <thead>
+          <tr className="border-b border-black border-dotted w-full my-2 bg-gray-100">
+            <td className='py-2'>Address</td>
+            {tokenMetaList.map((tokenMeta) => (
+              <td>
+                <AddressLink address={tokenMeta.address} className="text-black">
+                  {tokenMeta.symbol}
+                </AddressLink>
+              </td>
+            ))}
+          </tr>
+        </thead>
         <tbody className="font-mono">
           {renderUIData.map((row) => (
-            <tr key={row.address} className="my-2">
+            <tr key={row.address} className="my-2 hover:bg-gray-200">
               {' '}
               <td className="py-2">
-                {row.address}{' '}
+                <AddressLink
+                  address={row.address}
+                  className="text-xs text-gray-500"
+                >
+                  {row.address}
+                </AddressLink>{' '}
                 {addressName(row.address) ? (
                   <span className="text-gray-500 italic text-xs">
                     {`(${addressName(row.address)})`}{' '}
@@ -434,68 +461,57 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
             </tr>
           ))}
         </tbody>
-      </table>
-      <div className="border-b border-black border-dotted w-full my-2"></div>
-      <div className="flex justify-between my-2">
-        <div className="flex">
-          Total: <div>{renderUIData.length} Recipient(s)</div>
-        </div>
-        <div className="flex gap-2">
-          {tokenTotalAmounts.map((total, index) => (
-            <div key={tokenMetaList[index].address} className="flex">
-              <div className="text-right flex-1">
+        <tfoot>
+          <tr className="my-2 border-t border-black border-dotted w-full bg-white">
+            <td className="text-gray-500 pl-2">
+              Total: {renderUIData.length} Recipient(s)
+            </td>
+            {tokenTotalAmounts.map((total, index) => (
+              <td key={tokenMetaList[index].address} className="py-2">
                 {formatCurrencyAmount(total, tokenMetaList[index])}
-              </div>
-              <div className="ml-1 text-gray-500">
-                {tokenMetaList[index].symbol}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      {poolMeta.config.isFundNow ? (
-        <div className="flex justify-between my-2">
-          <div>Balance:</div>
-          <div className="flex gap-2">
-            {tokenMetaList.map((tokenMeta, index) => (
-              <div className="flex" key={tokenMeta.address}>
-                <div
+              </td>
+            ))}
+          </tr>
+          {poolMeta.config.isFundNow ? (
+            <tr className="my-2 bg-white">
+              <td className="text-gray-500">Balance:</td>
+              {tokenMetaList.map((tokenMeta, index) => (
+                <td
                   className={`${tokenBalanceList[index] &&
                     tokenBalanceList[index].lt(tokenTotalAmounts[index])
                     ? 'text-red-500'
                     : ''
-                    }`}
+                    } py-2`}
+                  key={tokenMeta.address}
                 >
                   {formatCurrencyAmount(
                     tokenBalanceList[index] || BigNumber.from(0),
                     tokenMeta
                   )}
-                </div>
-                <div className="ml-1 text-gray-500">{tokenMeta.symbol}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
+                </td>
+              ))}
+            </tr>
+          ) : null}
+        </tfoot>
+      </table>
+
       <div>
         {BigNumber.from(poolMeta.config.distributor).gt(0) &&
           poolMeta.config.distributor.toLowerCase() !== account?.toLowerCase() ? (
-          <div className="flex justify-between my-4">
-            <div>Distributor:</div>
-            <div>{poolMeta.config.distributor}</div>
+          <div className="flex justify-between  px-2 my-2">
+            <div className='text-gray-500'>Distributor:</div>
+            <div> <AddressLink address={poolMeta.config.distributor}>{poolMeta.config.distributor}</AddressLink></div>
           </div>
         ) : null}
         {distributionType === DistributionType.Push ? null : (
-          <div className="flex justify-between my-4">
-            <div>Date Range:</div>
-            <div className="flex flex-col text-sm">
-              <span className="ml-1 text">
-                {format(new Date(poolMeta.config.date[0] * 1000), 'Pp')}
-              </span>
-
-              <span className="ml-1">
-                {format(new Date(poolMeta.config.date[1] * 1000), 'Pp')}
-              </span>
+          <div className="flex flex-col justify-between  px-2">
+            <div className='flex justify-between my-2'>
+              <div className='text-gray-500'>Start:</div>
+              <div> {format(new Date(poolMeta.config.date[0] * 1000), 'Pp')}</div>
+            </div>
+            <div className='flex justify-between my-2'>
+              <div className='text-gray-500'>End:</div>
+              <div> {format(new Date(poolMeta.config.date[1] * 1000), 'Pp')}</div>
             </div>
           </div>
         )}
@@ -526,6 +542,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
                   ? 'Distribute Now'
                   : 'Create Distribution'}
             </Button>
+            {createPoolOption ? <EstimateGas method={createPoolOption.method} arg={createPoolOption.params} /> : null}
             <div className="flex justify-center text-gray-500 text-sm my-2">
               <div>Pay {poolMeta.config.isFundNow ? 'Now' : 'Later'}</div>
             </div>

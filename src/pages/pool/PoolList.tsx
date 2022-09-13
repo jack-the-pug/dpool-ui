@@ -1,17 +1,18 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
-import { Link, useParams } from 'react-router-dom'
-import { DPoolEvent, DPoolLocalStorageMeta } from '../../type'
+import { useParams } from 'react-router-dom'
+import { DPoolEvent } from '../../type'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import { BigNumber, ethers } from 'ethers'
 import { EosIconsBubbleLoading } from '../../components/icon'
-import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
-import { PoolDetail } from './PoolDetail'
+import { Pool, PoolDetail } from './PoolDetail'
 import { useDPoolContract } from '../../hooks/useContract'
 import { useGraph } from '../../hooks/useGraph'
 import { getContractTx } from '../../api/scan'
 import { useWeb3React } from '@web3-react/core'
 import DPoolABI from '../../abis/dPool.json'
+import { useGetPoolDetail } from '../../hooks/useGetPoolDetail'
+import { PoolSummary } from './Pool'
 
 const dPoolInterface = new ethers.utils.Interface(DPoolABI)
 const { useChainId } = metaMaskHooks
@@ -19,48 +20,32 @@ export default function PoolList() {
   const chainId = useChainId()
   const { dPoolAddress } = useDPoolAddress()
   const dPoolContract = useDPoolContract(dPoolAddress)
-
+  const getPoolDetail = useGetPoolDetail(dPoolAddress)
   // local pool meta data in this chain
-  const [poolList, setPoolList] = useState<DPoolLocalStorageMeta[]>([])
+  const [poolIds, setPoolIds] = useState<string[]>([])
+  const [poolMetaList, setPoolMetaList] = useState<Pool[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
 
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  useEffect(() => {
-    if (!dPoolAddress) return
-    setIsLoading(true)
-    const formatPoolList: DPoolLocalStorageMeta[] = JSON.parse(
-      localStorage.getItem(LOCAL_STORAGE_KEY.LOCAL_POOL_META_LIST) || '[]'
-    )
-      .filter((pool: DPoolLocalStorageMeta) => {
-        if (!dPoolAddress) return true
-        return (
-          pool.dPoolAddress.toLowerCase() === dPoolAddress.toLowerCase() &&
-          pool.chainId === chainId
-        )
-      })
-      .reverse()
-    setPoolList(formatPoolList)
-    setIsLoading(false)
-  }, [chainId, dPoolAddress, dPoolContract])
 
   const getPoolFromContract = useCallback(() => {
     if (!dPoolContract || !chainId || !dPoolAddress) return
-    setIsLoading(true)
     dPoolContract.lastPoolId().then((id: BigNumber) => {
-      const listInDPoolContract = Array(id.toNumber())
-        .fill(0)
-        .map((_, index) => ({
-          poolIds: [`${index + 1}`],
-          name: `Distribution Pool`,
-          creator: '',
-          chainId,
-          dPoolAddress,
-        }))
-        .reverse()
-
-      setPoolList(listInDPoolContract)
-      setIsLoading(false)
+      setPoolIds(() => Array(id.toNumber()).fill(0).map((_, index) => `${index + 1}`).reverse())
     })
   }, [dPoolContract, chainId, dPoolAddress])
+  useEffect(() => {
+    getPoolFromContract()
+  }, [chainId, getPoolFromContract])
+
+  useEffect(() => {
+    setIsLoading(true)
+    Promise.all(poolIds.map(getPoolDetail)).then(poolMetaList => {
+      poolMetaList = poolMetaList.filter(data => data !== undefined)
+      // @ts-ignore
+      setPoolMetaList(poolMetaList)
+    })
+      .finally(() => setIsLoading(false))
+  }, [poolIds, getPoolDetail])
 
   if (isLoading) {
     return <EosIconsBubbleLoading width="5em" height="5em" />
@@ -68,23 +53,23 @@ export default function PoolList() {
 
   return (
     <div className="flex flex-col w-full break-all  flex-1  items-center">
-      {poolList.length ? (
-        poolList.map((pool, index) => {
-          if (!pool.poolIds) return null
-          const ids = pool.poolIds.join(',')
-          return (
-            <Link
-              key={`${ids}-${index}`}
-              to={ids}
-              className="flex px-4 py-1 hover:bg-gray-100 hover:scale-110 transition-all ease-in-out rounded-sm"
-            >
-              <div className="mr-4 text-gray-500">{index + 1}</div>
-              <div className="flex cursor-pointer">
-                <div className="ml-2">{pool.name}</div>
-              </div>
-            </Link>
-          )
-        })
+      {poolMetaList.length ? (
+        <div className='bg-white px-4 py-2 rounded-lg'>
+          <table>
+            <thead>
+              <tr className='bg-gray-100 '>
+                <td className='py-2'>Name</td>
+                <td><span className='ml-2'>State</span></td>
+                <td>PoolAmount</td>
+                <td>ClaimedAmount</td>
+                <td></td>
+              </tr>
+            </thead>
+            <tbody>
+              {poolMetaList.map((pool) => <PoolSummary pool={pool} key={pool.poolId} />)}
+            </tbody>
+          </table>
+        </div>
       ) : (
         <p>Distributions Not Found</p>
       )}
@@ -116,6 +101,7 @@ export function PoolDetailList() {
 
   const [eventMetaDataList, setEventMetaDataList] = useState<ActionEvent[]>([])
 
+
   const startBlock = useMemo(() => {
     if (!dPoolAddress) return undefined
     return getCreatedDPoolEventByAddress(dPoolAddress)
@@ -130,6 +116,7 @@ export function PoolDetailList() {
       return []
     }
   }, [_poolIds])
+
 
   const getEventByTx = useCallback(
     async (txhash: string): Promise<ActionEvent[]> => {
@@ -151,7 +138,7 @@ export function PoolDetailList() {
         const log = logs[i]!
         events.push({
           name: log.name as DPoolEvent,
-          timestamp: await (
+          timestamp: (
             await provider.getBlock(transactionRes.blockNumber)
           ).timestamp!,
           transactionHash: transactionRes.transactionHash,
@@ -183,7 +170,7 @@ export function PoolDetailList() {
   const getPoolEvents = useCallback(async () => {
     getTxListByScanAPI().then(async (txList) => {
       if (!txList) return
-      const events = await (await Promise.all(txList.map(getEventByTx))).flat()
+      const events = (await Promise.all(txList.map(getEventByTx))).flat()
       setEventMetaDataList(events)
     })
   }, [getTxListByScanAPI, getEventByTx, chainId])

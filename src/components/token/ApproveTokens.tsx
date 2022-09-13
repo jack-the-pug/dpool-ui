@@ -8,6 +8,7 @@ import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { useERC20Permit } from '../../hooks/useERC20Permit'
 import { AddressLink } from '../hash'
 import { EosIconsBubbleLoading } from '../icon'
+import { Button } from '../button'
 
 enum ApproveType {
   LIMIT = 'LIMIT',
@@ -158,8 +159,8 @@ export function ApproveToken(props: ApproveTokenProps) {
   if (isApproved || BigNumber.from(token).eq(0)) return null
   return (
     <div className="w-full rounded-lg cursor-pointer flex justify-between items-center bg-neutral-200 px-1 py-1">
-      <div className="text-xs text-gray-500 ">
-        Allow the <AddressLink address={dPoolAddress} name="dPool" /> to use
+      <div className="text-xs text-gray-500 pl-2">
+        Allow the <AddressLink address={dPoolAddress}>dPool</AddressLink> to use
         your{' '}
         {isSupportPermit ? (
           `${utils.formatUnits(shouldApproveAmount, tokenMeta?.decimals)} ${
@@ -182,18 +183,14 @@ export function ApproveToken(props: ApproveTokenProps) {
           </select>
         )}
       </div>
-      {approveState === ActionState.ING ? (
-        <div className="rounded-lg ml-1 text py-1 px-2 flex items-center bg-green-500 text-white w-28 justify-center">
-          <EosIconsBubbleLoading className="mr-1" /> Approve
-        </div>
-      ) : (
-        <div
-          onClick={isSupportPermit ? handleSign : handleApprove}
-          className="rounded-lg ml-1 text py-1 px-2 bg-green-500 text-white w-28 flex justify-center"
-        >
-          Approve
-        </div>
-      )}
+
+      <Button
+        onClick={isSupportPermit ? handleSign : handleApprove}
+        loading={approveState === ActionState.ING}
+        className="rounded-lg ml-1 text py-1 px-2 bg-green-500 text-white w-28 flex justify-center border-none hover:text-white"
+      >
+        Approve
+      </Button>
     </div>
   )
 }
