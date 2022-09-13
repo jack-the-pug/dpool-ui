@@ -3,17 +3,14 @@ import { isAddress } from 'ethers/lib/utils'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { chains } from '../constants'
 import { TokenMeta } from '../type'
-import { hooks as metaMaskHooks } from '../connectors/metaMask'
 import useSignerOrProvider from './useSignOrProvider'
 import ERC20ABI from '../abis/erc20.json'
 import { get, set, values } from 'idb-keyval'
+import { useWeb3React } from '@web3-react/core'
 type TSetToken = (token: TokenMeta) => void
 
-const { useAccount, useChainId, useProvider } = metaMaskHooks
 export default function useTokenMeta() {
-  const account = useAccount()
-  const chainId = useChainId()
-  const provider = useProvider()
+  const { account, chainId, provider } = useWeb3React()
   const signerOrProvider = useSignerOrProvider()
   const [tokens, setTokens] = useState<TokenMeta[]>([])
   const getTokensByStore = useCallback(async () => {
@@ -82,7 +79,10 @@ export default function useTokenMeta() {
     },
     [tokens, chainId, getERC20TokenContract]
   )
-  const tokenList = useMemo(() => tokens.filter(token => token.chainId === chainId), [tokens, chainId])
+  const tokenList = useMemo(
+    () => tokens.filter((token) => token.chainId === chainId),
+    [tokens, chainId]
+  )
   return {
     tokenList,
     getToken,

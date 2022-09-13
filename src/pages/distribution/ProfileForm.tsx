@@ -57,16 +57,19 @@ export function Profile(props: TProfileProps) {
   const [focusInputNumber, setFocusInputNumber] = useState(-1)
   const addressSelectVisible = useMemo(() => {
     const addressList: string[] = Array.from(addressBookMap.keys())
-    console.log("focusInputNumber", focusInputNumber)
-    return (focusInputNumber === 1 && addressList.some((_address) => _address.startsWith(address.toLowerCase())))
+    return (
+      focusInputNumber === 1 &&
+      addressList.some((_address) => _address.startsWith(address.toLowerCase()))
+    )
   }, [focusInputNumber, addressBookMap, address])
 
   const addressBookFiltered = useMemo(() => {
     const book: AddressBookRow[] = Array.from(addressBookMap.values())
     if (!address) return book
-    return book.filter(addressMeta => addressMeta.id.startsWith(address.toLowerCase()))
+    return book.filter((addressMeta) =>
+      addressMeta.id.startsWith(address.toLowerCase())
+    )
   }, [addressBookMap, address])
-
 
   const onAmountBlur = useCallback(() => {
     setFocusInputNumber(-1)
@@ -83,61 +86,88 @@ export function Profile(props: TProfileProps) {
       return 'Addresses cannot be duplicated'
     return
   }, [address, repeatedAddress, inputAmount])
-  const [hoverSelectAddressIndex, setHoverSelectAddressIndex] = useState<number>(-1)
-  const handleAddressKey = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    const len = addressBookFiltered.length
-    if (e.code === 'ArrowDown') {
-      setHoverSelectAddressIndex(n => (n + 1) % len)
-    } else if (e.code === 'ArrowUp') {
-      setHoverSelectAddressIndex(n => (n - 1) >= 0 ? n - 1 : len - 1)
-    } else if (e.code === 'Enter') {
-      setAddress(addressBookFiltered[hoverSelectAddressIndex].address)
-      setFocusInputNumber(-1)
-    }
-  }, [focusInputNumber, addressBookFiltered, hoverSelectAddressIndex])
-  const renderAddressNode = useCallback((addressMeta: AddressBookRow) => {
-    const len = address.length
-    const notMatchedStr = addressMeta.address.substring(len)
-    return <div>
-      {len ? <span className='text-green-500'>{addressMeta.address.substring(0, len)}</span> : null}
-      <span>{notMatchedStr}</span>
-      <span className='text-gray-500'>{`(${addressMeta.name})`}</span>
-    </div>
-  }, [address])
+  const [hoverSelectAddressIndex, setHoverSelectAddressIndex] =
+    useState<number>(-1)
+  const handleAddressKey = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      const len = addressBookFiltered.length
+      if (e.code === 'ArrowDown') {
+        setHoverSelectAddressIndex((n) => (n + 1) % len)
+      } else if (e.code === 'ArrowUp') {
+        setHoverSelectAddressIndex((n) => (n - 1 >= 0 ? n - 1 : len - 1))
+      } else if (e.code === 'Enter') {
+        setAddress(addressBookFiltered[hoverSelectAddressIndex].address)
+        setFocusInputNumber(-1)
+      }
+    },
+    [focusInputNumber, addressBookFiltered, hoverSelectAddressIndex]
+  )
+  const renderAddressNode = useCallback(
+    (addressMeta: AddressBookRow) => {
+      const len = address.length
+      const notMatchedStr = addressMeta.address.substring(len)
+      return (
+        <div>
+          {len ? (
+            <span className="text-green-500">
+              {addressMeta.address.substring(0, len)}
+            </span>
+          ) : null}
+          <span>{notMatchedStr}</span>
+          <span className="text-gray-500">{`(${addressMeta.name})`}</span>
+        </div>
+      )
+    },
+    [address]
+  )
   return (
     <form className="flex h-12">
       <div className="text-black border border-solid border-r-0 border-b-0  border-gray-400 outline-none  text-center flex justify-center items-center w-10">
         {index + 1}
       </div>
       <div
-        className={`${focusInputNumber === 1 ? 'bg-gray-100' : 'bg-neutral-200'
-          } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-center relative`}
+        className={`${
+          focusInputNumber === 1 ? 'bg-gray-100' : 'bg-neutral-200'
+        } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-center relative`}
         style={{ width: 'calc(24rem + 1px)' }}
       >
-        <div className={`absolute top-10 rounded-md left-2 bg-white z-50 ${addressSelectVisible ? 'visible' : 'invisible'}`}>
-          {addressBookFiltered.map((addressMeta, index) => <div key={addressMeta.address}
-            onMouseEnter={() => setHoverSelectAddressIndex(index)}
-            onMouseLeave={() => setHoverSelectAddressIndex(-1)}
-            className={`text-xs cursor-pointer ${hoverSelectAddressIndex === index && 'bg-gray-100 text-green-500'}  py-4 px-2`}
-            onClick={() => {
-              setAddress(addressMeta.address)
-              setFocusInputNumber(-1)
-            }}
-          >
-            {renderAddressNode(addressMeta)}
-          </div>)}
+        <div
+          className={`absolute top-10 rounded-md left-2 bg-white z-50 ${
+            addressSelectVisible ? 'visible' : 'invisible'
+          }`}
+        >
+          {addressBookFiltered.map((addressMeta, index) => (
+            <div
+              key={addressMeta.address}
+              onMouseEnter={() => setHoverSelectAddressIndex(index)}
+              onMouseLeave={() => setHoverSelectAddressIndex(-1)}
+              className={`text-xs cursor-pointer ${
+                hoverSelectAddressIndex === index &&
+                'bg-gray-100 text-green-500'
+              }  py-4 px-2`}
+              onClick={() => {
+                setAddress(addressMeta.address)
+                setFocusInputNumber(-1)
+              }}
+            >
+              {renderAddressNode(addressMeta)}
+            </div>
+          ))}
         </div>
         <input
-          className={`${focusInputNumber === 1 ? 'bg-gray-100' : 'bg-neutral-200'
-            } outline-none focus:outline-none px-2 bg-neutral-200 text-sm`}
+          className={`${
+            focusInputNumber === 1 ? 'bg-gray-100' : 'bg-neutral-200'
+          } outline-none focus:outline-none px-2 bg-neutral-200 text-sm`}
           placeholder="address"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           onFocus={() => setFocusInputNumber(1)}
-          // when address changed. Then trigger blur 
-          onBlur={() => setTimeout(() => {
-            setFocusInputNumber(-1)
-          }, 50)}
+          // when address changed. Then trigger blur
+          onBlur={() =>
+            setTimeout(() => {
+              setFocusInputNumber(-1)
+            }, 50)
+          }
           onKeyDown={handleAddressKey}
           key={props.profileKey + 'address'}
         />
@@ -159,13 +189,16 @@ export function Profile(props: TProfileProps) {
       </div>
 
       <div
-        className={`${focusInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
-          } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-between items-center px-2  w-80 overflow-hidden`}
+        className={`${
+          focusInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
+        } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-between items-center px-2  w-80 overflow-hidden`}
       >
         <input
-          className={`${focusInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
-            } w-full outline-none :focus:outline-none   bg-neutral-200 items-end ${isPercentMode ? 'h-3/5' : 'h-full'
-            }`}
+          className={`${
+            focusInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
+          } w-full outline-none :focus:outline-none   bg-neutral-200 items-end ${
+            isPercentMode ? 'h-3/5' : 'h-full'
+          }`}
           placeholder="amount"
           key={props.profileKey + 'amount'}
           type="number"
@@ -181,16 +214,16 @@ export function Profile(props: TProfileProps) {
             <div className="text-xs text-gray-500">
               {userInputTotal.gt(0)
                 ? utils
-                  .parseUnits(
-                    parsedNumberByDecimal(
-                      parsed2NumberString(inputAmount),
-                      tokenMetaList[0].decimals
-                    ),
-                    tokenMetaList[0]?.decimals
-                  )
-                  .mul(10000) // Retain two decimal places
-                  .div(userInputTotal)
-                  .toNumber() / 100
+                    .parseUnits(
+                      parsedNumberByDecimal(
+                        parsed2NumberString(inputAmount),
+                        tokenMetaList[0].decimals
+                      ),
+                      tokenMetaList[0]?.decimals
+                    )
+                    .mul(10000) // Retain two decimal places
+                    .div(userInputTotal)
+                    .toNumber() / 100
                 : '0'}
               %
             </div>

@@ -18,13 +18,12 @@ import { ActionEvent } from './PoolList'
 import { PoolEvent } from './PoolEvent'
 import { AddressLink } from '../../components/hash'
 import { useGetPoolDetail } from '../../hooks/useGetPoolDetail'
+import { useWeb3React } from '@web3-react/core'
 
 export type Pool = BasePool & {
   state: PoolState
   poolId: string
 }
-
-const { useAccount, useChainId } = metaMaskHooks
 
 interface PoolDetailProps {
   poolId: string
@@ -51,8 +50,7 @@ export function PoolDetail(props: PoolDetailProps) {
   const navigate = useNavigate()
   const { dPoolAddress, isOwner } = useDPoolAddress()
   const { getToken } = useTokenMeta()
-  const account = useAccount()
-  const chainId = useChainId()
+  const { account, chainId } = useWeb3React()
   const _getPoolDetail = useGetPoolDetail(dPoolAddress)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [isApproved, setIsApproved] = useState<boolean>(false)
@@ -80,11 +78,13 @@ export function PoolDetail(props: PoolDetailProps) {
   }, [poolMeta, getToken])
   const getPoolDetail = useCallback(() => {
     setIsLoading(true)
-    _getPoolDetail(poolId).then(poolDetail => {
-      if (poolDetail) {
-        setPoolMeta(poolDetail)
-      }
-    }).finally(() => setIsLoading(false))
+    _getPoolDetail(poolId)
+      .then((poolDetail) => {
+        if (poolDetail) {
+          setPoolMeta(poolDetail)
+        }
+      })
+      .finally(() => setIsLoading(false))
   }, [_getPoolDetail])
 
   useEffect(() => {
@@ -123,7 +123,7 @@ export function PoolDetail(props: PoolDetailProps) {
         <EosIconsBubbleLoading width="5em" height="5em" />
       </p>
     )
-  if (!account) return <p>Please connect your wallet first</p>
+  // if (!account) return <p>Please connect your wallet first</p>
   if (!poolMeta) return <p>Distribute not found</p>
   return (
     <div className="flex justify-center z-0 transition-all ease-in-out">

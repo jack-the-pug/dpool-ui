@@ -9,6 +9,7 @@ import { useERC20Permit } from '../../hooks/useERC20Permit'
 import { AddressLink } from '../hash'
 import { EosIconsBubbleLoading } from '../icon'
 import { Button } from '../button'
+import { useWeb3React } from '@web3-react/core'
 
 enum ApproveType {
   LIMIT = 'LIMIT',
@@ -19,7 +20,6 @@ export interface ApproveState {
   signatureData: undefined | PermitCallData
 }
 
-const { useChainId } = metaMaskHooks
 export default function ApproveTokens(props: {
   tokens: {
     address: string
@@ -76,7 +76,7 @@ export interface ApproveTokenProps {
   selectClass?: string
 }
 export function ApproveToken(props: ApproveTokenProps) {
-  const chainId = useChainId()
+  const { chainId } = useWeb3React()
   const { token, dPoolAddress, approveAmount, onApproved, selectClass } = props
   const { approveToken, getApprovedAmount } = useApproveToken(dPoolAddress)
   const { getToken } = useTokenMeta()

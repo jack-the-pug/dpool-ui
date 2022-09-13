@@ -5,10 +5,15 @@ import ReactDom from 'react-dom'
 import { MetaMask } from '@web3-react/metamask'
 import { Web3ReactProvider, Web3ReactHooks } from '@web3-react/core'
 import { hooks as metaMaskHooks, metaMask } from './connectors/metaMask'
+import { hooks as networkHooks, network } from './connectors/network'
 import { ToastContainer } from 'react-toastify'
 import { HashRouter } from 'react-router-dom'
 import { RecoilRoot } from 'recoil'
-const connectors: [MetaMask, Web3ReactHooks][] = [[metaMask, metaMaskHooks]]
+import { Network } from '@web3-react/network'
+const connectors: [MetaMask | Network, Web3ReactHooks][] = [
+  [metaMask, metaMaskHooks],
+  [network, networkHooks],
+]
 function App() {
   return (
     <Web3ReactProvider connectors={connectors}>

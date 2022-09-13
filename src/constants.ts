@@ -36,10 +36,7 @@ const Polygon: Chain = {
   decimals: 18,
   dPoolFactoryAddress: '0x43677d1e464EF3121B4Ea4Ff89133f71e05238e1',
   scan: 'https://polygonscan.com',
-  urls: [
-    'https://rpc-mainnet.matic.network',
-    'https://matic-mainnet.chainstacklabs.com',
-  ],
+  urls: ['https://polygon-rpc.com'],
   graphUrl:
     'https://api.thegraph.com/subgraphs/name/socemtzmdrmndfg/dpoolpolygon',
   isTestNet: false,
@@ -119,3 +116,15 @@ export const API_LIST: {
   //   url: 'https://api.etherscan.io',
   // },
 }
+
+export const URLS: { [chainId: number]: string[] } = Object.keys(
+  chains
+).reduce<{ [chainId: number]: string[] }>((accumulator, chainId) => {
+  const validURLs: string[] = chains[Number(chainId)].urls
+
+  if (validURLs.length) {
+    accumulator[Number(chainId)] = validURLs
+  }
+
+  return accumulator
+}, {})
