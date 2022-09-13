@@ -163,11 +163,11 @@ export function Profile(props: TProfileProps) {
           onChange={(e) => setAddress(e.target.value)}
           onFocus={() => setFocusInputNumber(1)}
           // when address changed. Then trigger blur
-          onBlur={() =>
-            setTimeout(() => {
+          onBlur={() => {
+            if (!addressSelectVisible) {
               setFocusInputNumber(-1)
-            }, 50)
-          }
+            }
+          }}
           onKeyDown={handleAddressKey}
           key={props.profileKey + 'address'}
         />
