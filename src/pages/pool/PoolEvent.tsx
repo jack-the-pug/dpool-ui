@@ -24,7 +24,9 @@ export function PoolEvent(props: PoolEventProps) {
       </div>
       <div>
         {'BY '}
-        <AddressLink address={from} className="text-gray-400" />
+        <AddressLink address={from} className="text-gray-400">
+          {from}
+        </AddressLink>
       </div>
     </div>
   )
