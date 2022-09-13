@@ -13,11 +13,11 @@ export default function useDPoolAddress() {
   const dPoolFactory = useDPoolFactoryContract()
   const { chainId, account } = useWeb3React()
   const DP_KEY = useMemo(() => {
-    if (!chainId || !account) return undefined
-    return `${chainId}-${account.toLowerCase()}-${chains[
+    if (!chainId) return undefined
+    return `${chainId}-${chains[
       chainId
     ]?.dPoolFactoryAddress.toLowerCase()}-DPOOL-ADDRESS`
-  }, [account, chainId])
+  }, [chainId])
 
   const urlDPoolAddress = useMemo(() => {
     return searchParams.get('dPoolAddress')
@@ -42,6 +42,10 @@ export default function useDPoolAddress() {
   )
   useEffect(() => {
     if (!urlDPoolAddress && !localStorageDPoolAddress) return
+    if (urlDPoolAddress && isAddress(urlDPoolAddress)) {
+      setDPoolAddress(urlDPoolAddress)
+      DP_KEY && localStorage.setItem(DP_KEY, urlDPoolAddress)
+    }
     if (
       !urlDPoolAddress &&
       localStorageDPoolAddress &&
@@ -49,10 +53,6 @@ export default function useDPoolAddress() {
     ) {
       setDPoolAddress(localStorageDPoolAddress)
       return
-    }
-    if (urlDPoolAddress && isAddress(urlDPoolAddress) && DP_KEY) {
-      localStorage.setItem(DP_KEY, urlDPoolAddress)
-      setDPoolAddress(urlDPoolAddress)
     }
   }, [urlDPoolAddress, localStorageDPoolAddress, DP_KEY, chainId])
 

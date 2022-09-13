@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { useParams } from 'react-router-dom'
 import { DPoolEvent } from '../../type'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
@@ -15,35 +14,42 @@ import { useGetPoolDetail } from '../../hooks/useGetPoolDetail'
 import { PoolSummary } from './Pool'
 
 const dPoolInterface = new ethers.utils.Interface(DPoolABI)
-const { useChainId } = metaMaskHooks
 export default function PoolList() {
-  const chainId = useChainId()
+  const { chainId } = useWeb3React()
   const { dPoolAddress } = useDPoolAddress()
-  const dPoolContract = useDPoolContract(dPoolAddress)
+  const dPoolContract = useDPoolContract(dPoolAddress, true)
   const getPoolDetail = useGetPoolDetail(dPoolAddress)
   // local pool meta data in this chain
   const [poolIds, setPoolIds] = useState<string[]>([])
   const [poolMetaList, setPoolMetaList] = useState<Pool[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
-
-
   const getPoolFromContract = useCallback(() => {
     if (!dPoolContract || !chainId || !dPoolAddress) return
-    dPoolContract.lastPoolId().then((id: BigNumber) => {
-      setPoolIds(() => Array(id.toNumber()).fill(0).map((_, index) => `${index + 1}`).reverse())
-    })
+    setIsLoading(true)
+    dPoolContract
+      .lastPoolId()
+      .then((id: BigNumber) => {
+        setPoolIds(() =>
+          Array(id.toNumber())
+            .fill(0)
+            .map((_, index) => `${index + 1}`)
+            .reverse()
+        )
+      })
+      .finally(() => setIsLoading(false))
   }, [dPoolContract, chainId, dPoolAddress])
   useEffect(() => {
     getPoolFromContract()
-  }, [chainId, getPoolFromContract])
+  }, [getPoolFromContract])
 
   useEffect(() => {
     setIsLoading(true)
-    Promise.all(poolIds.map(getPoolDetail)).then(poolMetaList => {
-      poolMetaList = poolMetaList.filter(data => data !== undefined)
-      // @ts-ignore
-      setPoolMetaList(poolMetaList)
-    })
+    Promise.all(poolIds.map(getPoolDetail))
+      .then((poolMetaList) => {
+        poolMetaList = poolMetaList.filter((data) => data !== undefined)
+        // @ts-ignore
+        setPoolMetaList(poolMetaList)
+      })
       .finally(() => setIsLoading(false))
   }, [poolIds, getPoolDetail])
 
@@ -54,19 +60,23 @@ export default function PoolList() {
   return (
     <div className="flex flex-col w-full break-all  flex-1  items-center">
       {poolMetaList.length ? (
-        <div className='bg-white px-4 py-2 rounded-lg'>
+        <div className="bg-white px-4 py-2 rounded-lg">
           <table>
             <thead>
-              <tr className='bg-gray-100 '>
-                <td className='py-2'>Name</td>
-                <td><span className='ml-2'>State</span></td>
+              <tr className="bg-gray-100 ">
+                <td className="py-2">Name</td>
+                <td>
+                  <span className="ml-2">State</span>
+                </td>
                 <td>PoolAmount</td>
                 <td>ClaimedAmount</td>
                 <td></td>
               </tr>
             </thead>
             <tbody>
-              {poolMetaList.map((pool) => <PoolSummary pool={pool} key={pool.poolId} />)}
+              {poolMetaList.map((pool) => (
+                <PoolSummary pool={pool} key={pool.poolId} />
+              ))}
             </tbody>
           </table>
         </div>
@@ -101,7 +111,6 @@ export function PoolDetailList() {
 
   const [eventMetaDataList, setEventMetaDataList] = useState<ActionEvent[]>([])
 
-
   const startBlock = useMemo(() => {
     if (!dPoolAddress) return undefined
     return getCreatedDPoolEventByAddress(dPoolAddress)
@@ -116,7 +125,6 @@ export function PoolDetailList() {
       return []
     }
   }, [_poolIds])
-
 
   const getEventByTx = useCallback(
     async (txhash: string): Promise<ActionEvent[]> => {
@@ -138,9 +146,8 @@ export function PoolDetailList() {
         const log = logs[i]!
         events.push({
           name: log.name as DPoolEvent,
-          timestamp: (
-            await provider.getBlock(transactionRes.blockNumber)
-          ).timestamp!,
+          timestamp: (await provider.getBlock(transactionRes.blockNumber))
+            .timestamp!,
           transactionHash: transactionRes.transactionHash,
           poolId: log.args.poolId,
           from:

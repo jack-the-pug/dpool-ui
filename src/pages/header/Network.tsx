@@ -1,14 +1,13 @@
 import { useWeb3React } from '@web3-react/core'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { Chain, chains, getAddChainParameters } from '../../constants'
 import { Dialog } from '../../components/dialog'
 import { Network } from '@web3-react/network'
 import { EosIconsBubbleLoading } from '../../components/icon'
 import { toast } from 'react-toastify'
-const { useChainId } = metaMaskHooks
+
 export default function NetworkAction() {
-  const chainId = useChainId()
+  const { chainId } = useWeb3React()
   const [isSwitchChain, setIsSwitchChain] = useState(false)
   const [loading, setLoading] = useState<boolean>(false)
   const chainName = useMemo(() => {

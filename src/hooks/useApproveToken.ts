@@ -2,15 +2,13 @@ import { BigNumber, Contract, ContractReceipt, ethers } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
 import { useCallback } from 'react'
 import useSignerOrProvider from './useSignOrProvider'
-import { hooks as metaMaskHooks } from '../connectors/metaMask'
 import ERC20ABI from '../abis/erc20.json'
 import { toast } from 'react-toastify'
-const { useAccount, useChainId } = metaMaskHooks
+import { useWeb3React } from '@web3-react/core'
 
 type ApproveRes = [false] | [true, string | null]
 export const useApproveToken = (dPoolAddress: string | undefined) => {
-  const account = useAccount()
-  const chainId = useChainId()
+  const { chainId, account } = useWeb3React()
   const signerOrProvider = useSignerOrProvider()
 
   const getERC20TokenContract = useCallback(

@@ -47,7 +47,6 @@ export function useCallContract(contract: Contract | undefined) {
         )
         await request.wait(chains[chainId].isTestNet ? 2 : 6)
 
-
         return {
           success: true,
           data: response,

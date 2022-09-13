@@ -12,8 +12,6 @@ import {
   TokenMeta,
 } from '../../type'
 import { DistributionType, PoolConfig } from './CreatePool'
-import { hooks as metaMaskHooks } from '../../connectors/metaMask'
-import { useNavigate } from 'react-router-dom'
 import ApproveTokens, {
   ApproveState,
 } from '../../components/token/ApproveTokens'
@@ -25,6 +23,8 @@ import { LogDescription } from 'ethers/lib/utils'
 import { Button } from '../../components/button'
 import { AddressLink, TranSactionHash } from '../../components/hash'
 import { EstimateGas } from '../../components/estimateGas'
+import { useWeb3React } from '@web3-react/core'
+import { useNavigate } from 'react-router-dom'
 
 interface PoolMeta {
   name: string
@@ -49,8 +49,6 @@ interface CreatePoolConfirmProps {
   onDistributeSuccess: Function
 }
 
-const { useAccount, useChainId } = metaMaskHooks
-
 export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
   const {
     visible,
@@ -63,8 +61,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     dPoolAddress,
     onDistributeSuccess,
   } = props
-  const chainId = useChainId()
-  const account = useAccount()
+  const { chainId, account } = useWeb3React()
   const navigate = useNavigate()
   const callDPool = useCallDPoolContract(dPoolAddress)
   const [poolIds, setPoolIds] = useState<string[]>([])
@@ -371,7 +368,6 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
     setCreatePoolState(ActionState.SUCCESS)
   }, [createPoolOption, callDPool])
 
-
   useEffect(() => {
     if (createPoolState === ActionState.SUCCESS) {
       localStorage.removeItem(LOCAL_STORAGE_KEY.DISTRIBUTE_CATCH_DATA)
@@ -426,7 +422,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
       >
         <thead>
           <tr className="border-b border-black border-dotted w-full my-2 bg-gray-100">
-            <td className='py-2'>Address</td>
+            <td className="py-2">Address</td>
             {tokenMetaList.map((tokenMeta) => (
               <td>
                 <AddressLink address={tokenMeta.address} className="text-black">
@@ -477,11 +473,12 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               <td className="text-gray-500">Balance:</td>
               {tokenMetaList.map((tokenMeta, index) => (
                 <td
-                  className={`${tokenBalanceList[index] &&
+                  className={`${
+                    tokenBalanceList[index] &&
                     tokenBalanceList[index].lt(tokenTotalAmounts[index])
-                    ? 'text-red-500'
-                    : ''
-                    } py-2`}
+                      ? 'text-red-500'
+                      : ''
+                  } py-2`}
                   key={tokenMeta.address}
                 >
                   {formatCurrencyAmount(
@@ -497,21 +494,32 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
 
       <div>
         {BigNumber.from(poolMeta.config.distributor).gt(0) &&
-          poolMeta.config.distributor.toLowerCase() !== account?.toLowerCase() ? (
+        poolMeta.config.distributor.toLowerCase() !== account?.toLowerCase() ? (
           <div className="flex justify-between  px-2 my-2">
-            <div className='text-gray-500'>Distributor:</div>
-            <div> <AddressLink address={poolMeta.config.distributor}>{poolMeta.config.distributor}</AddressLink></div>
+            <div className="text-gray-500">Distributor:</div>
+            <div>
+              {' '}
+              <AddressLink address={poolMeta.config.distributor}>
+                {poolMeta.config.distributor}
+              </AddressLink>
+            </div>
           </div>
         ) : null}
         {distributionType === DistributionType.Push ? null : (
           <div className="flex flex-col justify-between  px-2">
-            <div className='flex justify-between my-2'>
-              <div className='text-gray-500'>Start:</div>
-              <div> {format(new Date(poolMeta.config.date[0] * 1000), 'Pp')}</div>
+            <div className="flex justify-between my-2">
+              <div className="text-gray-500">Start:</div>
+              <div>
+                {' '}
+                {format(new Date(poolMeta.config.date[0] * 1000), 'Pp')}
+              </div>
             </div>
-            <div className='flex justify-between my-2'>
-              <div className='text-gray-500'>End:</div>
-              <div> {format(new Date(poolMeta.config.date[1] * 1000), 'Pp')}</div>
+            <div className="flex justify-between my-2">
+              <div className="text-gray-500">End:</div>
+              <div>
+                {' '}
+                {format(new Date(poolMeta.config.date[1] * 1000), 'Pp')}
+              </div>
             </div>
           </div>
         )}
@@ -539,10 +547,15 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               {distributionType === DistributionType.Pull
                 ? 'Create Pool'
                 : poolMeta!.config.isFundNow
-                  ? 'Distribute Now'
-                  : 'Create Distribution'}
+                ? 'Distribute Now'
+                : 'Create Distribution'}
             </Button>
-            {createPoolOption ? <EstimateGas method={createPoolOption.method} arg={createPoolOption.params} /> : null}
+            {createPoolOption ? (
+              <EstimateGas
+                method={createPoolOption.method}
+                arg={createPoolOption.params}
+              />
+            ) : null}
             <div className="flex justify-center text-gray-500 text-sm my-2">
               <div>Pay {poolMeta.config.isFundNow ? 'Now' : 'Later'}</div>
             </div>

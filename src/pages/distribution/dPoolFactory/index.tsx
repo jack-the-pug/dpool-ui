@@ -1,6 +1,5 @@
 import { BigNumber, ethers } from 'ethers'
 import { useCallback } from 'react'
-import { hooks as metaMaskHooks } from '../../../connectors/metaMask'
 import dPoolFactoryABI from '../../../abis/dPoolFactory.json'
 import { isAddress } from 'ethers/lib/utils'
 import { useState } from 'react'
@@ -11,12 +10,10 @@ import { toast } from 'react-toastify'
 import { Button } from '../../../components/button'
 import { useCallContract } from '../../../hooks/useContractCall'
 import { useDPoolFactoryContract } from '../../../hooks/useContract'
-
-const { useChainId, useAccount } = metaMaskHooks
+import { useWeb3React } from '@web3-react/core'
 
 export default function dPoolFactory() {
-  const account = useAccount()
-  const chainId = useChainId()
+  const { account, chainId } = useWeb3React()
   const dPoolFactory = useDPoolFactoryContract()
   const { dPoolAddress, setDPoolAddress, getDPoolAddressByAccount } =
     useDPoolAddress()
@@ -76,7 +73,7 @@ export default function dPoolFactory() {
       <div className="flex flex-col items-center">
         <p>
           Congrats! Your dedicated dPool contract is deployed:{' '}
-          <AddressLink address={tempDPoolAddress} />
+          <AddressLink address={tempDPoolAddress} children={undefined} />
         </p>
         <div
           onClick={() => {

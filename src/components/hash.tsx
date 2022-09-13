@@ -1,7 +1,7 @@
+import { useWeb3React } from '@web3-react/core'
 import { ReactNode, useMemo } from 'react'
 import { hooks as metaMaskHooks } from '../connectors/metaMask'
 import { chains } from '../constants'
-const { useChainId } = metaMaskHooks
 
 export function TranSactionHash(props: {
   hash: string
@@ -9,8 +9,7 @@ export function TranSactionHash(props: {
   children?: ReactNode
 }) {
   const { hash, className, children } = props
-
-  const chainId = useChainId()
+  const { chainId } = useWeb3React()
   const scanUrl = useMemo(() => {
     if (!chainId || !chains[chainId]) return
     const scan = chains[chainId].scan
@@ -34,7 +33,7 @@ export function AddressLink(props: {
   className?: string
 }) {
   const { address, children, className } = props
-  const chainId = useChainId()
+  const { chainId } = useWeb3React()
   const scanUrl = useMemo(() => {
     if (!chainId || !chains[chainId]) return
     const scan = chains[chainId].scan

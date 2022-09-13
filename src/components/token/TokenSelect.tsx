@@ -1,6 +1,5 @@
 import { BigNumber, constants, utils } from 'ethers'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { Dialog } from '../dialog'
 import { EosIconsBubbleLoading, ZondiconsClose } from '../icon'
 import useTokenMeta from '../../hooks/useTokenMeta'
@@ -8,18 +7,17 @@ import { TokenMeta as TTokenMeta } from '../../type'
 import { chains } from '../../constants'
 
 import { isAddress } from 'ethers/lib/utils'
+import { useWeb3React } from '@web3-react/core'
 interface TTokenSelectProps {
   tokenMeta: TTokenMeta | undefined
   setTokenMeta: (tokenMeta: TTokenMeta) => void
   dialogDefaultOpen?: boolean
 }
-const { useProvider, useChainId, useAccount } = metaMaskHooks
+
 export default function TokenSelect(props: TTokenSelectProps) {
   const { tokenMeta, setTokenMeta, dialogDefaultOpen = false } = props
   const { tokenList: sourceTokenList, getToken, setToken } = useTokenMeta()
-  const provider = useProvider()
-  const chainId = useChainId()
-  const account = useAccount()
+  const { provider, chainId, account } = useWeb3React()
   const [loading, setLoading] = useState<boolean>(false)
   const [dialogVisible, setDialogVisible] = useState<boolean>(dialogDefaultOpen)
   const [tokenAddress, setTokenAddress] = useState<string>()
@@ -47,7 +45,9 @@ export default function TokenSelect(props: TTokenSelectProps) {
   }, [tokenMeta, nativeTokenMeta])
 
   const tokenList = useMemo(() => {
-    const _sourceTokenList = sourceTokenList.filter((token) => token.chainId === chainId && token.userAdd)
+    const _sourceTokenList = sourceTokenList.filter(
+      (token) => token.chainId === chainId && token.userAdd
+    )
     const list = nativeTokenMeta
       ? [nativeTokenMeta, ..._sourceTokenList]
       : _sourceTokenList
