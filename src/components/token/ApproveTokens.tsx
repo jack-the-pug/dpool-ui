@@ -88,6 +88,7 @@ export function ApproveToken(props: ApproveTokenProps) {
   const [approveState, setApproveState] = useState<ActionState>(
     ActionState.WAIT
   )
+  const [signState, setSignState] = useState<ActionState>(ActionState.WAIT)
   const [approvedAmount, setApprovedAmount] = useState<BigNumber>(
     BigNumber.from(0)
   )
@@ -119,7 +120,7 @@ export function ApproveToken(props: ApproveTokenProps) {
     setApproveState(isApproved ? ActionState.SUCCESS : ActionState.FAILED)
   }, [tokenMeta, approveType, shouldApproveAmount, approveToken])
   const handleSign = useCallback(async () => {
-    setApproveState(ActionState.ING)
+    setSignState(ActionState.ING)
     try {
       const signatureData = await getSignatureData(
         shouldApproveAmount,
@@ -135,20 +136,22 @@ export function ApproveToken(props: ApproveTokenProps) {
           v,
           s,
         })
-        setApproveState(ActionState.SUCCESS)
+        setSignState(ActionState.SUCCESS)
       } else {
-        setApproveState(ActionState.FAILED)
+        setSignState(ActionState.FAILED)
       }
     } catch {
-      setApproveState(ActionState.FAILED)
+      setSignState(ActionState.FAILED)
     }
   }, [token, getSignatureData, shouldApproveAmount, dPoolAddress])
 
   const isApproved = useMemo(() => {
     if (BigNumber.from(token).eq(0)) return true
     if (shouldApproveAmount.eq(0)) return true
-    return approveState === ActionState.SUCCESS
-  }, [approveState, shouldApproveAmount, token, tokenMeta])
+    return (
+      approveState === ActionState.SUCCESS || signState === ActionState.SUCCESS
+    )
+  }, [approveState, shouldApproveAmount, token, tokenMeta, signState])
 
   useEffect(() => {
     if (isApproved) {
@@ -162,30 +165,29 @@ export function ApproveToken(props: ApproveTokenProps) {
       <div className="text-xs text-gray-500 pl-2">
         Allow the <AddressLink address={dPoolAddress}>dPool</AddressLink> to use
         your{' '}
-        {isSupportPermit ? (
-          `${utils.formatUnits(shouldApproveAmount, tokenMeta?.decimals)} ${
-            tokenMeta ? tokenMeta.symbol : ''
-          }`
-        ) : (
-          <select
-            className={`outline-none bg-neutral-200 mr-2 ${selectClass}`}
-            onChange={(e) =>
-              setApproveType(e.target.value as unknown as ApproveType)
-            }
-          >
-            <option value={ApproveType.LIMIT} className="bg-neutral-200">
-              {`${utils.formatUnits(
-                shouldApproveAmount,
-                tokenMeta?.decimals
-              )} ${tokenMeta ? tokenMeta.symbol : ''}`}
-            </option>
-            <option value={ApproveType.MAX}>Max {tokenMeta?.symbol}</option>
-          </select>
-        )}
+        <select
+          className={`outline-none bg-neutral-200 mr-2 ${selectClass}`}
+          onChange={(e) =>
+            setApproveType(e.target.value as unknown as ApproveType)
+          }
+        >
+          <option value={ApproveType.LIMIT} className="bg-neutral-200">
+            {`${utils.formatUnits(shouldApproveAmount, tokenMeta?.decimals)} ${
+              tokenMeta ? tokenMeta.symbol : ''
+            }`}
+          </option>
+          <option value={ApproveType.MAX}>Max {tokenMeta?.symbol}</option>
+        </select>
       </div>
-
       <Button
-        onClick={isSupportPermit ? handleSign : handleApprove}
+        onClick={handleSign}
+        loading={signState === ActionState.ING}
+        className="rounded-lg ml-1 text py-1 px-2 bg-gray-400 text-white w-20 flex justify-center border-none hover:text-white"
+      >
+        Sign
+      </Button>
+      <Button
+        onClick={handleApprove}
         loading={approveState === ActionState.ING}
         className="rounded-lg ml-1 text py-1 px-2 bg-green-500 text-white w-28 flex justify-center border-none hover:text-white"
       >
