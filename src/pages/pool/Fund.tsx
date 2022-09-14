@@ -8,6 +8,7 @@ import { Pool } from './PoolDetail'
 import { useCallDPoolContract } from '../../hooks/useContractCall'
 import { Button } from '../../components/button'
 import useTokenMeta from '../../hooks/useTokenMeta'
+import { EstimateGas } from '../../components/estimateGas'
 
 interface FundProps {
   poolMeta: Pool | undefined
@@ -68,29 +69,33 @@ export function Fund(props: FundProps) {
         ]
       : null
   }, [signatureData])
+  const fundOnlyCallOption = useMemo(
+    () =>
+      permitData
+        ? {
+            method: 'fundWithPermit',
+            params: [poolId, permitData],
+            eventName: DPoolEvent.Funded,
+          }
+        : {
+            method: 'fund',
+            params: [
+              poolId,
+              {
+                value: nativeTokenAmount,
+              },
+            ],
+            eventName: DPoolEvent.Funded,
+          },
+    [poolId, permitData, nativeTokenAmount]
+  )
   const fundOnly = useCallback(async () => {
     if (!callDPool) return
-    const callOption = permitData
-      ? {
-          method: 'fundWithPermit',
-          params: [poolId, permitData],
-          eventName: DPoolEvent.Funded,
-        }
-      : {
-          method: 'fund',
-          params: [
-            poolId,
-            {
-              value: nativeTokenAmount,
-            },
-          ],
-          eventName: DPoolEvent.Funded,
-        }
     setFundState(ActionState.ING)
     const result = await callDPool(
-      callOption.method,
-      callOption.params,
-      callOption.eventName
+      fundOnlyCallOption.method,
+      fundOnlyCallOption.params,
+      fundOnlyCallOption.eventName
     )
     if (!result.success) return setFundState(ActionState.FAILED)
     setFundState(ActionState.SUCCESS)
@@ -98,29 +103,35 @@ export function Fund(props: FundProps) {
       getPoolEvent()
       getPoolDetail()
     }
-  }, [signatureData, poolId, nativeTokenAmount, permitData, callDPool])
+  }, [callDPool, fundOnlyCallOption])
+
+  const fundAndDistributeCallOption = useMemo(
+    () =>
+      permitData
+        ? {
+            method: 'distributeWithPermit',
+            params: [poolId, permitData],
+            eventName: DPoolEvent.Distributed,
+          }
+        : {
+            method: 'distribute',
+            params: [
+              poolId,
+              {
+                value: nativeTokenAmount,
+              },
+            ],
+            eventName: DPoolEvent.Distributed,
+          },
+    [poolId, permitData, nativeTokenAmount]
+  )
+
   const fundAndDistribute = useCallback(async () => {
-    const callOption = permitData
-      ? {
-          method: 'distributeWithPermit',
-          params: [poolId, permitData],
-          eventName: DPoolEvent.Distributed,
-        }
-      : {
-          method: 'distribute',
-          params: [
-            poolId,
-            {
-              value: nativeTokenAmount,
-            },
-          ],
-          eventName: DPoolEvent.Distributed,
-        }
     setFundAndDistributeState(ActionState.ING)
     const result = await callDPool(
-      callOption.method,
-      callOption.params,
-      callOption.eventName
+      fundAndDistributeCallOption.method,
+      fundAndDistributeCallOption.params,
+      fundAndDistributeCallOption.eventName
     )
     if (!result.success) return setFundAndDistributeState(ActionState.FAILED)
     setFundAndDistributeState(ActionState.SUCCESS)
@@ -128,7 +139,7 @@ export function Fund(props: FundProps) {
       getPoolEvent()
       getPoolDetail()
     }
-  }, [permitData, poolId, nativeTokenAmount])
+  }, [fundAndDistributeCallOption, getPoolEvent, getPoolDetail])
 
   if (
     !distributor.eq(0) &&
@@ -149,31 +160,43 @@ export function Fund(props: FundProps) {
         }}
         selectClass="bg-neutral-200"
       />
-      <div className="flex items-center mt-2 gap-4">
-        <Button
-          loading={fundState === ActionState.ING}
-          disable={
-            !isApproved ||
-            tokenBalance.lt(poolMeta.totalAmount) ||
-            fundAndDistributeState === ActionState.ING
-          }
-          onClick={fundOnly}
-        >
-          {distributor.eq(0) ? 'Fund only' : 'Fund'}
-        </Button>
-        {distributor.eq(0) && (
+      <div className="flex items-center mt-2 gap-4 w-full">
+        <div className="flex flex-col flex-1">
           <Button
-            loading={fundAndDistributeState === ActionState.ING}
+            loading={fundState === ActionState.ING}
             disable={
               !isApproved ||
               tokenBalance.lt(poolMeta.totalAmount) ||
-              fundState === ActionState.ING
+              fundAndDistributeState === ActionState.ING
             }
-            onClick={fundAndDistribute}
+            onClick={fundOnly}
           >
-            Fund and Distribute
+            {distributor.eq(0) ? 'Fund only' : 'Fund'}
           </Button>
-        )}
+          <EstimateGas
+            method={fundOnlyCallOption.method}
+            arg={fundOnlyCallOption.params}
+          />
+        </div>
+        <div className="flex flex-col flex-1">
+          {distributor.eq(0) && (
+            <Button
+              loading={fundAndDistributeState === ActionState.ING}
+              disable={
+                !isApproved ||
+                tokenBalance.lt(poolMeta.totalAmount) ||
+                fundState === ActionState.ING
+              }
+              onClick={fundAndDistribute}
+            >
+              Fund and Distribute
+            </Button>
+          )}
+          <EstimateGas
+            method={fundAndDistributeCallOption.method}
+            arg={fundAndDistributeCallOption.params}
+          />
+        </div>
       </div>
       {tokenBalance.lt(poolMeta.totalAmount) && (
         <span className="text-xs text-red-500 my-1">Insufficient balance</span>
