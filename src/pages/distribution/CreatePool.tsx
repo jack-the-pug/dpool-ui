@@ -560,12 +560,12 @@ export default function PoolsList() {
         {isTextareaMode ? (
           <div className="w-full border-t border-gray-400"></div>
         ) : (
-          <div
+          <button
             onClick={() => addEmptyProfile()}
             className="w-full cursor-pointer flex items-center justify-center h-8 border border-dashed  border-gray-500"
           >
             <MaterialSymbolsAdd className="flex-1" />
-          </div>
+          </button>
         )}
       </div>
 
@@ -592,10 +592,11 @@ export default function PoolsList() {
           )}
           <button
             onClick={typeof callDataCheck === 'boolean' ? onConfirm : undefined}
-            className={`border border-gray-900 px-2 rounded-md hover:bg-gray-100 ${typeof callDataCheck === 'boolean'
-              ? 'text-black'
-              : 'text-gray-500 cursor-not-allowed'
-              }`}
+            className={`border border-gray-900 px-2 rounded-md hover:bg-gray-100 ${
+              typeof callDataCheck === 'boolean'
+                ? 'text-black'
+                : 'text-gray-500 cursor-not-allowed'
+            }`}
           >
             Preview Distributions
           </button>
