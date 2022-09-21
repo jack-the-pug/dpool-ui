@@ -187,46 +187,50 @@ export function PoolDetail(props: PoolDetailProps) {
             <PoolEvent event={cancelEvent} label="Canceled" />
           </section>
         ) : null}
-        {dPoolAddress && (
-          <div className="w-full mt-10 text-black">
-            <Fund
-              poolMeta={poolMeta}
-              dPoolAddress={dPoolAddress}
-              tokenMeta={tokenMeta}
-              poolId={poolId}
-              getPoolDetail={getPoolDetail}
-              isApproved={isApproved}
-              setIsApproved={setIsApproved}
-              getPoolEvent={getPoolEvent}
-            />
-            <Distribute
-              poolMeta={poolMeta}
-              dPoolAddress={dPoolAddress}
-              poolId={poolId}
-              getPoolDetail={getPoolDetail}
-              submittable={submittable}
-              tokenMeta={tokenMeta}
-              getPoolEvent={getPoolEvent}
-            />
-          </div>
-        )}
-        <div className="flex mt-4 gap-2 w-full justify-between">
-          {isOwner ? (
-            <div
-              className="text-xs cursor-pointer text-gray-400 hover:text-gray-500 "
-              onClick={distributeAgain}
-            >
-              Duplicate Distribution
+        {account ? (
+          <div className="w-full">
+            {dPoolAddress && (
+              <div className="w-full mt-10 text-black">
+                <Fund
+                  poolMeta={poolMeta}
+                  dPoolAddress={dPoolAddress}
+                  tokenMeta={tokenMeta}
+                  poolId={poolId}
+                  getPoolDetail={getPoolDetail}
+                  isApproved={isApproved}
+                  setIsApproved={setIsApproved}
+                  getPoolEvent={getPoolEvent}
+                />
+                <Distribute
+                  poolMeta={poolMeta}
+                  dPoolAddress={dPoolAddress}
+                  poolId={poolId}
+                  getPoolDetail={getPoolDetail}
+                  submittable={submittable}
+                  tokenMeta={tokenMeta}
+                  getPoolEvent={getPoolEvent}
+                />
+              </div>
+            )}
+            <div className="flex mt-4 gap-2 w-full justify-between">
+              {isOwner ? (
+                <div
+                  className="text-xs cursor-pointer text-gray-400 hover:text-gray-500 "
+                  onClick={distributeAgain}
+                >
+                  Duplicate Distribution
+                </div>
+              ) : null}
+              <Cancel
+                poolMeta={poolMeta}
+                dPoolAddress={dPoolAddress}
+                isOwner={isOwner}
+                poolId={poolId}
+                getPoolDetail={getPoolDetail}
+              />
             </div>
-          ) : null}
-          <Cancel
-            poolMeta={poolMeta}
-            dPoolAddress={dPoolAddress}
-            isOwner={isOwner}
-            poolId={poolId}
-            getPoolDetail={getPoolDetail}
-          />
-        </div>
+          </div>
+        ) : null}
       </div>
     </div>
   )

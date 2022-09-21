@@ -470,7 +470,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           </tr>
           {poolMeta.config.isFundNow ? (
             <tr className="my-2 bg-white">
-              <td className="text-gray-500">Balance:</td>
+              <td className="text-gray-500 pl-2">Balance:</td>
               {tokenMetaList.map((tokenMeta, index) => (
                 <td
                   className={`${
