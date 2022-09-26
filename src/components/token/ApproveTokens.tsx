@@ -112,9 +112,7 @@ export function ApproveToken(props: ApproveTokenProps) {
     setApproveState(ActionState.ING)
     const approveTokenReq = await approveToken(
       tokenMeta.address,
-      approveType === ApproveType.LIMIT
-        ? shouldApproveAmount
-        : ethers.constants.MaxUint256
+      ethers.constants.MaxUint256
     )
     const [isApproved] = approveTokenReq
     setApproveState(isApproved ? ActionState.SUCCESS : ActionState.FAILED)
@@ -163,36 +161,24 @@ export function ApproveToken(props: ApproveTokenProps) {
   return (
     <div className="w-full rounded-lg cursor-pointer flex justify-between items-center bg-neutral-200 px-1 py-1">
       <div className="text-xs text-gray-500 pl-2">
-        Allow the <AddressLink address={dPoolAddress}>dPool</AddressLink> to use
-        your{' '}
-        <select
-          className={`outline-none bg-neutral-200 mr-2 ${selectClass}`}
-          onChange={(e) =>
-            setApproveType(e.target.value as unknown as ApproveType)
-          }
-        >
-          <option value={ApproveType.LIMIT} className="bg-neutral-200">
-            {`${utils.formatUnits(shouldApproveAmount, tokenMeta?.decimals)} ${
-              tokenMeta ? tokenMeta.symbol : ''
-            }`}
-          </option>
-          <option value={ApproveType.MAX}>Max {tokenMeta?.symbol}</option>
-        </select>
+        Approve <AddressLink address={dPoolAddress}>dPool</AddressLink> to spend{' '}
+        {tokenMeta?.symbol}
       </div>
       <div className="flex gap-2">
         <Button
           onClick={handleSign}
           loading={signState === ActionState.ING}
-          className="rounded-lg ml-1 text py-1 px-2 bg-gray-400 text-white w-20 flex justify-center border-none hover:text-white"
+          className="rounded-lg ml-1 text py-1 px-2 bg-gray-400 text-white flex justify-center border-none hover:text-white"
         >
-          Sign
+          Sign{' '}
+          {`${utils.formatUnits(shouldApproveAmount, tokenMeta?.decimals)}`}
         </Button>
         <Button
           onClick={handleApprove}
           loading={approveState === ActionState.ING}
           className="rounded-lg ml-1 text py-1 px-2 bg-green-500 text-white w-28 flex justify-center border-none hover:text-white"
         >
-          Approve
+          Approve MAX
         </Button>
       </div>
     </div>
