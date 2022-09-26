@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import { PoolState } from '../../type'
+import { Pool } from './PoolDetail'
+import { ActionEvent } from './PoolList'
 
 const stateMsg = {
   [PoolState.Initialized]: 'Initialized',
@@ -15,29 +17,38 @@ const stateColorMap = {
 }
 
 export function DistributeState({
-  state,
-  title,
+  poolMeta,
+  distributeEvent,
 }: {
-  state: PoolState
-  title: string
+  poolMeta: Pool
+  distributeEvent?: ActionEvent
 }) {
+  const { state, deadline, claimedAmount, totalAmount } = poolMeta
+  console.log('poolMeta', poolMeta)
   const colorClass = useMemo(() => stateColorMap[state], [state])
+  if (
+    distributeEvent ||
+    (deadline === 2 ** 48 - 1 && claimedAmount.eq(totalAmount))
+  ) {
+    return <div className="flex ml-2 text-gray-500 text-xs">Distributed</div>
+  }
   return (
     <div className="flex">
       <div className="ml-2 text-gray-500 text-xs flex items-center">
         {stateMsg[state]}
       </div>
-      {state === PoolState.Funded && <div className="relative">
-        <div
-          className={`w-2 h-2 rounded-full cursor-pointer`}
-          title={title}
-          style={{ background: colorClass }}
-        ></div>
-        <div
-          className="w-2 h-2 absolute left-0 top-0 rounded-full cursor-pointer animate-ping "
-          style={{ background: colorClass }}
-        ></div>
-      </div>}
+      {state === PoolState.Funded && (
+        <div className="relative">
+          <div
+            className={`w-2 h-2 rounded-full cursor-pointer`}
+            style={{ background: colorClass }}
+          ></div>
+          <div
+            className="w-2 h-2 absolute left-0 top-0 rounded-full cursor-pointer animate-ping "
+            style={{ background: colorClass }}
+          ></div>
+        </div>
+      )}
     </div>
   )
 }

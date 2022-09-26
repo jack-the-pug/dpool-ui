@@ -26,7 +26,7 @@ export function PoolSummary(props: PoolProps) {
     <tr key={`${pool.poolId}`} className="hover:bg-gray-200">
       <td className="py-2">{pool.name}</td>
       <td>
-        <DistributeState state={pool.state} title={pool.name}></DistributeState>
+        <DistributeState poolMeta={pool}></DistributeState>
       </td>
       <td>
         {utils.formatUnits(pool.totalAmount, tokenMeta?.decimals)}
