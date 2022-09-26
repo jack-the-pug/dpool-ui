@@ -179,20 +179,22 @@ export function ApproveToken(props: ApproveTokenProps) {
           <option value={ApproveType.MAX}>Max {tokenMeta?.symbol}</option>
         </select>
       </div>
-      <Button
-        onClick={handleSign}
-        loading={signState === ActionState.ING}
-        className="rounded-lg ml-1 text py-1 px-2 bg-gray-400 text-white w-20 flex justify-center border-none hover:text-white"
-      >
-        Sign
-      </Button>
-      <Button
-        onClick={handleApprove}
-        loading={approveState === ActionState.ING}
-        className="rounded-lg ml-1 text py-1 px-2 bg-green-500 text-white w-28 flex justify-center border-none hover:text-white"
-      >
-        Approve
-      </Button>
+      <div className="flex gap-2">
+        <Button
+          onClick={handleSign}
+          loading={signState === ActionState.ING}
+          className="rounded-lg ml-1 text py-1 px-2 bg-gray-400 text-white w-20 flex justify-center border-none hover:text-white"
+        >
+          Sign
+        </Button>
+        <Button
+          onClick={handleApprove}
+          loading={approveState === ActionState.ING}
+          className="rounded-lg ml-1 text py-1 px-2 bg-green-500 text-white w-28 flex justify-center border-none hover:text-white"
+        >
+          Approve
+        </Button>
+      </div>
     </div>
   )
 }

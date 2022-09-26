@@ -362,8 +362,10 @@ export default function PoolsList() {
     return true
   }, [tokenTotalAmounts, tokenBalanceList])
   const callDataCheck = useMemo(() => {
+    if (!account) return 'Please connect your wallet'
     if (!createPoolCallData) return
     if (!isOwner) return
+
     const { distributionType, isFundNow } = poolConfig
     const callData = createPoolCallData[0]
     const claimer = callData[PoolCreator.Claimers]
@@ -381,7 +383,7 @@ export default function PoolsList() {
       if (parsedTokenAmountsTotal[0].eq(0)) return 'Total amount can not be 0'
     }
     return true
-  }, [createPoolCallData, poolConfig, isOwner, isTokenBalanceEnough])
+  }, [createPoolCallData, poolConfig, isOwner, isTokenBalanceEnough, account])
 
   const getTokensBalance = useCallback(async () => {
     const balanceList: BigNumber[] = []

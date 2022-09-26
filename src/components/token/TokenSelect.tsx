@@ -56,14 +56,14 @@ export default function TokenSelect(props: TTokenSelectProps) {
 
   const getTokenMeta = useCallback(
     async (tokenAddress: string) => {
-      if (!provider?.provider || !tokenAddress || !chainId) return
+      if (!tokenAddress || !chainId) return
       if (!utils.isAddress(tokenAddress)) return
       setLoading(true)
-      const tokenMeta: TTokenMeta = (await getToken(tokenAddress))!
+      const tokenMeta: TTokenMeta | undefined = await getToken(tokenAddress)
       setLoading(false)
       return tokenMeta
     },
-    [chainId, account, nativeTokenMeta, getToken]
+    [chainId, nativeTokenMeta, getToken]
   )
   useEffect(() => {
     if (!tokenAddress || !isAddress(tokenAddress)) return
@@ -72,7 +72,7 @@ export default function TokenSelect(props: TTokenSelectProps) {
         setToken(token)
       }
     })
-  }, [tokenAddress, account, chainId])
+  }, [tokenAddress, chainId])
   return (
     <>
       <div
