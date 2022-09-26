@@ -409,8 +409,8 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
   }, [isTokensApproved, account, poolMeta, isTokenBalanceEnough])
   if (!poolMeta || !poolMeta.length) return null
   return (
-    <Dialog visible={visible} onClose={onClosePage}>
-      <h1 className="flex justify-between items-center cur">
+    <Dialog visible={visible} onClose={onClosePage} dialogClass="px-0">
+      <h1 className="flex justify-between items-center px-4">
         <span></span>
         <div className="font-medium font-xl">{poolMeta.name}</div>
         <ZondiconsClose onClick={onClosePage} className="cursor-pointer" />
@@ -421,7 +421,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         style={{ borderSpacing: '20px' }}
       >
         <thead>
-          <tr className="border-b border-black border-dotted w-full my-2 bg-gray-100">
+          <tr className=" w-full my-2 bg-gray-100">
             <td className="py-2">Address</td>
             {tokenMetaList.map((tokenMeta) => (
               <td>
@@ -458,18 +458,18 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           ))}
         </tbody>
         <tfoot>
-          <tr className="my-2 border-t border-black border-dotted w-full bg-white">
+          <tr className="my-2  w-full bg-white text-sm">
             <td className="text-gray-500 pl-2">
               Total: {renderUIData.length} Recipient(s)
             </td>
             {tokenTotalAmounts.map((total, index) => (
-              <td key={tokenMetaList[index].address} className="py-2">
+              <td key={tokenMetaList[index].address} className="py-2 text-base">
                 {formatCurrencyAmount(total, tokenMetaList[index])}
               </td>
             ))}
           </tr>
           {poolMeta.config.isFundNow ? (
-            <tr className="my-2 bg-white">
+            <tr className="my-2 bg-white text-sm">
               <td className="text-gray-500 pl-2">Balance:</td>
               {tokenMetaList.map((tokenMeta, index) => (
                 <td
@@ -478,7 +478,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
                     tokenBalanceList[index].lt(tokenTotalAmounts[index])
                       ? 'text-red-500'
                       : ''
-                  } py-2`}
+                  } py-2 text-base`}
                   key={tokenMeta.address}
                 >
                   {formatCurrencyAmount(
@@ -492,7 +492,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         </tfoot>
       </table>
 
-      <div>
+      <div className="px-2">
         {BigNumber.from(poolMeta.config.distributor).gt(0) &&
         poolMeta.config.distributor.toLowerCase() !== account?.toLowerCase() ? (
           <div className="flex justify-between  px-2 my-2">
@@ -524,7 +524,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           </div>
         )}
       </div>
-      <div className="w-full mt-10">
+      <div className="w-full mt-10 px-2">
         {createPoolState !== ActionState.SUCCESS ? (
           <div>
             {poolMeta.config.isFundNow ? (
