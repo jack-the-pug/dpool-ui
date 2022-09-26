@@ -409,10 +409,27 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
   }, [isTokensApproved, account, poolMeta, isTokenBalanceEnough])
   if (!poolMeta || !poolMeta.length) return null
   return (
-    <Dialog visible={visible} onClose={onClosePage}>
-      <h1 className="flex justify-between items-center cur">
+    <Dialog visible={visible} onClose={onClosePage} dialogClass="px-0">
+      <h1 className="flex justify-between items-center px-4">
         <span></span>
-        <div className="font-medium font-xl">{poolMeta.name}</div>
+
+        {createPoolState === ActionState.SUCCESS ? (
+          poolIds.length ? (
+            <div className="font-medium font-xl text-green-500">
+              {createPoolState === ActionState.SUCCESS &&
+              distributionType === DistributionType.Push
+                ? 'Pool'
+                : 'Distribution'}{' '}
+              "{poolMeta.name}" created
+            </div>
+          ) : (
+            <div className="font-medium font-xl text-green-500">
+              Distribute "{poolMeta.name}" success
+            </div>
+          )
+        ) : (
+          <div className="font-medium font-xl"> {poolMeta.name}</div>
+        )}
         <ZondiconsClose onClick={onClosePage} className="cursor-pointer" />
       </h1>
 
@@ -421,7 +438,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         style={{ borderSpacing: '20px' }}
       >
         <thead>
-          <tr className="border-b border-black border-dotted w-full my-2 bg-gray-100">
+          <tr className=" w-full my-2 bg-gray-100">
             <td className="py-2">Address</td>
             {tokenMetaList.map((tokenMeta) => (
               <td>
@@ -458,18 +475,18 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           ))}
         </tbody>
         <tfoot>
-          <tr className="my-2 border-t border-black border-dotted w-full bg-white">
+          <tr className="my-2  w-full bg-white text-sm">
             <td className="text-gray-500 pl-2">
               Total: {renderUIData.length} Recipient(s)
             </td>
             {tokenTotalAmounts.map((total, index) => (
-              <td key={tokenMetaList[index].address} className="py-2">
+              <td key={tokenMetaList[index].address} className="py-2 text-base">
                 {formatCurrencyAmount(total, tokenMetaList[index])}
               </td>
             ))}
           </tr>
           {poolMeta.config.isFundNow ? (
-            <tr className="my-2 bg-white">
+            <tr className="my-2 bg-white text-sm">
               <td className="text-gray-500 pl-2">Balance:</td>
               {tokenMetaList.map((tokenMeta, index) => (
                 <td
@@ -478,7 +495,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
                     tokenBalanceList[index].lt(tokenTotalAmounts[index])
                       ? 'text-red-500'
                       : ''
-                  } py-2`}
+                  } py-2 text-base`}
                   key={tokenMeta.address}
                 >
                   {formatCurrencyAmount(
@@ -489,42 +506,40 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               ))}
             </tr>
           ) : null}
+          {BigNumber.from(poolMeta.config.distributor).gt(0) &&
+          poolMeta.config.distributor.toLowerCase() !==
+            account?.toLowerCase() ? (
+            <tr className="my-2 bg-white text-sm">
+              <td className="text-gray-500 py-2 pl-2">Distributor</td>
+              <td className="text-gray-500">
+                {' '}
+                <AddressLink address={poolMeta.config.distributor}>
+                  {poolMeta.config.distributor}
+                </AddressLink>
+              </td>
+            </tr>
+          ) : null}
+          {distributionType === DistributionType.Push
+            ? null
+            : [
+                <tr className="my-2  bg-white text-sm">
+                  <td className="text-gray-500 py-2  pl-2">Start</td>
+                  <td className="text-gray-500">
+                    {format(new Date(poolMeta.config.date[0] * 1000), 'Pp')}
+                  </td>
+                </tr>,
+                <tr className="my-2 bg-white text-sm">
+                  <td className="text-gray-500 py-2 pl-2">End</td>
+                  <td className="text-gray-500">
+                    {format(new Date(poolMeta.config.date[1] * 1000), 'Pp')}
+                  </td>
+                </tr>,
+              ]}
         </tfoot>
       </table>
 
-      <div>
-        {BigNumber.from(poolMeta.config.distributor).gt(0) &&
-        poolMeta.config.distributor.toLowerCase() !== account?.toLowerCase() ? (
-          <div className="flex justify-between  px-2 my-2">
-            <div className="text-gray-500">Distributor:</div>
-            <div>
-              {' '}
-              <AddressLink address={poolMeta.config.distributor}>
-                {poolMeta.config.distributor}
-              </AddressLink>
-            </div>
-          </div>
-        ) : null}
-        {distributionType === DistributionType.Push ? null : (
-          <div className="flex flex-col justify-between  px-2">
-            <div className="flex justify-between my-2">
-              <div className="text-gray-500">Start:</div>
-              <div>
-                {' '}
-                {format(new Date(poolMeta.config.date[0] * 1000), 'Pp')}
-              </div>
-            </div>
-            <div className="flex justify-between my-2">
-              <div className="text-gray-500">End:</div>
-              <div>
-                {' '}
-                {format(new Date(poolMeta.config.date[1] * 1000), 'Pp')}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="w-full mt-10">
+      <div className="px-2"></div>
+      <div className="w-full mt-10 px-2">
         {createPoolState !== ActionState.SUCCESS ? (
           <div>
             {poolMeta.config.isFundNow ? (
@@ -560,32 +575,23 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               <div>Pay {poolMeta.config.isFundNow ? 'Now' : 'Later'}</div>
             </div>
           </div>
+        ) : poolIds.length ? (
+          <Button onClick={routerToPoolDetail}>
+            View{' '}
+            {distributionType === DistributionType.Push
+              ? 'Pool'
+              : 'Distribution'}{' '}
+            Details
+          </Button>
         ) : (
-          <div className="flex items-center">
-            <div className="mr-2">
-              {poolIds.length ? (
-                <div>
-                  {distributionType === DistributionType.Push
-                    ? 'Pool'
-                    : 'Distribution'}
-                  <span
-                    className="text-green-500 cursor-pointer mx-1"
-                    onClick={routerToPoolDetail}
-                  >
-                    {poolMeta.name}
-                  </span>
-                  created.
-                </div>
-              ) : (
-                'Distribute Success.'
-              )}
-            </div>
-            {createTx && (
-              <TranSactionHash hash={createTx}>
-                View on Explorer
-              </TranSactionHash>
-            )}
-          </div>
+          <Button>
+            <TranSactionHash
+              hash={createTx!}
+              className="text-black w-full text-center py-1 hover:text-green-500"
+            >
+              View Distribute Transaction
+            </TranSactionHash>
+          </Button>
         )}
       </div>
     </Dialog>

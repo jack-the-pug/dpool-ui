@@ -127,13 +127,13 @@ export function PoolDetail(props: PoolDetailProps) {
   if (!poolMeta) return <p>Distribute not found</p>
   return (
     <div className="flex justify-center z-0 transition-all ease-in-out">
-      <div className="w-full break-all flex flex-1 flex-col items-center bg-white px-4 py-2 rounded-lg">
+      <div className="w-full break-all flex flex-1 flex-col items-center bg-white  py-2 rounded-lg">
         <div className="my-5 w-full relative items-center flex justify-center">
-          <div className="flex">
+          <div className="flex items-center">
             {poolMeta?.name}
             <DistributeState
-              state={poolMeta?.state}
-              title={PoolState[poolMeta.state]}
+              poolMeta={poolMeta}
+              distributeEvent={distributeEvent}
             />
           </div>
         </div>
@@ -171,66 +171,68 @@ export function PoolDetail(props: PoolDetailProps) {
                 )}
                 getPoolEvent={getPoolEvent}
                 getPoolDetail={getPoolDetail}
+                distributeEvent={distributeEvent}
               />
             ))}
           </tbody>
         </table>
-
-        <section className="text-xs w-full flex flex-col gap-4 mt-20">
-          <DateRange start={poolMeta.startTime} end={poolMeta.deadline} />
-        </section>
-        {createEvent || fundEvent || distributeEvent || cancelEvent ? (
-          <section className="w-full mt-10 text-xs border border-gray-300 divide-solid divide-y divide-gray-300 rounded-md ">
-            <PoolEvent event={createEvent} label="Created" />
-            <PoolEvent event={fundEvent} label="Funded" />
-            <PoolEvent event={distributeEvent} label="Distributed" />
-            <PoolEvent event={cancelEvent} label="Canceled" />
+        <div className="w-full px-4">
+          <section className="text-xs w-full flex flex-col gap-4 mt-20">
+            <DateRange start={poolMeta.startTime} end={poolMeta.deadline} />
           </section>
-        ) : null}
-        {account ? (
-          <div className="w-full">
-            {dPoolAddress && (
-              <div className="w-full mt-10 text-black">
-                <Fund
+          {createEvent || fundEvent || distributeEvent || cancelEvent ? (
+            <section className="w-full mt-10 text-xs border border-gray-300 divide-solid divide-y divide-gray-300 rounded-md ">
+              <PoolEvent event={createEvent} label="Created" />
+              <PoolEvent event={fundEvent} label="Funded" />
+              <PoolEvent event={distributeEvent} label="Distributed" />
+              <PoolEvent event={cancelEvent} label="Canceled" />
+            </section>
+          ) : null}
+          {account ? (
+            <div className="w-full">
+              {dPoolAddress && (
+                <div className="w-full mt-10 text-black">
+                  <Fund
+                    poolMeta={poolMeta}
+                    dPoolAddress={dPoolAddress}
+                    tokenMeta={tokenMeta}
+                    poolId={poolId}
+                    getPoolDetail={getPoolDetail}
+                    isApproved={isApproved}
+                    setIsApproved={setIsApproved}
+                    getPoolEvent={getPoolEvent}
+                  />
+                  <Distribute
+                    poolMeta={poolMeta}
+                    dPoolAddress={dPoolAddress}
+                    poolId={poolId}
+                    getPoolDetail={getPoolDetail}
+                    submittable={submittable}
+                    tokenMeta={tokenMeta}
+                    getPoolEvent={getPoolEvent}
+                  />
+                </div>
+              )}
+              <div className="flex mt-4 gap-2 w-full justify-between">
+                {isOwner ? (
+                  <div
+                    className="text-xs cursor-pointer text-gray-400 hover:text-gray-500 "
+                    onClick={distributeAgain}
+                  >
+                    Duplicate Distribution
+                  </div>
+                ) : null}
+                <Cancel
                   poolMeta={poolMeta}
                   dPoolAddress={dPoolAddress}
-                  tokenMeta={tokenMeta}
+                  isOwner={isOwner}
                   poolId={poolId}
                   getPoolDetail={getPoolDetail}
-                  isApproved={isApproved}
-                  setIsApproved={setIsApproved}
-                  getPoolEvent={getPoolEvent}
-                />
-                <Distribute
-                  poolMeta={poolMeta}
-                  dPoolAddress={dPoolAddress}
-                  poolId={poolId}
-                  getPoolDetail={getPoolDetail}
-                  submittable={submittable}
-                  tokenMeta={tokenMeta}
-                  getPoolEvent={getPoolEvent}
                 />
               </div>
-            )}
-            <div className="flex mt-4 gap-2 w-full justify-between">
-              {isOwner ? (
-                <div
-                  className="text-xs cursor-pointer text-gray-400 hover:text-gray-500 "
-                  onClick={distributeAgain}
-                >
-                  Duplicate Distribution
-                </div>
-              ) : null}
-              <Cancel
-                poolMeta={poolMeta}
-                dPoolAddress={dPoolAddress}
-                isOwner={isOwner}
-                poolId={poolId}
-                getPoolDetail={getPoolDetail}
-              />
             </div>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </div>
   )

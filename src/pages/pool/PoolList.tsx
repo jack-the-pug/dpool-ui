@@ -60,11 +60,11 @@ export default function PoolList() {
   return (
     <div className="flex flex-col w-full break-all  flex-1  items-center">
       {poolMetaList.length ? (
-        <div className="bg-white px-4 py-2 rounded-lg">
+        <div className="bg-white rounded-lg">
           <table>
-            <thead>
+            <thead className="text-gray-500 text-xs">
               <tr className="bg-gray-100 ">
-                <td className="py-2">Name</td>
+                <td className="py-3">Name</td>
                 <td>
                   <span className="ml-2">State</span>
                 </td>

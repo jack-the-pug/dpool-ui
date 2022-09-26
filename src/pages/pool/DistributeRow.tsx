@@ -29,6 +29,7 @@ interface ClaimProps {
   tokenMeta: TokenMeta | undefined
   getPoolEvent: Function
   getPoolDetail: Function
+  distributeEvent?: ActionEvent
 }
 
 export function DistributeRow(props: ClaimProps) {
@@ -43,6 +44,7 @@ export function DistributeRow(props: ClaimProps) {
     claimEvent,
     getPoolEvent,
     getPoolDetail,
+    distributeEvent,
   } = props
   const { addressName } = useAddressBook()
   return (
@@ -79,6 +81,7 @@ export function DistributeRow(props: ClaimProps) {
         claimEvent={claimEvent}
         getPoolEvent={getPoolEvent}
         getPoolDetail={getPoolDetail}
+        distributeEvent={distributeEvent}
       />
     </tr>
   )
@@ -95,6 +98,7 @@ export function RenderClaim(props: ClaimProps) {
     claimEvent,
     getPoolEvent,
     getPoolDetail,
+    distributeEvent,
   } = props
   if (!poolMeta || !dPoolAddress) return null
   const { chainId, account } = useWeb3React()
@@ -162,6 +166,20 @@ export function RenderClaim(props: ClaimProps) {
     const { startTime, deadline, state } = poolMeta
     const nowTime = Date.now() / 1000
     const isClaimer = claimer.address.toLowerCase() === account?.toLowerCase()
+    if (distributeEvent) {
+      return (
+        <div className="flex items-center">
+          <span className="mr-1">Distributed</span>
+          <DateDistance date={new Date(distributeEvent.timestamp * 1000)} />.
+          <TranSactionHash
+            hash={distributeEvent.transactionHash}
+            className="text-gray-400 flex items-center ml-2"
+          >
+            TX <MdiArrowTopRight />
+          </TranSactionHash>
+        </div>
+      )
+    }
     if (claimEvent)
       return (
         <div className="flex items-center">
@@ -199,7 +217,15 @@ export function RenderClaim(props: ClaimProps) {
         </Button>
       )
     }
-  }, [shouldClaimAmount, poolMeta, claim, claimState, claimEvent, claimedTx])
+  }, [
+    shouldClaimAmount,
+    poolMeta,
+    claim,
+    claimState,
+    claimEvent,
+    claimedTx,
+    distributeEvent,
+  ])
   return (
     <>
       <td className="text-sm">

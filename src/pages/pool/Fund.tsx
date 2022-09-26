@@ -47,7 +47,7 @@ export function Fund(props: FundProps) {
   const [fundAndDistributeState, setFundAndDistributeState] =
     useState<ActionState>(ActionState.WAIT)
   const [signatureData, setSignatureData] = useState<PermitCallData>()
-  const [tokenBalance, setTokenBalance] = useState<BigNumber>(BigNumber.from(0))
+  const [tokenBalance, setTokenBalance] = useState<BigNumber>()
 
   useEffect(() => {
     getTokenBalance(tokenMeta.address).then(setTokenBalance)
@@ -166,7 +166,7 @@ export function Fund(props: FundProps) {
             loading={fundState === ActionState.ING}
             disable={
               !isApproved ||
-              tokenBalance.lt(poolMeta.totalAmount) ||
+              (tokenBalance && tokenBalance.lt(poolMeta.totalAmount)) ||
               fundAndDistributeState === ActionState.ING
             }
             onClick={fundOnly}
@@ -184,7 +184,7 @@ export function Fund(props: FundProps) {
               loading={fundAndDistributeState === ActionState.ING}
               disable={
                 !isApproved ||
-                tokenBalance.lt(poolMeta.totalAmount) ||
+                (tokenBalance && tokenBalance.lt(poolMeta.totalAmount)) ||
                 fundState === ActionState.ING
               }
               onClick={fundAndDistribute}
@@ -198,7 +198,7 @@ export function Fund(props: FundProps) {
           />
         </div>
       </div>
-      {tokenBalance.lt(poolMeta.totalAmount) && (
+      {tokenBalance && tokenBalance.lt(poolMeta.totalAmount) && (
         <span className="text-xs text-red-500 my-1">Insufficient balance</span>
       )}
     </div>
