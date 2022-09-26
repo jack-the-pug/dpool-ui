@@ -11,7 +11,6 @@ type TSetToken = (token: TokenMeta) => void
 
 export default function useTokenMeta() {
   const { account, chainId, provider } = useWeb3React()
-  const signerOrProvider = useSignerOrProvider()
   const [tokens, setTokens] = useState<TokenMeta[]>([])
   const getTokensByStore = useCallback(async () => {
     const storeValues = await values()
@@ -34,11 +33,10 @@ export default function useTokenMeta() {
   )
   const getERC20TokenContract = useCallback(
     (tokenAddress: string) => {
-      if (!signerOrProvider || !tokenAddress || !isAddress(tokenAddress))
-        return null
-      return new Contract(tokenAddress, ERC20ABI, signerOrProvider)
+      if (!provider || !tokenAddress || !isAddress(tokenAddress)) return null
+      return new Contract(tokenAddress, ERC20ABI, provider)
     },
-    [signerOrProvider]
+    [provider]
   )
 
   const setToken = useCallback<TSetToken>(
