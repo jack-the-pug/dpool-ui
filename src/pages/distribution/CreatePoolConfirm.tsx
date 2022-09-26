@@ -577,10 +577,11 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           </div>
         ) : poolIds.length ? (
           <Button onClick={routerToPoolDetail}>
+            View{' '}
             {distributionType === DistributionType.Push
               ? 'Pool'
               : 'Distribution'}{' '}
-            Detail
+            Details
           </Button>
         ) : (
           <Button>
@@ -588,7 +589,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               hash={createTx!}
               className="text-black w-full text-center py-1 hover:text-green-500"
             >
-              View Transaction
+              View Distribute Transaction
             </TranSactionHash>
           </Button>
         )}
