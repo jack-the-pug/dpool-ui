@@ -30,8 +30,6 @@ import {
   parsedNumberByDecimal,
 } from '../../utils/number'
 import { LOCAL_STORAGE_KEY } from '../../store/storeKey'
-import { Provider } from 'urql'
-import { useWeb3React } from '@web3-react/core'
 
 export type TPoolRow = PoolRow & {
   key?: number | string
@@ -443,10 +441,10 @@ export default function PoolsList() {
   useEffect(() => {
     setDPoolFactoryVisible(() => !dPoolAddress)
   }, [dPoolAddress, isOwner])
-
+  const toastId = useRef<string | number>()
   useEffect(() => {
     if (!isOwner) {
-      toast.warning(
+      toastId.current = toast.warning(
         ({ closeToast }) => (
           <div>
             <p className="break-normal">
@@ -465,8 +463,11 @@ export default function PoolsList() {
         ),
         { autoClose: false }
       )
+    } else if (toastId.current !== undefined) {
+      toast.dismiss(toastId.current)
+      toastId.current = undefined
     }
-  }, [isOwner])
+  }, [isOwner, toastId.current])
 
   const onConfirm = useCallback(() => {
     if (typeof callDataCheck !== 'boolean') return

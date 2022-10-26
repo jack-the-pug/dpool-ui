@@ -82,7 +82,12 @@ export default function AddressBook() {
           </span>
         </div>
       </div>
-
+      <div className="flex border-solid  border-l border-t border-gray-400">
+        <div className="w-96 flex items-center pl-2">Address</div>
+        <div className="w-48 flex items-center pl-2 py-1   border-solid  border-l border-r border-gray-400">
+          Name
+        </div>
+      </div>
       {isTextMode ? (
         <TextareaMode
           addressBook={addressBook}
