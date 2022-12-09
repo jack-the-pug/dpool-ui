@@ -29,6 +29,17 @@ const Mainnet: Chain = {
   isTestNet: false,
 }
 
+const Goerli: Chain = {
+  chainId: 5,
+  name: 'Ethereum Goerli',
+  symbol: 'ETH',
+  decimals: 18,
+  dPoolFactoryAddress: "0xE748216dE5b8347949f274611fE14D041897cC12",
+  scan: 'https://goerli.etherscan.io/',
+  urls: [],
+  isTestNet: true,
+}
+
 const Polygon: Chain = {
   chainId: 137,
   name: 'Polygon',
@@ -71,6 +82,7 @@ const RinkeBy: Chain = {
 
 export const chains: Chains = {
   // 1: Mainnet,
+  5:Goerli,
   137: Polygon,
   4: RinkeBy,
   80001: Mumbai,
@@ -110,6 +122,10 @@ export const API_LIST: {
   [ChainId.RinkeBy]: {
     key: import.meta.env.VITE_ETHEREUM_SCAN_KEY,
     url: 'https://api-rinkeby.etherscan.io',
+  },
+  [ChainId.Goerli]: {
+    key: import.meta.env.VITE_ETHEREUM_SCAN_KEY,
+    url: 'https://api-goerli.etherscan.io',
   },
   // [ChainId.Ethereum]: {
   //   key: import.meta.env.VITE_ETHEREUM_SCAN_KEY,
