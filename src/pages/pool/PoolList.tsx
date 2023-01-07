@@ -13,6 +13,7 @@ import DPoolABI from '../../abis/dPool.json'
 import { useGetPoolDetail } from '../../hooks/useGetPoolDetail'
 import { PoolSummary } from './Pool'
 import { PoolListStats } from "./PoolListStats"
+import { PoolMeta } from './PoolMeta'
 const dPoolInterface = new ethers.utils.Interface(DPoolABI)
 export default function PoolList() {
   const { chainId } = useWeb3React()
