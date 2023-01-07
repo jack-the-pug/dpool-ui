@@ -18,7 +18,7 @@ export function PoolMeta(props: PoolMetaProps) {
   const { getCreatedDPoolEventByAddress } = useGraph()
   const [owner, setOwner] = useState<string>()
   const [createPoolData, setCreatePoolData] = useState<CreatedDPool>()
-  const [factor, setFactor] = useState<string>()
+  const [factory, setFactory] = useState<string>()
   useEffect(() => {
     if (!dPoolContract) return
     dPoolContract.owner().then(setOwner)
@@ -28,7 +28,7 @@ export function PoolMeta(props: PoolMetaProps) {
   }, [getCreatedDPoolEventByAddress, dPoolAddress])
   useEffect(() => {
     if (!chainId || !chains[chainId]) return
-    setFactor(chains[chainId].dPoolFactoryAddress)
+    setFactory(chains[chainId].dPoolFactoryAddress)
   }, [chainId])
   return <div className="bg-white p-4 rounded-xl mb-4">
     <p className="font-bold">Pool Meta</p>
@@ -40,8 +40,8 @@ export function PoolMeta(props: PoolMetaProps) {
       <span className="text-gray-500 w-40">Owner/Deployer</span>
       {owner ? <AddressLink address={owner} className="ml-2 font-medium">{owner}</AddressLink> : EmptyData}</div>
     <div className="flex mt-2">
-      <span className="text-gray-500 w-40">Factor</span>
-      {factor ? <AddressLink address={factor} className="ml-2 font-medium">{factor}</AddressLink> : EmptyData}
+      <span className="text-gray-500 w-40">Factory</span>
+      {factory ? <AddressLink address={factory} className="ml-2 font-medium">{factory}</AddressLink> : EmptyData}
     </div>
     <div className="flex mt-2">
       <span className="text-gray-500 w-40">Deploy Date</span>
