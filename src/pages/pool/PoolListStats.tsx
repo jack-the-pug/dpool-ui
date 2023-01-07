@@ -132,7 +132,7 @@ export function PoolListStats(props: PoolListStatsProps) {
         <div className="flex justify-between">
           <div className="font-bold">Pool Volume</div>
           {currentHoverItem ? <div className="flex">
-            <span className="" style={{ maxWidth: 100 }}>{currentHoverItem.name}</span>
+            <span className="truncate" style={{ maxWidth: 100 }}>{currentHoverItem.name}</span>
             :
             <span className="font-bold">${currentHoverItem.totalUSDC}</span>
           </div> : <div><span>Total:</span> <span className="font-bold">${totalUSDC}</span></div>}
