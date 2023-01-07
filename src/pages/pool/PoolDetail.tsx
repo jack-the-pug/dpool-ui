@@ -1,4 +1,4 @@
-import { BigNumber, utils } from 'ethers'
+import { BigNumber, ethers, utils } from 'ethers'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { BasePool, PoolState, TokenMeta } from '../../type'
@@ -19,7 +19,7 @@ import { PoolEvent } from './PoolEvent'
 import { AddressLink } from '../../components/hash'
 import { useGetPoolDetail } from '../../hooks/useGetPoolDetail'
 import { useWeb3React } from '@web3-react/core'
-
+import { PoolStats } from "./PoolStats"
 export type Pool = BasePool & {
   state: PoolState
   poolId: string
@@ -124,7 +124,7 @@ export function PoolDetail(props: PoolDetailProps) {
       </p>
     )
   // if (!account) return <p>Please connect your wallet first</p>
-  if (!poolMeta) return <p>Distribute not found</p>
+  if (!poolMeta || !tokenMeta) return <p>Distribute not found</p>
   return (
     <div className="flex justify-center z-0 transition-all ease-in-out">
       <div className="w-full break-all flex flex-1 flex-col items-center bg-white  py-2 rounded-lg">
@@ -176,6 +176,7 @@ export function PoolDetail(props: PoolDetailProps) {
             ))}
           </tbody>
         </table>
+        <PoolStats poolMeta={poolMeta} tokenMeta={tokenMeta} />
         <div className="w-full px-4">
           <section className="text-xs w-full flex flex-col gap-4 mt-20">
             <DateRange start={poolMeta.startTime} end={poolMeta.deadline} />

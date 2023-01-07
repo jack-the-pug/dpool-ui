@@ -33,6 +33,5 @@ export function EstimateGas(props: EstimateGasProps) {
   if (loading) return <div className="flex text-xs text-gray-400 my-1"><EosIconsBubbleLoading />Estimate gas fee</div>
   if (gasFee)
     return <div className="text-xs text-gray-400 my-1">Gas Fee:{utils.formatEther(gasFee)}</div>
-  // return <div className="text-xs text-gray-400 my-1">Unknown Fee</div>
-  return null
+  return <div className="text-xs text-gray-400 my-1">Unknown Fee</div>
 }
