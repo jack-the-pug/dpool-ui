@@ -12,7 +12,7 @@ import { useWeb3React } from '@web3-react/core'
 import DPoolABI from '../../abis/dPool.json'
 import { useGetPoolDetail } from '../../hooks/useGetPoolDetail'
 import { PoolSummary } from './Pool'
-
+import { PoolListStats } from "./PoolListStats"
 const dPoolInterface = new ethers.utils.Interface(DPoolABI)
 export default function PoolList() {
   const { chainId } = useWeb3React()
@@ -58,31 +58,34 @@ export default function PoolList() {
   }
 
   return (
-    <div className="flex flex-col w-full break-all  flex-1  items-center">
-      {poolMetaList.length ? (
-        <div className="bg-white rounded-lg">
-          <table>
-            <thead className="text-gray-500 text-xs">
-              <tr className="bg-gray-100 ">
-                <td className="py-3">Name</td>
-                <td>
-                  <span className="ml-2">State</span>
-                </td>
-                <td>PoolAmount</td>
-                <td>ClaimedAmount</td>
-                <td></td>
-              </tr>
-            </thead>
-            <tbody>
-              {poolMetaList.map((pool) => (
-                <PoolSummary pool={pool} key={pool.poolId} />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <p>Distributions Not Found</p>
-      )}
+    <div className="flex flex-col w-full break-all  flex-1 gap-10">
+      <PoolListStats list={poolMetaList} />
+      <div className='w-full'>
+        {poolMetaList.length ? (
+          <div className="bg-white rounded-lg w-full">
+            <table className='w-full'>
+              <thead className="text-gray-500 text-xs">
+                <tr className="bg-gray-100 ">
+                  <td className="py-3">Name</td>
+                  <td>
+                    <span className="ml-2">State</span>
+                  </td>
+                  <td>PoolAmount</td>
+                  <td>ClaimedAmount</td>
+                  <td></td>
+                </tr>
+              </thead>
+              <tbody>
+                {poolMetaList.map((pool) => (
+                  <PoolSummary pool={pool} key={pool.poolId} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p>Distributions Not Found</p>
+        )}
+      </div>
       <div className="text-xs text-gray-500 flex mt-4 mb-16 w-full justify-end">
         Didn't see your transaction? Try{' '}
         <button className="ml-2 text-green-500" onClick={getPoolFromContract}>

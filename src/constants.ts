@@ -82,10 +82,10 @@ const RinkeBy: Chain = {
 
 export const chains: Chains = {
   // 1: Mainnet,
-  5:Goerli,
+  5: Goerli,
   137: Polygon,
   4: RinkeBy,
-  80001: Mumbai,
+  // 80001: Mumbai,
 }
 export function getAddChainParameters(
   chainId: number
