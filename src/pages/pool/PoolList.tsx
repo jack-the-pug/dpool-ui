@@ -58,8 +58,10 @@ export default function PoolList() {
   }
 
   return (
-    <div className="flex flex-col w-full break-all  flex-1 gap-10">
+    <div className="flex flex-col w-full break-all  flex-1">
+      {dPoolAddress && <PoolMeta dPoolAddress={dPoolAddress} />}
       <PoolListStats list={poolMetaList} />
+      <div className='mt-10 font-extrabold text-xl mb-2'>Distributions</div>
       <div className='w-full'>
         {poolMetaList.length ? (
           <div className="bg-white rounded-lg w-full">
