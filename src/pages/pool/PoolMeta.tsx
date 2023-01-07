@@ -9,6 +9,8 @@ import { chains } from "../../constants";
 interface PoolMetaProps {
   dPoolAddress: string
 }
+
+const EmptyData = <div className="ml-2">/</div>
 export function PoolMeta(props: PoolMetaProps) {
   const { dPoolAddress } = props
   const { chainId } = useWeb3React()
@@ -36,14 +38,14 @@ export function PoolMeta(props: PoolMetaProps) {
     </div>
     <div className="flex mt-2">
       <span className="text-gray-500 w-40">Owner/Deployer</span>
-      {owner ? <AddressLink address={owner} className="ml-2 font-medium">{owner}</AddressLink> : null}</div>
+      {owner ? <AddressLink address={owner} className="ml-2 font-medium">{owner}</AddressLink> : EmptyData}</div>
     <div className="flex mt-2">
       <span className="text-gray-500 w-40">Factor</span>
-      {factor ? <AddressLink address={factor} className="ml-2 font-medium">{factor}</AddressLink> : null}
+      {factor ? <AddressLink address={factor} className="ml-2 font-medium">{factor}</AddressLink> : EmptyData}
     </div>
     <div className="flex mt-2">
       <span className="text-gray-500 w-40">Deploy Date</span>
-      {createPoolData ? <span className="ml-2 font-medium">{format(new Date(createPoolData.timestamp * 1000), "PPpp")}</span> : null}
+      {createPoolData ? <span className="ml-2 font-medium">{format(new Date(createPoolData.timestamp * 1000), "PPpp")}</span> : EmptyData}
     </div>
 
   </div>
