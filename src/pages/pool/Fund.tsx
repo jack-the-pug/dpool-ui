@@ -192,10 +192,10 @@ export function Fund(props: FundProps) {
               Fund and Distribute
             </Button>
           )}
-          <EstimateGas
+          {isApproved && <EstimateGas
             method={fundAndDistributeCallOption.method}
             arg={fundAndDistributeCallOption.params}
-          />
+          />}
         </div>
       </div>
       {tokenBalance && tokenBalance.lt(poolMeta.totalAmount) && (
