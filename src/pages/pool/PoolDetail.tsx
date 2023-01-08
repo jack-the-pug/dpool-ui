@@ -21,6 +21,7 @@ import { useGetPoolDetail } from '../../hooks/useGetPoolDetail'
 import { useWeb3React } from '@web3-react/core'
 import { PoolStats } from "./PoolStats"
 import { Claim } from './Claim'
+import { PoolBarChart } from './PoolBarChart'
 export type Pool = BasePool & {
   state: PoolState
   poolId: string
@@ -128,89 +129,92 @@ export function PoolDetail(props: PoolDetailProps) {
   if (!poolMeta || !tokenMeta) return <p>Distribute not found</p>
   return (
     <div className="flex z-0 ">
-      <div className="flex  flex-col items-center bg-white  py-2 rounded-lg">
-        <div className="my-5 w-full relative items-center flex justify-center">
-          <div className="flex items-center">
-            {poolMeta?.name}
-            <DistributeState
-              poolMeta={poolMeta}
-              distributeEvent={distributeEvent}
-            />
-          </div>
-        </div>
-        <table className="my-4">
-          <thead className="text-sm sticky">
-            <tr className="text-gray-500 bg-gray-100 sticky">
-              <td>Index</td>
-              <td className="py-3">Address</td>
-              <td>
-                Amount/
-                {tokenMeta && (
-                  <AddressLink
-                    address={tokenMeta?.address}
-                    className="  text-gray-600"
-                  >
-                    {tokenMeta?.symbol}
-                  </AddressLink>
-                )}
-              </td>
-              <td>State</td>
-            </tr>
-          </thead>
-          <tbody>
-            {poolList.map((claimer, index) => (
-              <DistributeRow
-                key={claimer.address}
-                claimer={claimer}
-                index={index}
+      <div className='flex flex-col gap-10'>
+        <PoolBarChart poolMeta={poolMeta} tokenMeta={tokenMeta} />
+        <div className="flex  flex-col items-center bg-white  py-2 rounded-lg">
+          <div className="my-5 w-full relative items-center flex justify-center">
+            <div className="flex items-center">
+              {poolMeta?.name}
+              <DistributeState
                 poolMeta={poolMeta}
-                dPoolAddress={dPoolAddress}
-                tokenMeta={tokenMeta}
-                poolId={poolId}
-                claimEvent={claimEventList.find(
-                  (e) => e.from.toLowerCase() === claimer.address.toLowerCase()
-                )}
-                getPoolEvent={getPoolEvent}
-                getPoolDetail={getPoolDetail}
                 distributeEvent={distributeEvent}
               />
-            ))}
-          </tbody>
-        </table>
-        {/* <PoolStats poolMeta={poolMeta} tokenMeta={tokenMeta} /> */}
-        <div className="w-full px-4">
-          <section className="text-xs w-full flex flex-col gap-4 mt-20">
-            <DateRange start={poolMeta.startTime} end={poolMeta.deadline} />
-          </section>
-          {createEvent || fundEvent || distributeEvent || cancelEvent ? (
-            <section className="w-full mt-10 text-xs border border-gray-300 divide-solid divide-y divide-gray-300 rounded-md ">
-              <PoolEvent event={createEvent} label="Created" />
-              <PoolEvent event={fundEvent} label="Funded" />
-              <PoolEvent event={distributeEvent} label="Distributed" />
-              <PoolEvent event={cancelEvent} label="Canceled" />
-            </section>
-          ) : null}
-          {account ? (
-            <div className="w-full">
-              <div className="flex mt-4 gap-2 w-full justify-between">
-                {isOwner ? (
-                  <div
-                    className="text-xs cursor-pointer text-gray-400 hover:text-gray-500 "
-                    onClick={distributeAgain}
-                  >
-                    Duplicate Distribution
-                  </div>
-                ) : null}
-                <Cancel
+            </div>
+          </div>
+          <table className="my-4">
+            <thead className="text-sm sticky">
+              <tr className="text-gray-500 bg-gray-100 sticky">
+                <td>Index</td>
+                <td className="py-3">Address</td>
+                <td>
+                  Amount/
+                  {tokenMeta && (
+                    <AddressLink
+                      address={tokenMeta?.address}
+                      className="  text-gray-600"
+                    >
+                      {tokenMeta?.symbol}
+                    </AddressLink>
+                  )}
+                </td>
+                <td>State</td>
+              </tr>
+            </thead>
+            <tbody>
+              {poolList.map((claimer, index) => (
+                <DistributeRow
+                  key={claimer.address}
+                  claimer={claimer}
+                  index={index}
                   poolMeta={poolMeta}
                   dPoolAddress={dPoolAddress}
-                  isOwner={isOwner}
+                  tokenMeta={tokenMeta}
                   poolId={poolId}
+                  claimEvent={claimEventList.find(
+                    (e) => e.from.toLowerCase() === claimer.address.toLowerCase()
+                  )}
+                  getPoolEvent={getPoolEvent}
                   getPoolDetail={getPoolDetail}
+                  distributeEvent={distributeEvent}
                 />
+              ))}
+            </tbody>
+          </table>
+          {/* <PoolStats poolMeta={poolMeta} tokenMeta={tokenMeta} /> */}
+          <div className="w-full px-4">
+            <section className="text-xs w-full flex flex-col gap-4 mt-20">
+              <DateRange start={poolMeta.startTime} end={poolMeta.deadline} />
+            </section>
+            {createEvent || fundEvent || distributeEvent || cancelEvent ? (
+              <section className="w-full mt-10 text-xs border border-gray-300 divide-solid divide-y divide-gray-300 rounded-md ">
+                <PoolEvent event={createEvent} label="Created" />
+                <PoolEvent event={fundEvent} label="Funded" />
+                <PoolEvent event={distributeEvent} label="Distributed" />
+                <PoolEvent event={cancelEvent} label="Canceled" />
+              </section>
+            ) : null}
+            {account ? (
+              <div className="w-full">
+                <div className="flex mt-4 gap-2 w-full justify-between">
+                  {isOwner ? (
+                    <div
+                      className="text-xs cursor-pointer text-gray-400 hover:text-gray-500 "
+                      onClick={distributeAgain}
+                    >
+                      Duplicate Distribution
+                    </div>
+                  ) : null}
+                  <Cancel
+                    poolMeta={poolMeta}
+                    dPoolAddress={dPoolAddress}
+                    isOwner={isOwner}
+                    poolId={poolId}
+                    getPoolDetail={getPoolDetail}
+                  />
+                </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
       </div>
       <div className='flex flex-col gap-5'>
