@@ -20,6 +20,7 @@ import { AddressLink } from '../../components/hash'
 import { useGetPoolDetail } from '../../hooks/useGetPoolDetail'
 import { useWeb3React } from '@web3-react/core'
 import { PoolStats } from "./PoolStats"
+import { Claim } from './Claim'
 export type Pool = BasePool & {
   state: PoolState
   poolId: string
@@ -126,8 +127,8 @@ export function PoolDetail(props: PoolDetailProps) {
   // if (!account) return <p>Please connect your wallet first</p>
   if (!poolMeta || !tokenMeta) return <p>Distribute not found</p>
   return (
-    <div className="flex justify-center z-0 transition-all ease-in-out">
-      <div className="w-full break-all flex flex-1 flex-col items-center bg-white  py-2 rounded-lg">
+    <div className="flex z-0 ">
+      <div className="flex  flex-col items-center bg-white  py-2 rounded-lg">
         <div className="my-5 w-full relative items-center flex justify-center">
           <div className="flex items-center">
             {poolMeta?.name}
@@ -176,7 +177,7 @@ export function PoolDetail(props: PoolDetailProps) {
             ))}
           </tbody>
         </table>
-        <PoolStats poolMeta={poolMeta} tokenMeta={tokenMeta} />
+        {/* <PoolStats poolMeta={poolMeta} tokenMeta={tokenMeta} /> */}
         <div className="w-full px-4">
           <section className="text-xs w-full flex flex-col gap-4 mt-20">
             <DateRange start={poolMeta.startTime} end={poolMeta.deadline} />
@@ -191,29 +192,6 @@ export function PoolDetail(props: PoolDetailProps) {
           ) : null}
           {account ? (
             <div className="w-full">
-              {dPoolAddress && (
-                <div className="w-full mt-10 text-black">
-                  <Fund
-                    poolMeta={poolMeta}
-                    dPoolAddress={dPoolAddress}
-                    tokenMeta={tokenMeta}
-                    poolId={poolId}
-                    getPoolDetail={getPoolDetail}
-                    isApproved={isApproved}
-                    setIsApproved={setIsApproved}
-                    getPoolEvent={getPoolEvent}
-                  />
-                  <Distribute
-                    poolMeta={poolMeta}
-                    dPoolAddress={dPoolAddress}
-                    poolId={poolId}
-                    getPoolDetail={getPoolDetail}
-                    submittable={submittable}
-                    tokenMeta={tokenMeta}
-                    getPoolEvent={getPoolEvent}
-                  />
-                </div>
-              )}
               <div className="flex mt-4 gap-2 w-full justify-between">
                 {isOwner ? (
                   <div
@@ -234,6 +212,32 @@ export function PoolDetail(props: PoolDetailProps) {
             </div>
           ) : null}
         </div>
+      </div>
+      <div className='flex flex-col gap-5'>
+        {dPoolAddress &&
+          <Fund
+            poolMeta={poolMeta}
+            dPoolAddress={dPoolAddress}
+            tokenMeta={tokenMeta}
+            poolId={poolId}
+            getPoolDetail={getPoolDetail}
+            isApproved={isApproved}
+            setIsApproved={setIsApproved}
+            getPoolEvent={getPoolEvent}
+          />
+        }
+        {dPoolAddress && <Claim getPoolDetail={getPoolDetail} poolId={poolId} poolMeta={poolMeta} tokenMeta={tokenMeta} dPoolAddress={dPoolAddress} />}
+        {
+          dPoolAddress && <Distribute
+            poolMeta={poolMeta}
+            dPoolAddress={dPoolAddress}
+            poolId={poolId}
+            getPoolDetail={getPoolDetail}
+            submittable={submittable}
+            tokenMeta={tokenMeta}
+            getPoolEvent={getPoolEvent}
+          />
+        }
       </div>
     </div>
   )

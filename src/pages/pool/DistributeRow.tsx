@@ -90,21 +90,14 @@ export function DistributeRow(props: ClaimProps) {
 export function RenderClaim(props: ClaimProps) {
   const {
     claimer,
-    index,
     poolMeta,
     dPoolAddress,
     poolId,
     tokenMeta,
     claimEvent,
-    getPoolEvent,
-    getPoolDetail,
     distributeEvent,
   } = props
   if (!poolMeta || !dPoolAddress) return null
-  const { chainId, account } = useWeb3React()
-  const callDPool = useCallDPoolContract(dPoolAddress)
-  const [claimState, setClaimState] = useState<ActionState>(ActionState.WAIT)
-  const [claimedTx, setClaimedTx] = useState<string>()
 
   const [shouldClaimAmount, setShouldClaimAmount] = useState<BigNumber>(
     claimer.amount
@@ -129,43 +122,11 @@ export function RenderClaim(props: ClaimProps) {
     getClaimedAmount()
   }, [getClaimedAmount, claimEvent])
 
-  const claim = useCallback(async () => {
-    if (!dPoolContract || !poolId || !chainId || !account) return
-    setClaimState(ActionState.ING)
-    const result = await callDPool(
-      'claimSinglePool',
-      [poolId, index],
-      DPoolEvent.Claimed
-    )
-    if (!result.success) {
-      setClaimState(ActionState.FAILED)
-      return
-    }
-    const { transactionHash, logs } = result.data
-    if (logs.length) {
-      setClaimedTx(transactionHash)
-      setClaimState(ActionState.SUCCESS)
-      getPoolEvent()
-      // last one
-      if (poolMeta.totalAmount.sub(poolMeta.claimedAmount).eq(claimer.amount)) {
-        getPoolDetail()
-      }
-    }
-  }, [
-    dPoolContract,
-    chainId,
-    poolId,
-    getClaimedAmount,
-    getPoolEvent,
-    poolMeta,
-    getPoolDetail,
-    claimer,
-  ])
+
 
   const actionCell = useMemo(() => {
     const { startTime, deadline, state } = poolMeta
     const nowTime = Date.now() / 1000
-    const isClaimer = claimer.address.toLowerCase() === account?.toLowerCase()
     if (distributeEvent) {
       return (
         <div className="flex items-center">
@@ -193,10 +154,9 @@ export function RenderClaim(props: ClaimProps) {
           </TranSactionHash>
         </div>
       )
-
+    if (state === PoolState.Funded && poolMeta.startTime == (2 ** 48 - 1)) return <div>Wait Distribute</div>
     if (state === PoolState.Initialized) return <div>Unfunded</div>
-    if (shouldClaimAmount.eq(0) || claimedTx) return <div>Received</div>
-
+    if (shouldClaimAmount.eq(0)) return <div>Received</div>
     if (startTime !== 2 ** 48 - 1) {
       if (nowTime < startTime) return <div>Not Started</div>
       if (
@@ -205,25 +165,11 @@ export function RenderClaim(props: ClaimProps) {
       )
         return <div>Expired</div>
     }
-    if (!isClaimer && shouldClaimAmount.gt(0)) return <div>Unclaimed</div>
-    if (isClaimer && state === PoolState.Funded) {
-      return (
-        <Button
-          loading={claimState === ActionState.ING}
-          onClick={claim}
-          className="w-20 py-1"
-        >
-          Claim
-        </Button>
-      )
-    }
+    return <div>Unclaimed</div>
   }, [
     shouldClaimAmount,
     poolMeta,
-    claim,
-    claimState,
     claimEvent,
-    claimedTx,
     distributeEvent,
   ])
   return (
