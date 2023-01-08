@@ -157,27 +157,30 @@ export function Fund(props: FundProps) {
             <span>{tokenMeta.symbol}</span>
           </div>
         </div>
-        <ApproveToken
-          token={tokenMeta.address}
-          approveAmount={poolMeta.totalAmount}
-          dPoolAddress={dPoolAddress}
-          onApproved={(signatureData) => {
-            setIsApproved(true)
-            if (signatureData) {
-              setSignatureData(signatureData)
-            }
-          }}
-          selectClass="bg-neutral-200"
-        />
-        <div className="flex mt-8 mx-2  flex-col">
-          <div className='flex justify-end'>
+
+        <div className="flex mt-10 mx-2  flex-col">
+          {!isApproved && <div className='mt-8'>
+            <ApproveToken
+              token={tokenMeta.address}
+              approveAmount={poolMeta.totalAmount}
+              dPoolAddress={dPoolAddress}
+              onApproved={(signatureData) => {
+                setIsApproved(true)
+                if (signatureData) {
+                  setSignatureData(signatureData)
+                }
+              }}
+              selectClass="bg-neutral-200"
+            />
+          </div>}
+          {isApproved && <div className='flex justify-end'>
             <div className=' font-thin text-gray-500 flex items-center'>
               <input type="checkbox" name="scales" onChange={e => {
                 setFundWithDistribute(e.target.checked)
               }} checked={fundWithDistribute} />
               <span className='ml-1 text-xs'>With Distribute</span>
             </div>
-          </div>
+          </div>}
           <Button
             loading={fundState === ActionState.ING}
             disable={
@@ -185,11 +188,11 @@ export function Fund(props: FundProps) {
               (tokenBalance && tokenBalance.lt(poolMeta.totalAmount))
             }
             onClick={fundWithDistribute && distributor.eq(0) ? fundAndDistribute : fundOnly}
-            className="bal-btn mt-2 px-4 h-12 text-base 
+            className={isApproved ? `bal-btn mt-2 px-4 h-12 text-base 
             bg-gradient-to-tr from-green-200 to-gray-300
              font-bold
             hover:from-green-400 hover:to-purple-300 transition-colors
-           text-black border-none block w-full hover:text-black rounded-lg shadow hover:shadow-none cursor-pointer"
+           text-black border-none block w-full hover:text-black rounded-lg shadow hover:shadow-none cursor-pointer` : 'mt-2'}
           >
             Fund
           </Button>

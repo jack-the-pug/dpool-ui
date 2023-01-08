@@ -5,7 +5,7 @@ import { Button } from "../../components/button";
 import { EstimateGas } from "../../components/estimateGas";
 import { useDPoolContract } from "../../hooks/useContract";
 import { useCallDPoolContract } from "../../hooks/useContractCall";
-import { ActionState, DPoolEvent, TokenMeta } from "../../type";
+import { ActionState, DPoolEvent, PoolState, TokenMeta } from "../../type";
 import { Pool } from "./PoolDetail";
 
 interface ClaimProps {
@@ -61,7 +61,7 @@ export function Claim(props: ClaimProps) {
     poolId,
     poolMeta,
   ])
-
+  if (poolMeta.state !== PoolState.Funded) return null
   if (claimerIndex === -1) return null
   if (claimedAmount.gt(0)) return null
   return <div className='flex flex-col ml-5'>
