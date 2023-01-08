@@ -86,7 +86,7 @@ export default function PoolList() {
             </table>
           </div>
         ) : (
-          <p>Distributions Not Found</p>
+          null
         )}
       </div>
       <div className="text-xs text-gray-500 flex mt-4 mb-16 w-full justify-end">

@@ -224,7 +224,6 @@ export function Fund(props: FundProps) {
           <span className="text-xs text-red-500 my-1">Insufficient balance</span>
         )}
       </div>
-
     </div>
   )
 }

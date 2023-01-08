@@ -62,6 +62,7 @@ export function Claim(props: ClaimProps) {
     poolMeta,
   ])
   if (poolMeta.state !== PoolState.Funded) return null
+  if (poolMeta.startTime === 281474976710655) return null
   if (claimerIndex === -1) return null
   if (claimedAmount.gt(0)) return null
   return <div className='flex flex-col ml-5'>
