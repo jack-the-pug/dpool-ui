@@ -47,14 +47,8 @@ export function Claim(props: ClaimProps) {
       setClaimState(ActionState.FAILED)
       return
     }
-    const { logs } = result.data
     setClaimedAmount(poolMeta.amounts[claimerIndex])
-    if (logs.length) {
-      // last one
-      if (poolMeta.totalAmount.sub(poolMeta.claimedAmount).eq(poolMeta.amounts[claimerIndex])) {
-        getPoolDetail()
-      }
-    }
+    getPoolDetail()
   }, [
     claimerIndex,
     chainId,
