@@ -6,6 +6,7 @@ import { BigNumber, utils } from "ethers"
 import { ResponsiveContainer, BarChart, XAxis, Bar, Tooltip, Cell, PieChart, Pie } from "recharts"
 
 import { PoolState, TokenMeta } from "../../type"
+import useAddressBook from "../../hooks/useAddressBook"
 
 interface PoolListStatsProps {
   list: Pool[]
@@ -27,6 +28,7 @@ interface ChartItemState {
 
 interface USDCByAddress {
   address: string,
+  name: string,
   usdc: number
 }
 
@@ -53,7 +55,7 @@ const CustomUSDCAddressTooltip = (data: any) => {
   const { active, payload } = data
   if (active && payload && payload.length) {
     return <div className=" bg-black opacity-80 text-white flex py-1 px-2 ">
-      <div className="">{`${payload[0].payload.address.slice(0, 6)}...${payload[0].payload.address.slice(38, 42)}:`}</div>
+      <div className="">{payload[0].payload.name}:</div>
       <div className="font-bold">{`$${payload[0].payload.usdc}`}</div>
     </div>
   }
@@ -63,7 +65,8 @@ const CustomUSDCAddressTooltip = (data: any) => {
 
 export function PoolListStats(props: PoolListStatsProps) {
   const { list } = props
-  const { getToken } = useTokenMeta();
+  const { getToken } = useTokenMeta()
+  const { addressName } = useAddressBook()
   const [chartList, setChartList] = useState<Pool[]>([])
   const [totalUSDC, setTotalUSDC] = useState<string>()
   const [currentHoverItem, setCurrentHoverItem] = useState<ChartItemState>()
@@ -107,7 +110,10 @@ export function PoolListStats(props: PoolListStatsProps) {
 
     }
     const totalUSDCByAddressList: USDCByAddress[] = []
-    totalUSDCByAddress.forEach((usdc, address) => totalUSDCByAddressList.push({ usdc: Number(utils.formatUnits(usdc, 6)), address }))
+    totalUSDCByAddress.forEach((usdc, address) => {
+      const name = addressName(address) || `${address.slice(0, 6)}`
+      totalUSDCByAddressList.push({ usdc: Number(utils.formatUnits(usdc, 6)), address, name })
+    })
 
     const totalUSDCByTokenList: USDCByToken[] = []
     totalUSDCByToken.forEach((item) => totalUSDCByTokenList.push({ usdc: Number(utils.formatUnits(item.usdc, 6)), token: item.token }))
