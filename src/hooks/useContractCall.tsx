@@ -24,7 +24,7 @@ export function useCallContract(contract: Contract | undefined) {
   const { chainId } = useWeb3React()
   return useCallback(
     async (method: string, params: any[]): Promise<CallResult> => {
-      console.log('call contract params', params)
+      console.log('call contract ===', method, params)
       if (!contract || !chainId || !chains[chainId])
         return {
           success: false,

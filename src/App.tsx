@@ -21,7 +21,7 @@ function App() {
         <RecoilRoot>
           <div className="w-full h-full flex flex-col items-center">
             <LayoutHeader />
-            <div className="max-w-screen-xl mt-8">
+            <div className="max-w-7xl mt-8">
               <LayoutHome />
             </div>
             {ReactDom.createPortal(

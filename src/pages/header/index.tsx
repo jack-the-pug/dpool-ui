@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router-dom'
 import { useParams, Link } from 'react-router-dom'
+import { VscodeIconsFileTypeDependencies } from '../../components/icon'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import Connector from './Connector'
 import Network from './Network'
@@ -9,43 +10,31 @@ export default function LayoutHeader() {
   const { pathname } = useLocation()
   return (
     <header className="w-full flex justify-between items-center mt-2 px-5 gap-10">
-      <div className="flex flex-col">
-        <h2>dPool</h2>
-        {dPoolAddress && pathname !== '/dPoolFactory' ? (
-          <span className="mr-1 text-xs text-gray-500">{dPoolAddress}</span>
-        ) : null}
-      </div>
-      <div>
-        <Link
-          to="/"
-          className={`border-solid  rounded p-1.5 py-0.5 inline-block border ${
-            pathname === '/'
-              ? 'text-black border-black'
-              : 'border-gray-400 text-gray-500'
-          }`}
-        >
-          Create
-        </Link>
-        <Link
-          to="/distributions"
-          className={`border-solid  rounded p-1.5 py-0.5 inline-block border ml-4 ${
-            pathname.includes('/distributions')
-              ? 'text-black border-black'
-              : 'border-gray-400 text-gray-500'
-          }`}
-        >
-          Distributions
-        </Link>
-        <Link
-          to="/addressBook"
-          className={`border-solid  rounded p-1.5 py-0.5 inline-block border ml-4  ${
-            pathname.includes('/addressBook')
-              ? 'text-black border-black'
-              : 'border-gray-400 text-gray-500'
-          }`}
-        >
-          Address Book
-        </Link>
+      <div className='flex items-center'>
+        <div className="flex items-center">
+          <VscodeIconsFileTypeDependencies />
+          <h2 className='text-2xl ml-2'>dPool</h2>
+        </div>
+        <div className='ml-8'>
+          <Link
+            to="/"
+            className={`font-medium ${pathname === '/' && 'text-green-500'}`}
+          >
+            Create
+          </Link>
+          <Link
+            to="/distributions"
+            className={`ml-4 font-medium ${pathname.includes('/distributions') && 'text-green-500'}`}
+          >
+            Distributions
+          </Link>
+          <Link
+            to="/addressBook"
+            className={`ml-4 font-medium ${pathname.includes('/addressBook') && 'text-green-500'}`}
+          >
+            AddressBook
+          </Link>
+        </div>
       </div>
       <div className="flex gap-4">
         <Network />
