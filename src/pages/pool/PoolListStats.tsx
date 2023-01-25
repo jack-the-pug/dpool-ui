@@ -94,14 +94,16 @@ export function PoolListStats(props: PoolListStatsProps) {
         tokenPriceCatch[token.address] = tokenPrice
       }
       // pool usdc total
-      const poolUsdcValue = list[i].claimedAmount.mul(tokenPrice)
+      if (list[i].claimedAmount.eq(0)) continue
+      const poolUsdcValue = list[i].claimedAmount.mul(tokenPrice).div(utils.parseUnits("1", token.decimals))
       totalValue = totalValue.add(poolUsdcValue)
-      res.push({ ...list[i], totalUSDC: Number(utils.formatUnits(poolUsdcValue, token.decimals)) })
+      res.push({ ...list[i], totalUSDC: poolUsdcValue.toNumber() })
       // address usdc total
       list[i].claimers.forEach((claimer, index) => {
         const amount = list[i].amounts[index]
-        const currentUsdc = totalUSDCByAddress.get(claimer) || BigNumber.from(0)
-        totalUSDCByAddress.set(claimer, currentUsdc.add(amount.mul(tokenPrice as BigNumber)))
+        const preUsdc = totalUSDCByAddress.get(claimer) || BigNumber.from(0)
+        const currentUsdc = amount.mul(tokenPrice as BigNumber).div(utils.parseUnits("1", token.decimals))
+        totalUSDCByAddress.set(claimer, preUsdc.add(currentUsdc));
       })
       // token usdc total
       const currentTokenUsdc = totalUSDCByToken.get(token.address) || { usdc: BigNumber.from(0), token }
@@ -112,17 +114,14 @@ export function PoolListStats(props: PoolListStatsProps) {
     const totalUSDCByAddressList: USDCByAddress[] = []
     totalUSDCByAddress.forEach((usdc, address) => {
       const name = addressName(address) || `${address.slice(0, 6)}`
-      totalUSDCByAddressList.push({ usdc: Number(utils.formatUnits(usdc, 6)), address, name })
+      totalUSDCByAddressList.push({ usdc: usdc.toNumber(), address, name })
     })
-
     const totalUSDCByTokenList: USDCByToken[] = []
-    totalUSDCByToken.forEach((item) => totalUSDCByTokenList.push({ usdc: Number(utils.formatUnits(item.usdc, 6)), token: item.token }))
-    totalUSDCByTokenList.sort((a, b) => a.usdc > b.usdc ? 1 : -1)
-
-    setTotalUSDC(utils.formatUnits(totalValue, 6))
+    totalUSDCByToken.forEach((item) => totalUSDCByTokenList.push({ usdc: item.usdc.toNumber(), token: item.token }))
+    totalUSDCByTokenList.sort((a, b) => a.usdc > b.usdc ? -1 : 1)
+    setTotalUSDC(totalValue.toString())
     setChartList(res.reverse())
     setTotalUSDCByAddress(totalUSDCByAddressList)
-
     setTotalUSDCByToken(totalUSDCByTokenList)
   }, [getToken, list])
   useEffect(() => {
@@ -207,7 +206,7 @@ export function PoolListStats(props: PoolListStatsProps) {
           <div className="mt-4">
             {totalUSDCByToken.map((tokenRecord, index) => <div
               key={tokenRecord.token.address}
-              className="flex relative px-2 items-center"
+              className="flex relative px-2 items-center my-2"
             >
               <div className="absolute left-0 top-0 h-full rounded-md opacity-30 z-0" style={{
                 width: 200 * tokenRecord.usdc / Number(totalUSDC),
@@ -217,7 +216,7 @@ export function PoolListStats(props: PoolListStatsProps) {
                 <div className="flex">
                   <div>{index + 1}.</div>
                   <div>{tokenRecord.token.symbol}</div>
-                  <div className="ml-2 font-semibold">{tokenRecord.usdc} </div>
+                  <div className="ml-2 font-semibold">${tokenRecord.usdc} </div>
                 </div>
                 <span className="text-gray-500">{`${(tokenRecord.usdc / Number(totalUSDC) * 100).toFixed(0)}%`}</span>
               </div>
