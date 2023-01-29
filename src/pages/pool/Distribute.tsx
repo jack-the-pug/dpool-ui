@@ -60,7 +60,7 @@ export function Distribute(props: DistributeProps) {
 
   return (
     <div className='flex flex-col ml-5'>
-      <div className='bg-white rounded-lg py-4 px-2'>
+      <div className='bg-white dark:bg-slate-800 rounded-lg py-4 px-2'>
         <div className='flex gap-20 items-center justify-between px-2 border-b border-gray-200 border-solid'>
           <span className='text-lg font-semibold'>Distribute</span>
           <div>
@@ -79,7 +79,7 @@ export function Distribute(props: DistributeProps) {
           hover:from-green-400 hover:to-purple-300 transition-colors
          text-black border-none block w-full hover:text-black rounded-lg shadow hover:shadow-none cursor-pointer"
           >
-            Distribute
+            <span className="text-black">Distribute</span>
           </Button>
           <EstimateGas method="distribute" arg={[poolId]} />
         </div>

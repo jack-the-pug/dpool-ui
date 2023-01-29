@@ -29,7 +29,6 @@ input::-webkit-inner-spin-button {
 /* Firefox */
 input[type='number'] {
   -moz-appearance: textfield;
-  background: white;
 }
 
 td {
@@ -63,6 +62,7 @@ dialog {
   background: white;
   color: black;
   display: block;
+
 }
 
 dialog:not([open]) {

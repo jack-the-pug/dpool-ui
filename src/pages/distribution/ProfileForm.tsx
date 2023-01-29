@@ -122,15 +122,15 @@ export function Profile(props: TProfileProps) {
   )
   return (
     <form className="flex h-12">
-      <div className="text-black border border-solid border-r-0 border-b-0  border-gray-400 outline-none  text-center flex justify-center items-center w-10">
+      <div className="text-black dark:text-gray-500 border border-solid border-r-0 border-b-0  border-gray-400 dark:border-gray-600 outline-none  text-center flex justify-center items-center w-10">
         {index + 1}
       </div>
       <div
-        className={`border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-center relative`}
+        className={`border border-solid border-r-0 border-b-0 border-gray-400 dark:border-gray-600 flex flex-col justify-center relative`}
         style={{ width: 'calc(24rem + 1px)' }}
       >
         <div
-          className={`absolute top-10 rounded-md bg-white shadow-lg left-2 z-50 ${addressSelectVisible ? 'visible' : 'invisible'
+          className={`absolute top-10 rounded-md bg-white dark:bg-slate-700 shadow-lg left-2 z-50 ${addressSelectVisible ? 'visible' : 'invisible'
             }`}
         >
           {addressBookFiltered.map((addressMeta, index) => (
@@ -139,7 +139,7 @@ export function Profile(props: TProfileProps) {
               onMouseEnter={() => setHoverSelectAddressIndex(index)}
               onMouseLeave={() => setHoverSelectAddressIndex(-1)}
               className={`text-xs cursor-pointer ${hoverSelectAddressIndex === index &&
-                'bg-gray-100 text-green-500'
+                'bg-gray-100 dark:bg-slate-700 text-green-500'
                 }  py-4 px-2`}
               onClick={() => {
                 setAddress(addressMeta.address)
@@ -151,7 +151,7 @@ export function Profile(props: TProfileProps) {
           ))}
         </div>
         <input
-          className={`outline-none focus:outline-none px-2 text-sm`}
+          className={`outline-none focus:outline-none px-2 text-sm dark:bg-slate-800`}
           placeholder="address"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
@@ -187,10 +187,10 @@ export function Profile(props: TProfileProps) {
       </div>
 
       <div
-        className={`border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-between items-center px-2  w-80 overflow-hidden`}
+        className={`border border-solid dark:border-gray-600 border-r-0 border-b-0 border-gray-400 flex flex-col justify-between items-center px-2  w-80 overflow-hidden`}
       >
         <input
-          className={`w-full outline-none :focus:outline-none items-end ${isPercentMode ? 'h-3/5' : 'h-full'
+          className={`w-full outline-none :focus:outline-none items-end dark:bg-slate-800 ${isPercentMode ? 'h-3/5' : 'h-full'
             }`}
           placeholder="amount"
           key={props.profileKey + 'amount'}
@@ -230,12 +230,12 @@ export function Profile(props: TProfileProps) {
         ) : null}
       </div>
       {tokenMetaList[1] ? (
-        <div className="border border-solid text-gray-500 cursor-not-allowed border-r-0 border-b-0 border-gray-400 flex justify-between items-center px-2 w-80">
+        <div className="border border-solid text-gray-500 cursor-not-allowed border-r-0 border-b-0 border-gray-400 dark:border-gray-600 flex justify-between items-center px-2 w-80">
           {formatCurrencyAmount(parsedTokenAmounts[1][index], tokenMetaList[1])}
         </div>
       ) : null}
       <div
-        className={`w-12 justify-center  cursor-pointer border  border-b-0 border-gray-400 m-0 flex items-center`}
+        className={`w-12 justify-center  cursor-pointer border  border-b-0 border-gray-400 dark:border-gray-600  m-0 flex items-center`}
       >
         <IconoirDeleteCircledOutline onClick={() => onRemove(index)} />
       </div>

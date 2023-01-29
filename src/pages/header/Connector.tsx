@@ -46,7 +46,7 @@ export default function Connector() {
     return (
       <button
         onClick={() => connect()}
-        className="w-28 border border-gray-900 justify-center rounded-md hover:bg-gray-100"
+        className="w-28 border border-gray-900 justify-center rounded-md hover:bg-gray-100 dark:bg-slate-700 dark:hover:bg-slate-500 "
         style={{ height: '30px' }}
       >
         Connect
@@ -56,16 +56,13 @@ export default function Connector() {
 
   return (
     <div
-      className="border w-36 justify-center border-gray-900 px-2 rounded-md hover:bg-gray-100 flex items-center "
+      className="border w-36 justify-center  border-gray-900 px-2 rounded-md hover:bg-gray-100 flex items-center dark:bg-slate-700 dark:hover:bg-slate-500 "
       style={{ height: '30px' }}
       onMouseEnter={() => setIsAddressHover(true)}
       onMouseLeave={() => setIsAddressHover(false)}
     >
-      {isAddressHover ? (
-        <button onClick={() => setIsConnect(false)}>Disconnect</button>
-      ) : (
-        `${account?.slice(0, 6)}...${account?.slice(38).toUpperCase()}`
-      )}
+
+      {`${account?.slice(0, 6)}...${account?.slice(38).toUpperCase()}`}
     </div>
   )
 }

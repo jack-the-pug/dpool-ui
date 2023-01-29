@@ -60,7 +60,7 @@ export function Claim(props: ClaimProps) {
   if (claimerIndex === -1) return null
   if (claimedAmount.gt(0)) return null
   return <div className='flex flex-col ml-5'>
-    <div className='bg-white rounded-lg py-4 px-2'>
+    <div className='bg-white dark:bg-slate-800 rounded-lg py-4 px-2'>
       <div className='flex gap-x-36 items-center justify-between px-2 border-b border-gray-200 border-solid'>
         <span className='text-lg font-semibold'>Claim</span>
         <div>
@@ -76,9 +76,10 @@ export function Claim(props: ClaimProps) {
       font-bold
       bg-gradient-to-tr from-green-200 to-gray-300
       hover:from-green-400 hover:to-purple-300 transition-colors
-     text-black border-none block w-full hover:text-black rounded-lg shadow hover:shadow-none cursor-pointer"
+      border-none block w-full rounded-lg shadow hover:shadow-none cursor-pointer
+      "
         >
-          Claim
+          <span className="text-black">Claim</span>
         </Button>
         <EstimateGas method="claimSinglePool" arg={[poolId, claimerIndex]} />
       </div>

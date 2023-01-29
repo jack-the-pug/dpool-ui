@@ -17,7 +17,7 @@ interface TTokenSelectProps {
 export default function TokenSelect(props: TTokenSelectProps) {
   const { tokenMeta, setTokenMeta, dialogDefaultOpen = false } = props
   const { tokenList: sourceTokenList, getToken, setToken } = useTokenMeta()
-  const { provider, chainId, account } = useWeb3React()
+  const { chainId } = useWeb3React()
   const [loading, setLoading] = useState<boolean>(false)
   const [dialogVisible, setDialogVisible] = useState<boolean>(dialogDefaultOpen)
   const [tokenAddress, setTokenAddress] = useState<string>()
@@ -99,7 +99,7 @@ export default function TokenSelect(props: TTokenSelectProps) {
             <>
               <input
                 onChange={(e) => setTokenAddress(e.target.value)}
-                className="my-5 outline-none focus:outline-none border-b border-gray-300 border-solid"
+                className="my-5 outline-none focus:outline-none border-b border-gray-300 border-solid dark:bg-slate-800"
                 autoFocus
                 placeholder="Token Address"
                 style={{ width: '380px' }}
@@ -116,7 +116,7 @@ export default function TokenSelect(props: TTokenSelectProps) {
                         setDialogVisible(false)
                       }
                     }}
-                    className="transition-all duration-300 flex flex-col ease-in-out rounded-md cursor-pointer p-2 hover:mx-2 hover:scale-110  hover:bg-gray-100"
+                    className="transition-all duration-300 flex flex-col ease-in-out rounded-md cursor-pointer p-2 hover:mx-2 hover:scale-110  hover:bg-gray-100 dark:hover:bg-slate-600"
                   >
                     <div> {token.symbol}</div>
 

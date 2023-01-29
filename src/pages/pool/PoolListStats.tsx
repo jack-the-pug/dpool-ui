@@ -133,7 +133,7 @@ export function PoolListStats(props: PoolListStatsProps) {
   }, [])
   return <div className="">
     <div className="flex w-full relative gap-5">
-      <div className="flex flex-col flex-1 relative  bg-white pt-4  px-4 rounded-xl">
+      <div className="flex flex-col flex-1 relative  bg-white dark:bg-slate-800 pt-4  px-4 rounded-xl">
         <div className="flex justify-between">
           <div className="font-bold">Pool Volume</div>
           {currentHoverItem ? <div className="flex">
@@ -175,7 +175,7 @@ export function PoolListStats(props: PoolListStatsProps) {
         </div>
       </div>
       <div className="flex flex-col gap-5">
-        <div className="flex flex-1 flex-col relative bg-white pt-4  px-4 rounded-xl">
+        <div className="flex flex-1 flex-col relative bg-white pt-4 dark:bg-slate-800  px-4 rounded-xl">
           <div className="font-bold">
             Volume By Address
           </div>
@@ -199,7 +199,7 @@ export function PoolListStats(props: PoolListStatsProps) {
             <Tooltip cursor={false} content={<CustomUSDCAddressTooltip />} wrapperClassName="border-none" contentStyle={{ border: "none" }} />
           </PieChart>
         </div>
-        <div className="flex flex-1 flex-col relative bg-white pt-4  px-4 rounded-xl">
+        <div className="flex flex-1 flex-col relative bg-white dark:bg-slate-800 pt-4  px-4 rounded-xl">
           <div className="font-bold">
             Top Tokens
           </div>

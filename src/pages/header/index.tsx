@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom'
 import { VscodeIconsFileTypeDependencies } from '../../components/icon'
 import Connector from './Connector'
 import Network from './Network'
+import { Theme } from './Theme'
 
 export default function LayoutHeader() {
   const { pathname } = useLocation()
   return (
-    <header className="w-full flex justify-between items-center py-4 px-5 gap-10 bg-white sticky top-0 z-50 shadow">
+    <header className="w-full flex justify-between items-center py-4 px-5 gap-10 bg-white dark:bg-slate-800 dark:text-white sticky top-0 z-50 shadow">
       <div className='flex items-center'>
         <div className="flex items-center">
           <VscodeIconsFileTypeDependencies />
@@ -35,6 +36,7 @@ export default function LayoutHeader() {
         </div>
       </div>
       <div className="flex gap-4">
+        <Theme />
         <Network />
         <Connector />
       </div>

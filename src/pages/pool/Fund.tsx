@@ -150,7 +150,7 @@ export function Fund(props: FundProps) {
     return null
   return (
     <div className="flex flex-col ml-5">
-      <div className='bg-white rounded-lg py-4'>
+      <div className='bg-white dark:bg-slate-800 rounded-lg py-4'>
         <div className='flex gap-x-36 items-center justify-between px-2 border-b border-gray-200 border-solid'>
           <span className='text-lg font-semibold'>Fund</span>
           <div>
@@ -201,7 +201,7 @@ export function Fund(props: FundProps) {
             hover:from-green-400 hover:to-purple-300 transition-colors
            text-black border-none block w-full hover:text-black rounded-lg shadow hover:shadow-none cursor-pointer` : 'mt-2'}
           >
-            Fund
+            <span className="text-black">Fund</span>
           </Button>
           <EstimateGas
             method={fundWithDistribute && distributor.eq(0) ? fundAndDistributeCallOption.method : fundOnlyCallOption.method}

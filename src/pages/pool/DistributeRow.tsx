@@ -48,7 +48,7 @@ export function DistributeRow(props: ClaimProps) {
   } = props
   const { addressName } = useAddressBook()
   return (
-    <tr key={claimer.address} className="hover:bg-gray-200">
+    <tr key={claimer.address} className={`hover:bg-gray-200 dark:hover:bg-slate-700 ${index % 2 == 0 ? "bg-white dark:bg-slate-900" : "bg-gray-100 dark:bg-slate-800"}`}>
       <td className="text-gray-500 text-center py-2">
         {claimer.address.toLowerCase() === account?.toLowerCase() ? (
           <span className="text-xs text-green-500 bg-green-200 px-2 rounded-md cursor-default">

@@ -417,7 +417,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           poolIds.length ? (
             <div className="font-medium font-xl text-green-500">
               {createPoolState === ActionState.SUCCESS &&
-              distributionType === DistributionType.Push
+                distributionType === DistributionType.Push
                 ? 'Pool'
                 : 'Distribution'}{' '}
               "{poolMeta.name}" created
@@ -438,11 +438,11 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         style={{ borderSpacing: '20px' }}
       >
         <thead>
-          <tr className=" w-full my-2 bg-gray-100">
+          <tr className=" w-full my-2 bg-gray-100 dark:bg-slate-700">
             <td className="py-2">Address</td>
             {tokenMetaList.map((tokenMeta) => (
               <td>
-                <AddressLink address={tokenMeta.address} className="text-black">
+                <AddressLink address={tokenMeta.address} className="text-black dark:text-gray-200">
                   {tokenMeta.symbol}
                 </AddressLink>
               </td>
@@ -450,8 +450,8 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           </tr>
         </thead>
         <tbody className="font-mono">
-          {renderUIData.map((row) => (
-            <tr key={row.address} className="my-2 hover:bg-gray-200">
+          {renderUIData.map((row, index) => (
+            <tr key={row.address} className={`my-2 hover:bg-gray-200 dark:hover:bg-slate-600 ${index % 2 === 0 ? "bg-gray-200 dark:bg-slate-800" : "bg-white dark:bg-slate-700"}`}>
               {' '}
               <td className="py-2">
                 <AddressLink
@@ -475,7 +475,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           ))}
         </tbody>
         <tfoot>
-          <tr className="my-2  w-full bg-white text-sm">
+          <tr className="my-2  w-full bg-white dark:bg-slate-800 text-sm">
             <td className="text-gray-500 pl-2">
               Total: {renderUIData.length} Recipient(s)
             </td>
@@ -486,16 +486,15 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
             ))}
           </tr>
           {poolMeta.config.isFundNow ? (
-            <tr className="my-2 bg-white text-sm">
+            <tr className="my-2 bg-white dark:bg-slate-800 text-sm">
               <td className="text-gray-500 pl-2">Balance:</td>
               {tokenMetaList.map((tokenMeta, index) => (
                 <td
-                  className={`${
-                    tokenBalanceList[index] &&
+                  className={`${tokenBalanceList[index] &&
                     tokenBalanceList[index].lt(tokenTotalAmounts[index])
-                      ? 'text-red-500'
-                      : ''
-                  } py-2 text-base`}
+                    ? 'text-red-500'
+                    : ''
+                    } py-2 text-base`}
                   key={tokenMeta.address}
                 >
                   {formatCurrencyAmount(
@@ -507,7 +506,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
             </tr>
           ) : null}
           {BigNumber.from(poolMeta.config.distributor).gt(0) &&
-          poolMeta.config.distributor.toLowerCase() !==
+            poolMeta.config.distributor.toLowerCase() !==
             account?.toLowerCase() ? (
             <tr className="my-2 bg-white text-sm">
               <td className="text-gray-500 py-2 pl-2">Distributor</td>
@@ -522,19 +521,19 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           {distributionType === DistributionType.Push
             ? null
             : [
-                <tr className="my-2  bg-white text-sm">
-                  <td className="text-gray-500 py-2  pl-2">Start</td>
-                  <td className="text-gray-500">
-                    {format(new Date(poolMeta.config.date[0] * 1000), 'Pp')}
-                  </td>
-                </tr>,
-                <tr className="my-2 bg-white text-sm">
-                  <td className="text-gray-500 py-2 pl-2">End</td>
-                  <td className="text-gray-500">
-                    {format(new Date(poolMeta.config.date[1] * 1000), 'Pp')}
-                  </td>
-                </tr>,
-              ]}
+              <tr className="my-2  bg-white text-sm">
+                <td className="text-gray-500 py-2  pl-2">Start</td>
+                <td className="text-gray-500">
+                  {format(new Date(poolMeta.config.date[0] * 1000), 'Pp')}
+                </td>
+              </tr>,
+              <tr className="my-2 bg-white text-sm">
+                <td className="text-gray-500 py-2 pl-2">End</td>
+                <td className="text-gray-500">
+                  {format(new Date(poolMeta.config.date[1] * 1000), 'Pp')}
+                </td>
+              </tr>,
+            ]}
         </tfoot>
       </table>
 
@@ -562,8 +561,8 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               {distributionType === DistributionType.Pull
                 ? 'Create Pool'
                 : poolMeta!.config.isFundNow
-                ? 'Distribute Now'
-                : 'Create Distribution'}
+                  ? 'Distribute Now'
+                  : 'Create Distribution'}
             </Button>
             {createPoolOption ? (
               <EstimateGas

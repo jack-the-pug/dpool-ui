@@ -478,15 +478,14 @@ export default function PoolsList() {
     setPoolList([createPoolEmptyItem()])
     setTableHeaderInputList([])
   }, [])
-  console.log("callDataCheck", callDataCheck)
   return dPoolFactoryVisible ? (
     <DPoolFactory />
   ) : (
     <div className='flex gap-5'>
-      <div className="flex flex-col items-center justify-center bg-white px-4 mb-8 rounded-lg shadow-lg">
+      <div className="flex flex-col items-center justify-center bg-white px-4 mb-8 rounded-lg shadow-lg dark:bg-slate-800">
         <div className="w-full flex justify-center items-center">
           <input
-            className="text-center text-xl font-medium px-2 my-5 outline-dashed focus:outline-dashed outline-gray-400"
+            className="text-center text-xl font-medium px-2 my-5 outline-dashed focus:outline-dashed outline-gray-400 dark:bg-slate-800"
             autoFocus
             value={poolName}
             placeholder="Name"
@@ -516,12 +515,12 @@ export default function PoolsList() {
 
         <div className="w-full">
           <div className="flex  w-full  justify-between  text-base ">
-            <div className="flex flex-1 justify-center items-center text-center  border border-solid  border-b-0 border-r-0 border-gray-400">
+            <div className="flex flex-1 justify-center items-center text-center  border border-solid  border-b-0 border-r-0 border-gray-400 dark:border-gray-600">
               <div className="w-10"></div>
               <div className="w-96">Address</div>
             </div>
-            <div className="flex flex-col border border-b-0 border-gray-400">
-              <div className="text-center border-b border-gray-400 py-1">
+            <div className="flex flex-col border border-b-0 border-gray-400 dark:border-gray-600">
+              <div className="text-center border-b border-gray-400 dark:border-gray-600 py-1">
                 Amount
               </div>
 
@@ -577,31 +576,31 @@ export default function PoolsList() {
         <div ref={(el) => (scrollToViewDiv.current = el)} className="h-10"></div>
       </div>
       <div>
-        <div className='bg-white rounded-lg py-4 px-2'>
+        <div className='bg-white rounded-lg py-4 px-2 dark:bg-slate-800'>
           <div className='flex flex-col'>
-            <div className='flex gap-x-36 items-center justify-between px-2 border-b border-gray-200 border-solid'>
+            <div className='flex gap-x-36 items-center justify-between px-2 border-b border-gray-200 dark:border-gray-600 border-solid'>
               <span className='text-lg font-semibold'>Total</span>
               <div>
                 <span className='text-2xl font-bold'>{tokenTotalAmounts ? formatCurrencyAmount(tokenTotalAmounts[0], tokenMetaList[0]) : null}</span>
                 <span className="ml-1">{tokenMetaList[0] && tokenMetaList[0].symbol}</span>
               </div>
             </div>
-            <div className='flex gap-x-36 items-center justify-between p-2 border-b border-gray-200 border-solid'>
+            <div className='flex gap-x-36 items-center justify-between p-2 border-b border-gray-200 dark:border-gray-600 border-solid'>
               <span className=''>Balance</span>
               <div>
                 <span className=''>{tokenBalanceList ? formatCurrencyAmount(tokenBalanceList[0], tokenMetaList[0]) : null}</span>
                 <span className="ml-1">{tokenMetaList[0] && tokenMetaList[0].symbol}</span>
               </div>
             </div>
-           { tokenMetaList[1] && <div className='mt-4'>
-              <div className='flex gap-x-36 items-center justify-between px-2 border-b border-gray-200 border-solid'>
+            {tokenMetaList[1] && <div className='mt-4'>
+              <div className='flex gap-x-36 items-center justify-between px-2 border-b border-gray-200 dark:border-gray-600 border-solid'>
                 <span className='text-lg font-semibold'>Pool2</span>
                 <div>
                   <span className='text-2xl font-bold'>{tokenTotalAmounts ? formatCurrencyAmount(tokenTotalAmounts[1], tokenMetaList[1]) : null}</span>
                   <span className="ml-1">{tokenMetaList[1] && tokenMetaList[1].symbol}</span>
                 </div>
               </div>
-              <div className='flex gap-x-36 items-center justify-between p-2 border-b border-gray-200 border-solid'>
+              <div className='flex gap-x-36 items-center justify-between p-2 border-b border-gray-200 dark:border-gray-600 border-solid'>
                 <span className=''>Balance</span>
                 <div>
                   <span className=''>{tokenBalanceList ? formatCurrencyAmount(tokenBalanceList[1], tokenMetaList[1]) : null}</span>

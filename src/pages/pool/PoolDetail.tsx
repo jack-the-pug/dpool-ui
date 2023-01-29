@@ -131,7 +131,7 @@ export function PoolDetail(props: PoolDetailProps) {
     <div className="flex z-0 ">
       <div className='flex flex-col gap-10'>
         <PoolBarChart poolMeta={poolMeta} tokenMeta={tokenMeta} />
-        <div className="flex  flex-col items-center bg-white  py-2 rounded-lg">
+        <div className="flex  flex-col items-center bg-white dark:bg-slate-800  py-2 rounded-lg">
           <div className="my-5 w-full relative items-center flex justify-center">
             <div className="flex items-center">
               {poolMeta?.name}
@@ -143,7 +143,7 @@ export function PoolDetail(props: PoolDetailProps) {
           </div>
           <table className="my-4">
             <thead className="text-sm sticky">
-              <tr className="text-gray-500 bg-gray-100 sticky">
+              <tr className="text-gray-500 bg-gray-100 dark:bg-slate-800 sticky">
                 <td>Index</td>
                 <td className="py-3">Address</td>
                 <td>

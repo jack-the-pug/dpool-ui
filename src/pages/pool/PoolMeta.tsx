@@ -30,7 +30,7 @@ export function PoolMeta(props: PoolMetaProps) {
     if (!chainId || !chains[chainId]) return
     setFactory(chains[chainId].dPoolFactoryAddress)
   }, [chainId])
-  return <div className="bg-white p-4 rounded-xl mb-4">
+  return <div className="bg-white p-4 rounded-xl mb-4 dark:bg-slate-800">
     <p className="font-bold">Pool Meta</p>
     <div className="flex mt-2">
       <span className="text-gray-500 w-40">Address</span>

@@ -8,9 +8,10 @@ import { Pool } from './PoolDetail'
 
 interface PoolProps {
   pool: Pool
+  index: number
 }
 export function PoolSummary(props: PoolProps) {
-  const { pool } = props
+  const { pool, index } = props
   const { getToken } = useTokenMeta()
   const [tokenMeta, setTokenMeta] = useState<TokenMeta>()
   useEffect(() => {
@@ -23,7 +24,7 @@ export function PoolSummary(props: PoolProps) {
     }
   }, [pool])
   return (
-    <tr key={`${pool.poolId}`} className="hover:bg-gray-200">
+    <tr key={`${pool.poolId}`} className={`hover:bg-gray-200 dark:hover:bg-slate-700 ${index % 2 == 0 ? "bg-white dark:bg-slate-900" : "bg-gray-100 dark:bg-slate-800"}`}>
       <td className="py-2">
         <Link to={`${pool.poolId}`}>{pool.name}</Link>
       </td>

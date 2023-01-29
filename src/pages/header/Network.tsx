@@ -58,7 +58,7 @@ export default function NetworkAction() {
     <>
       <button
         onClick={() => setIsSwitchChain(true)}
-        className="border border-gray-900 px-2 rounded-md hover:bg-gray-100"
+        className="border border-gray-900 px-2 rounded-md hover:bg-gray-100 dark:bg-slate-700 dark:hover:bg-slate-500 "
       >
         {chainName}
       </button>
@@ -69,7 +69,7 @@ export default function NetworkAction() {
               <div
                 key={chain.chainId}
                 onClick={() => switchChain(chain.chainId)}
-                className="flex h-10 items-center transition-all duration-300 ease-in-out  rounded-md cursor-pointer px-2 hover:scale-110  hover:bg-gray-100"
+                className="flex h-10 items-center transition-all duration-300 ease-in-out  rounded-md cursor-pointer px-2 hover:scale-110  hover:bg-gray-100 dark:hover:bg-slate-500"
               >
                 {chain.name}
               </div>
