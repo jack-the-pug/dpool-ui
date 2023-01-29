@@ -1,6 +1,5 @@
-import { BigNumber, ethers, utils } from 'ethers'
+import { BigNumber, utils } from 'ethers'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { BasePool, PoolState, TokenMeta } from '../../type'
 import { EosIconsBubbleLoading } from '../../components/icon'
 import { useNavigate } from 'react-router-dom'
@@ -19,7 +18,6 @@ import { PoolEvent } from './PoolEvent'
 import { AddressLink } from '../../components/hash'
 import { useGetPoolDetail } from '../../hooks/useGetPoolDetail'
 import { useWeb3React } from '@web3-react/core'
-import { PoolStats } from "./PoolStats"
 import { Claim } from './Claim'
 import { PoolBarChart } from './PoolBarChart'
 export type Pool = BasePool & {

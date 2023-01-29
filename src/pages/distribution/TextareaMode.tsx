@@ -1,5 +1,5 @@
 import { BigNumber } from 'ethers'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { TokenMeta } from '../../type'
 import { formatCurrencyAmount } from '../../utils/number'
 

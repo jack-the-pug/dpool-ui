@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MaterialSymbolsAdd } from '../../components/icon'
 import { usePageClose } from '../../hooks/usePageClose'
 
-import { BigNumber, constants, ethers, utils } from 'ethers'
+import { BigNumber, constants, utils } from 'ethers'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import {
   PoolRow,

@@ -1,4 +1,3 @@
-import { utils } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
 import { useEffect, useMemo } from 'react'
 import { useState } from 'react'

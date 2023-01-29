@@ -1,5 +1,5 @@
 import { utils } from 'ethers'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import { IconoirDeleteCircledOutline } from '../../components/icon'
 import useAddressBook from '../../hooks/useAddressBook'
