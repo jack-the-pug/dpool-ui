@@ -361,8 +361,8 @@ export default function PoolsList() {
   }, [tokenTotalAmounts, tokenBalanceList])
   const callDataCheck = useMemo(() => {
     if (!account) return 'Please connect your wallet'
-    if (!createPoolCallData) return
-    if (!isOwner) return
+    if (!createPoolCallData) return "Please check distribution list"
+    if (!isOwner) return "Not pool owner"
 
     const { distributionType, isFundNow } = poolConfig
     const callData = createPoolCallData[0]
