@@ -16,6 +16,7 @@ export const formatCurrencyAmount = (
   tokenMeta?: TokenMeta,
   formatLen: number = 2
 ) => {
+  if (!amount) return '0'
   const readableAmount = utils.formatUnits(
     amount,
     tokenMeta ? tokenMeta.decimals : 18
