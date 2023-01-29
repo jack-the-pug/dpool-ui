@@ -581,7 +581,7 @@ export default function PoolsList() {
             <div className='flex gap-x-36 items-center justify-between px-2 border-b border-gray-200 dark:border-gray-600 border-solid'>
               <span className='text-lg font-semibold'>Total</span>
               <div>
-                <span className='text-2xl font-bold'>{tokenTotalAmounts ? formatCurrencyAmount(tokenTotalAmounts[0], tokenMetaList[0]) : null}</span>
+                <span className='text-2xl font-bold'>{tokenTotalAmounts ? formatCurrencyAmount(tokenTotalAmounts[0], tokenMetaList[0]) : "0"}</span>
                 <span className="ml-1">{tokenMetaList[0] && tokenMetaList[0].symbol}</span>
               </div>
             </div>
@@ -596,7 +596,7 @@ export default function PoolsList() {
               <div className='flex gap-x-36 items-center justify-between px-2 border-b border-gray-200 dark:border-gray-600 border-solid'>
                 <span className='text-lg font-semibold'>Pool2</span>
                 <div>
-                  <span className='text-2xl font-bold'>{tokenTotalAmounts ? formatCurrencyAmount(tokenTotalAmounts[1], tokenMetaList[1]) : null}</span>
+                  <span className='text-2xl font-bold'>{tokenTotalAmounts ? formatCurrencyAmount(tokenTotalAmounts[1], tokenMetaList[1]) : "0"}</span>
                   <span className="ml-1">{tokenMetaList[1] && tokenMetaList[1].symbol}</span>
                 </div>
               </div>

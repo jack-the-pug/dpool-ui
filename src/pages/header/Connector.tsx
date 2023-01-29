@@ -56,7 +56,7 @@ export default function Connector() {
 
   return (
     <div
-      className="border w-36 justify-center  border-gray-900 px-2 rounded-md hover:bg-gray-100 flex items-center dark:bg-slate-700 dark:hover:bg-slate-500 "
+      className="border w-36 justify-center cursor-pointer border-gray-900 px-2 rounded-md hover:bg-gray-100 flex items-center dark:bg-slate-700 dark:hover:bg-slate-500 "
       style={{ height: '30px' }}
       onMouseEnter={() => setIsAddressHover(true)}
       onMouseLeave={() => setIsAddressHover(false)}

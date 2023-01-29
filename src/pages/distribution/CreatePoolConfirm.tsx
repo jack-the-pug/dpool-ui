@@ -475,7 +475,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           ))}
         </tbody>
         <tfoot>
-          <tr className="my-2  w-full bg-white dark:bg-slate-800 text-sm">
+          <tr className="my-2  w-full bg-white dark:bg-slate-900 text-sm">
             <td className="text-gray-500 pl-2">
               Total: {renderUIData.length} Recipient(s)
             </td>
@@ -486,7 +486,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
             ))}
           </tr>
           {poolMeta.config.isFundNow ? (
-            <tr className="my-2 bg-white dark:bg-slate-800 text-sm">
+            <tr className="my-2 bg-white dark:bg-slate-900 text-sm">
               <td className="text-gray-500 pl-2">Balance:</td>
               {tokenMetaList.map((tokenMeta, index) => (
                 <td
