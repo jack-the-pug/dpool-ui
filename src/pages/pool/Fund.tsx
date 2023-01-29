@@ -9,6 +9,7 @@ import { useCallDPoolContract } from '../../hooks/useContractCall'
 import { Button } from '../../components/button'
 import useTokenMeta from '../../hooks/useTokenMeta'
 import { EstimateGas } from '../../components/estimateGas'
+import { formatCurrencyAmount } from '../../utils/number'
 
 interface FundProps {
   poolMeta: Pool | undefined
@@ -150,15 +151,21 @@ export function Fund(props: FundProps) {
   return (
     <div className="flex flex-col ml-5">
       <div className='bg-white rounded-lg py-4'>
-        <div className='flex gap-20 items-center justify-between px-2 border-b border-gray-200 border-solid'>
+        <div className='flex gap-x-36 items-center justify-between px-2 border-b border-gray-200 border-solid'>
           <span className='text-lg font-semibold'>Fund</span>
           <div>
             <span className='text-2xl font-bold'>{utils.formatUnits(poolMeta.totalAmount, tokenMeta.decimals)}</span>
-            <span>{tokenMeta.symbol}</span>
+            <span className='ml-1'>{tokenMeta.symbol}</span>
           </div>
         </div>
-
-        <div className="flex mt-10 mx-2  flex-col">
+        {tokenBalance && <div className='flex gap-30 my-2 items-center justify-between px-2 border-b border-gray-200 border-solid'>
+          <span className='text-lg'>Balance</span>
+          <div>
+            <span className=''>{formatCurrencyAmount(tokenBalance, tokenMeta)}</span>
+            <span className='ml-1'>{tokenMeta.symbol}</span>
+          </div>
+        </div>}
+        <div className="flex mt-16 mx-2  flex-col">
           {!isApproved && <div className='mt-8'>
             <ApproveToken
               token={tokenMeta.address}
@@ -200,29 +207,10 @@ export function Fund(props: FundProps) {
             method={fundWithDistribute && distributor.eq(0) ? fundAndDistributeCallOption.method : fundOnlyCallOption.method}
             arg={fundWithDistribute && distributor.eq(0) ? fundAndDistributeCallOption.params : fundOnlyCallOption.params}
           />
-          {/* <div className="flex flex-col flex-1">
-            {distributor.eq(0) && (
-              <Button
-                loading={fundAndDistributeState === ActionState.ING}
-                disable={
-                  !isApproved ||
-                  (tokenBalance && tokenBalance.lt(poolMeta.totalAmount)) ||
-                  fundState === ActionState.ING
-                }
-                onClick={fundAndDistribute}
-              >
-                Fund and Distribute
-              </Button>
-            )}
-            {isApproved && <EstimateGas
-              method={fundAndDistributeCallOption.method}
-              arg={fundAndDistributeCallOption.params}
-            />}
-          </div> */}
+          {tokenBalance && tokenBalance.lt(poolMeta.totalAmount) && (
+            <div className="text-xs text-red-500 my-1">Insufficient balance</div>
+          )}
         </div>
-        {tokenBalance && tokenBalance.lt(poolMeta.totalAmount) && (
-          <span className="text-xs text-red-500 my-1">Insufficient balance</span>
-        )}
       </div>
     </div>
   )

@@ -65,22 +65,25 @@ export function Distribute(props: DistributeProps) {
           <span className='text-lg font-semibold'>Distribute</span>
           <div>
             <span className='text-2xl font-bold'>{utils.formatUnits(poolMeta.totalAmount, tokenMeta.decimals)}</span>
-            <span>{tokenMeta.symbol}</span>
+            <span className='ml-1'>{tokenMeta.symbol}</span>
           </div>
         </div>
-        <Button
-          disable={!submittable}
-          loading={distributionState === ActionState.ING}
-          onClick={distributePool}
-          className="bal-btn mt-8 px-4 h-12 text-base 
+        <div className='mt-16'>
+          <Button
+            disable={!submittable}
+            loading={distributionState === ActionState.ING}
+            onClick={distributePool}
+            className="bal-btn mt-8 px-4 h-12 text-base 
           font-bold
           bg-gradient-to-tr from-green-200 to-gray-300
           hover:from-green-400 hover:to-purple-300 transition-colors
          text-black border-none block w-full hover:text-black rounded-lg shadow hover:shadow-none cursor-pointer"
-        >
-          Distribute
-        </Button>
-        <EstimateGas method="distribute" arg={[poolId]} />
+          >
+            Distribute
+          </Button>
+          <EstimateGas method="distribute" arg={[poolId]} />
+        </div>
+
       </div>
     </div>
   )

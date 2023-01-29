@@ -575,34 +575,51 @@ export default function PoolsList() {
       <PoolSetting poolConfig={poolConfig} setPoolConfig={setPoolConfig} />
 
       <div className="w-full mt-5 flex justify-between items-center">
-        <div className="flex items-baseline">
-          {tokenTotalAmounts ? `Total:` : null}
-          <div className="flex flex-col font-medium mx-2">
-            {tokenTotalAmounts &&
-              tokenTotalAmounts.map((amount, index) => (
-                <div key={'token-' + index}>
-                  {formatCurrencyAmount(amount, tokenMetaList[index])}
-                  <span className="ml-1 text-gray-500">
-                    {tokenMetaList[index]?.symbol}
-                  </span>
-                </div>
-              ))}
+        <div className='flex flex-1 justify-between items-end'>
+          <div className="flex flex-col">
+            <div className='flex'>
+              {tokenTotalAmounts ? `Total:` : null}
+              <div className="flex flex-col font-medium mx-2">
+                {tokenTotalAmounts &&
+                  tokenTotalAmounts.map((amount, index) => (
+                    <div key={'token-' + index}>
+                      {formatCurrencyAmount(amount, tokenMetaList[index])}
+                      <span className="ml-1 text-gray-500">
+                        {tokenMetaList[index]?.symbol}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+            <div className='flex'>
+              <span>Balance:</span>
+              <div className="flex flex-col font-medium mx-2">
+                {tokenBalanceList &&
+                  tokenBalanceList.map((amount, index) => (
+                    <div key={'token-' + index}>
+                      {formatCurrencyAmount(amount, tokenMetaList[index])}
+                      <span className="ml-1 text-gray-500">
+                        {tokenMetaList[index]?.symbol}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
           </div>
-        </div>
-        <div>
-          {typeof callDataCheck === 'boolean' ? null : (
-            <span className=" text-red-500 mr-2">{callDataCheck}</span>
-          )}
-          <button
-            onClick={typeof callDataCheck === 'boolean' ? onConfirm : undefined}
-            className={`border border-gray-900 px-2 rounded-md hover:bg-gray-100 ${
-              typeof callDataCheck === 'boolean'
+          <div>
+            {typeof callDataCheck === 'boolean' ? null : (
+              <span className=" text-red-500 mr-2">{callDataCheck}</span>
+            )}
+            <button
+              onClick={typeof callDataCheck === 'boolean' ? onConfirm : undefined}
+              className={`border border-gray-900 px-2 rounded-md hover:bg-gray-100 ${typeof callDataCheck === 'boolean'
                 ? 'text-black'
                 : 'text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            Preview Distributions
-          </button>
+                }`}
+            >
+              Preview Distributions
+            </button>
+          </div>
         </div>
       </div>
       <div ref={(el) => (scrollToViewDiv.current = el)} className="h-20"></div>
