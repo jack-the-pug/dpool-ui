@@ -55,7 +55,7 @@ function PoolSetting(props: {
         <div className="flex flex-1 items-center">
           <label className="italic mr-2">Distributor:</label>
           <input
-            className="outline-none bg-neutral-200  flex-1 focus:outline-none border-b border-gray-300  border-dashed"
+            className="outline-none  flex-1 focus:outline-none border-b border-gray-300  border-dashed"
             placeholder="address"
             value={distributorAddress}
             onChange={(e) => {

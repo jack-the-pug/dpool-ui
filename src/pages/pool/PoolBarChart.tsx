@@ -26,6 +26,7 @@ interface ChartItemState {
   }
   address: string
   value: number
+  name: string
 }
 
 export function PoolBarChart(props: PoolBarChartProps) {
@@ -43,7 +44,7 @@ export function PoolBarChart(props: PoolBarChartProps) {
   return <div className="bg-white pt-4  px-4 rounded-xl">
     <div className="flex justify-end">
       {currentHoverItem ? <div className="flex">
-        <span className="truncate" style={{ maxWidth: 100 }}>{currentHoverItem.address.slice(0, 6)}</span>
+        <span className="truncate" style={{ maxWidth: 100 }}>{currentHoverItem.name || currentHoverItem.address.slice(0, 6)}</span>
         :
         <span className="font-bold">{currentHoverItem.value}</span>
       </div> : <div><span>Total:</span> <span className="font-bold">{utils.formatUnits(poolMeta.totalAmount, tokenMeta.decimals)}</span></div>}

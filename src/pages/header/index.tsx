@@ -1,15 +1,13 @@
 import { useLocation } from 'react-router-dom'
-import { useParams, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { VscodeIconsFileTypeDependencies } from '../../components/icon'
-import useDPoolAddress from '../../hooks/useDPoolAddress'
 import Connector from './Connector'
 import Network from './Network'
 
 export default function LayoutHeader() {
-  const { dPoolAddress } = useDPoolAddress()
   const { pathname } = useLocation()
   return (
-    <header className="w-full flex justify-between items-center mt-2 px-5 gap-10">
+    <header className="w-full flex justify-between items-center py-4 px-5 gap-10 bg-white sticky top-0 z-50 shadow">
       <div className='flex items-center'>
         <div className="flex items-center">
           <VscodeIconsFileTypeDependencies />

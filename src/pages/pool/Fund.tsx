@@ -158,7 +158,7 @@ export function Fund(props: FundProps) {
             <span className='ml-1'>{tokenMeta.symbol}</span>
           </div>
         </div>
-        {tokenBalance && <div className='flex gap-30 my-2 items-center justify-between px-2 border-b border-gray-200 border-solid'>
+        {tokenBalance && <div className='flex gap-x-36 my-2 items-center justify-between px-2 border-b border-gray-200 border-solid'>
           <span className='text-lg'>Balance</span>
           <div>
             <span className=''>{formatCurrencyAmount(tokenBalance, tokenMeta)}</span>

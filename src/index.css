@@ -29,16 +29,19 @@ input::-webkit-inner-spin-button {
 /* Firefox */
 input[type='number'] {
   -moz-appearance: textfield;
+  background: white;
 }
 
 td {
   padding: 0 10px;
 }
+
 ::-webkit-scrollbar {
   width: 2px;
 
   background-color: rgb(229 229 229 / var(--tw-bg-opacity));
 }
+
 ::-webkit-scrollbar-thumb {
   border-radius: 10px;
   background-color: #9ca3af;
@@ -66,7 +69,7 @@ dialog:not([open]) {
   display: none;
 }
 
-dialog + .backdrop {
+dialog+.backdrop {
   position: fixed;
   top: 0;
   right: 0;

@@ -126,25 +126,21 @@ export function Profile(props: TProfileProps) {
         {index + 1}
       </div>
       <div
-        className={`${
-          focusInputNumber === 1 ? 'bg-gray-100' : 'bg-neutral-200'
-        } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-center relative`}
+        className={`border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-center relative`}
         style={{ width: 'calc(24rem + 1px)' }}
       >
         <div
-          className={`absolute top-10 rounded-md left-2 bg-white z-50 ${
-            addressSelectVisible ? 'visible' : 'invisible'
-          }`}
+          className={`absolute top-10 rounded-md bg-white shadow-lg left-2 z-50 ${addressSelectVisible ? 'visible' : 'invisible'
+            }`}
         >
           {addressBookFiltered.map((addressMeta, index) => (
             <div
               key={addressMeta.address}
               onMouseEnter={() => setHoverSelectAddressIndex(index)}
               onMouseLeave={() => setHoverSelectAddressIndex(-1)}
-              className={`text-xs cursor-pointer ${
-                hoverSelectAddressIndex === index &&
+              className={`text-xs cursor-pointer ${hoverSelectAddressIndex === index &&
                 'bg-gray-100 text-green-500'
-              }  py-4 px-2`}
+                }  py-4 px-2`}
               onClick={() => {
                 setAddress(addressMeta.address)
                 setFocusInputNumber(-1)
@@ -155,14 +151,12 @@ export function Profile(props: TProfileProps) {
           ))}
         </div>
         <input
-          className={`${
-            focusInputNumber === 1 ? 'bg-gray-100' : 'bg-neutral-200'
-          } outline-none focus:outline-none px-2 bg-neutral-200 text-sm`}
+          className={`outline-none focus:outline-none px-2 text-sm`}
           placeholder="address"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           onFocus={() => setFocusInputNumber(1)}
-          onBlur={(e) => {
+          onBlur={() => {
             if (!addressSelectVisible) {
               setFocusInputNumber(-1)
             } else {
@@ -193,16 +187,11 @@ export function Profile(props: TProfileProps) {
       </div>
 
       <div
-        className={`${
-          focusInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
-        } border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-between items-center px-2  w-80 overflow-hidden`}
+        className={`border border-solid border-r-0 border-b-0 border-gray-400 flex flex-col justify-between items-center px-2  w-80 overflow-hidden`}
       >
         <input
-          className={`${
-            focusInputNumber === 2 ? 'bg-gray-100' : 'bg-neutral-200'
-          } w-full outline-none :focus:outline-none   bg-neutral-200 items-end ${
-            isPercentMode ? 'h-3/5' : 'h-full'
-          }`}
+          className={`w-full outline-none :focus:outline-none items-end ${isPercentMode ? 'h-3/5' : 'h-full'
+            }`}
           placeholder="amount"
           key={props.profileKey + 'amount'}
           type="number"
@@ -218,16 +207,16 @@ export function Profile(props: TProfileProps) {
             <div className="text-xs text-gray-500">
               {userInputTotal.gt(0)
                 ? utils
-                    .parseUnits(
-                      parsedNumberByDecimal(
-                        parsed2NumberString(inputAmount),
-                        tokenMetaList[0].decimals
-                      ),
-                      tokenMetaList[0]?.decimals
-                    )
-                    .mul(10000) // Retain two decimal places
-                    .div(userInputTotal)
-                    .toNumber() / 100
+                  .parseUnits(
+                    parsedNumberByDecimal(
+                      parsed2NumberString(inputAmount),
+                      tokenMetaList[0].decimals
+                    ),
+                    tokenMetaList[0]?.decimals
+                  )
+                  .mul(10000) // Retain two decimal places
+                  .div(userInputTotal)
+                  .toNumber() / 100
                 : '0'}
               %
             </div>
@@ -241,7 +230,7 @@ export function Profile(props: TProfileProps) {
         ) : null}
       </div>
       {tokenMetaList[1] ? (
-        <div className="border border-solid text-gray-500 cursor-not-allowed bg-neutral-200 border-r-0 border-b-0 border-gray-400 flex justify-between items-center px-2 w-80">
+        <div className="border border-solid text-gray-500 cursor-not-allowed border-r-0 border-b-0 border-gray-400 flex justify-between items-center px-2 w-80">
           {formatCurrencyAmount(parsedTokenAmounts[1][index], tokenMetaList[1])}
         </div>
       ) : null}
