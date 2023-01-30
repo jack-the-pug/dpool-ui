@@ -438,7 +438,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         style={{ borderSpacing: '20px' }}
       >
         <thead>
-          <tr className=" w-full my-2 bg-gray-100 dark:bg-slate-700">
+          <tr className=" w-full my-2 bg-gray-100 dark:bg-slate-800">
             <td className="py-2">Address</td>
             {tokenMetaList.map((tokenMeta) => (
               <td>
@@ -451,7 +451,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
         </thead>
         <tbody className="font-mono">
           {renderUIData.map((row, index) => (
-            <tr key={row.address} className={`my-2 hover:bg-gray-200 dark:hover:bg-slate-600 ${index % 2 === 0 ? "bg-gray-200 dark:bg-slate-800" : "bg-white dark:bg-slate-700"}`}>
+            <tr key={row.address} className={`my-2 hover:bg-gray-200 dark:hover:bg-slate-600 ${index % 2 == 0 ? "bg-white dark:bg-slate-900" : "bg-gray-100 dark:bg-slate-800"}`}>
               {' '}
               <td className="py-2">
                 <AddressLink
@@ -521,13 +521,13 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           {distributionType === DistributionType.Push
             ? null
             : [
-              <tr className="my-2  bg-white text-sm">
+              <tr className="my-2 text-sm">
                 <td className="text-gray-500 py-2  pl-2">Start</td>
                 <td className="text-gray-500">
                   {format(new Date(poolMeta.config.date[0] * 1000), 'Pp')}
                 </td>
               </tr>,
-              <tr className="my-2 bg-white text-sm">
+              <tr className="my-2 text-sm">
                 <td className="text-gray-500 py-2 pl-2">End</td>
                 <td className="text-gray-500">
                   {format(new Date(poolMeta.config.date[1] * 1000), 'Pp')}

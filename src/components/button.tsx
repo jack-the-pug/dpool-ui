@@ -29,7 +29,7 @@ export function Button(props: ButtonProps) {
       `}
       onClick={disable || loading ? undefined : onClick}
     >
-      {loading ? <EosIconsBubbleLoading className="mr-1" /> : null}
+      {loading ? <EosIconsBubbleLoading className="mr-1 text-black" /> : null}
       {children}
     </div>
   )
