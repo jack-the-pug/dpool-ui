@@ -62,13 +62,13 @@ export default function PoolList() {
     <div className="flex flex-col w-full break-all  flex-1">
       {dPoolAddress && <PoolMeta dPoolAddress={dPoolAddress} />}
       <PoolListStats list={poolMetaList} />
-      <div className='mt-10 font-extrabold text-xl mb-2'>Distributions</div>
+      <div className='mt-10 font-extrabold text-xl mb-2 dark:text-gray-200'>Distributions</div>
       <div className='w-full'>
         {poolMetaList.length ? (
-          <div className="bg-white rounded-lg w-full">
+          <div className="bg-white rounded-lg w-full dark:bg-slate-800">
             <table className='w-full'>
               <thead className="text-gray-500 text-xs">
-                <tr className="bg-gray-100 ">
+                <tr className="bg-gray-100 dark:bg-slate-800">
                   <td className="py-3">Name</td>
                   <td>
                     <span className="ml-2">State</span>
@@ -79,8 +79,8 @@ export default function PoolList() {
                 </tr>
               </thead>
               <tbody>
-                {poolMetaList.map((pool) => (
-                  <PoolSummary pool={pool} key={pool.poolId} />
+                {poolMetaList.map((pool, index) => (
+                  <PoolSummary pool={pool} key={pool.poolId} index={index} />
                 ))}
               </tbody>
             </table>

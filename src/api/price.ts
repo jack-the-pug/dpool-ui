@@ -15,6 +15,9 @@ export async function getTokenPrice(token: TokenMeta) {
   url.searchParams.set("sellAmount", utils.parseUnits("1", token.decimals).toString())
   try {
     const res = await (await fetch(url)).json()
-    return BigNumber.from(res.price)
-  } catch { }
+    const price = Math.round(Number(res.price))
+    return BigNumber.from(price)
+  } catch (err) {
+    console.error("getTokenPrice", err)
+  }
 }

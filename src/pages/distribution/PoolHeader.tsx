@@ -30,7 +30,7 @@ export default function PoolTableHeader(props: {
     <div className="flex items-center">
       {tokens.map((token, index) => (
         <div
-          className={`w-80 flex items-center justify-between cursor-pointer text-base border-r border-gray-400 relative `}
+          className={`w-80 flex items-center justify-between cursor-pointer text-base border-r border-gray-400 dark:border-gray-600 relative `}
           key={index}
         >
           <input
@@ -44,7 +44,7 @@ export default function PoolTableHeader(props: {
               list[index] = value
               setTableHeaderInputList(list)
             }}
-            className="flex-1 outline-none focus:outline-none  px-2 my-1 bg-neutral-200"
+            className="flex-1 outline-none focus:outline-none  px-2 my-1 dark:bg-slate-800"
           />
           <TokenSelect
             tokenMeta={token}

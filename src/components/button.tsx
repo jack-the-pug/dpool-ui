@@ -18,17 +18,18 @@ export function Button(props: ButtonProps) {
   } = props
   return (
     <div
-      className={`w-full flex justify-center items-center border  rounded-md whitespace-nowrap   px-2 py-1 
+      className={`w-full flex justify-center items-center border  rounded-md whitespace-nowrap  p-2 dark:border-gray-500 dark:text-gray-200  border-black text-black
       ${disable || loading
-          ? 'border-gray-400 text-gray-400 cursor-not-allowed'
-          : 'cursor-pointer  border-black text-black hover:text-green-500 hover:border-green-500'
+          ? 'cursor-not-allowed'
+          : 'cursor-pointer hover:text-green-500 hover:border-green-500'
         }
       ${loading && 'cursor-wait'}
       ${className}
+       dark:bg-slate-700
       `}
       onClick={disable || loading ? undefined : onClick}
     >
-      {loading ? <EosIconsBubbleLoading className="mr-1" /> : null}
+      {loading ? <EosIconsBubbleLoading className="mr-1 text-black" /> : null}
       {children}
     </div>
   )

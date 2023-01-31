@@ -4,10 +4,8 @@ import { useApproveToken } from '../../hooks/useApproveToken'
 import useDPoolAddress from '../../hooks/useDPoolAddress'
 import useTokenMeta from '../../hooks/useTokenMeta'
 import { ActionState, PermitCallData, TokenMeta } from '../../type'
-import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import { useERC20Permit } from '../../hooks/useERC20Permit'
 import { AddressLink } from '../hash'
-import { EosIconsBubbleLoading } from '../icon'
 import { Button } from '../button'
 import { useWeb3React } from '@web3-react/core'
 
@@ -115,8 +113,8 @@ export function ApproveToken(props: ApproveTokenProps) {
       isSupportPermit
         ? ethers.constants.MaxUint256
         : approveType === ApproveType.LIMIT
-        ? shouldApproveAmount
-        : ethers.constants.MaxUint256
+          ? shouldApproveAmount
+          : ethers.constants.MaxUint256
     )
     const [isApproved] = approveTokenReq
     setApproveState(isApproved ? ActionState.SUCCESS : ActionState.FAILED)
@@ -169,7 +167,7 @@ export function ApproveToken(props: ApproveTokenProps) {
 
   if (isApproved || BigNumber.from(token).eq(0)) return null
   return (
-    <div className="w-full rounded-lg cursor-pointer flex justify-between items-center bg-neutral-200 px-1 py-1">
+    <div className="w-full rounded-lg cursor-pointer flex justify-between items-center bg-neutral-200 dark:bg-slate-800 px-1 py-1">
       <div className="text-xs text-gray-500 pl-2">
         Approve <AddressLink address={dPoolAddress}>dPool</AddressLink> to spend{' '}
         {tokenMeta?.symbol}

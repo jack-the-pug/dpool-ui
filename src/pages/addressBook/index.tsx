@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { MaterialSymbolsAdd } from '../../components/icon'
 import SetProfile from './SetProfile'
 import {
@@ -60,7 +60,7 @@ export default function AddressBook() {
   )
 
   return (
-    <div className="w-full flex flex-1 flex-col items-center">
+    <div className="w-full flex flex-1 flex-col items-center bg-white dark:bg-slate-800 p-4 mb-8 rounded-lg shadow-lg">
       <div className="w-full">
         <div className="flex flex-row items-center mb-2 w-full">
           <span className={`${isTextMode ? 'opacity-30' : 'text-green-500'}`}>

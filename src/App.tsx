@@ -19,7 +19,7 @@ function App() {
     <Web3ReactProvider connectors={connectors}>
       <HashRouter>
         <RecoilRoot>
-          <div className="w-full h-full flex flex-col items-center">
+          <div className="w-full h-full flex flex-col items-center dark:bg-slate-700">
             <LayoutHeader />
             <div className="max-w-7xl mt-8">
               <LayoutHome />

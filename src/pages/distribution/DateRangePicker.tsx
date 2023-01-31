@@ -45,14 +45,14 @@ export default function DateRangePicker(props: TDateRangePickerProps) {
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
           type="datetime-local"
-          className="bg-neutral-200 focus:outline focus:outline-black"
+          className=" focus:outline focus:outline-black dark:bg-slate-800"
         />
         <input
           type="datetime-local"
           min={startDate}
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}
-          className="bg-neutral-200 focus:outline focus:outline-black"
+          className="focus:outline focus:outline-black dark:bg-slate-800"
         />
       </div>
       <div className="w-full flex justify-between text-gray-500">

@@ -1,5 +1,5 @@
 import { utils } from 'ethers'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import { IconoirDeleteCircledOutline } from '../../components/icon'
 import useAddressBook from '../../hooks/useAddressBook'
@@ -41,7 +41,7 @@ export default function SetProfile(props: {
     <form className="flex" style={{ height: '40px' }}>
       <div className="flex flex-col border border-solid border-r-0 border-b-0 border-gray-400">
         <input
-          className="outline-none focus:outline-none px-2 bg-neutral-200 flex-1 w-96 text-sm"
+          className="outline-none focus:outline-none px-2 dark:bg-slate-800 flex-1 w-96 text-sm"
           type="text"
           name="address"
           value={address}
@@ -57,7 +57,7 @@ export default function SetProfile(props: {
         ) : null}
       </div>
       <input
-        className="outline-none focus:outline-none px-2 bg-neutral-200 border border-solid border-r-0 border-b-0 border-gray-400 text-sm w-40"
+        className="outline-none focus:outline-none px-2 dark:bg-slate-800  border border-solid border-r-0 border-b-0 border-gray-400 text-sm w-40"
         type="text"
         name="name"
         value={name}

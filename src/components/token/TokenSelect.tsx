@@ -1,13 +1,14 @@
 import { BigNumber, constants, utils } from 'ethers'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Dialog } from '../dialog'
-import { EosIconsBubbleLoading, ZondiconsClose } from '../icon'
+import { EosIconsBubbleLoading, MaterialSymbolsWarningOutlineRounded, ZondiconsClose } from '../icon'
 import useTokenMeta from '../../hooks/useTokenMeta'
 import { TokenMeta as TTokenMeta } from '../../type'
 import { chains } from '../../constants'
 
 import { isAddress } from 'ethers/lib/utils'
 import { useWeb3React } from '@web3-react/core'
+import { TokenImg } from '../tokenImg'
 interface TTokenSelectProps {
   tokenMeta: TTokenMeta | undefined
   setTokenMeta: (tokenMeta: TTokenMeta) => void
@@ -17,7 +18,7 @@ interface TTokenSelectProps {
 export default function TokenSelect(props: TTokenSelectProps) {
   const { tokenMeta, setTokenMeta, dialogDefaultOpen = false } = props
   const { tokenList: sourceTokenList, getToken, setToken } = useTokenMeta()
-  const { provider, chainId, account } = useWeb3React()
+  const { chainId } = useWeb3React()
   const [loading, setLoading] = useState<boolean>(false)
   const [dialogVisible, setDialogVisible] = useState<boolean>(dialogDefaultOpen)
   const [tokenAddress, setTokenAddress] = useState<string>()
@@ -73,6 +74,7 @@ export default function TokenSelect(props: TTokenSelectProps) {
       }
     })
   }, [tokenAddress, chainId])
+
   return (
     <>
       <div
@@ -99,7 +101,7 @@ export default function TokenSelect(props: TTokenSelectProps) {
             <>
               <input
                 onChange={(e) => setTokenAddress(e.target.value)}
-                className="my-5 outline-none focus:outline-none border-b border-gray-300 border-solid"
+                className="my-5 outline-none focus:outline-none border-b border-gray-300 border-solid dark:bg-slate-900"
                 autoFocus
                 placeholder="Token Address"
                 style={{ width: '380px' }}
@@ -116,10 +118,9 @@ export default function TokenSelect(props: TTokenSelectProps) {
                         setDialogVisible(false)
                       }
                     }}
-                    className="transition-all duration-300 flex flex-col ease-in-out rounded-md cursor-pointer p-2 hover:mx-2 hover:scale-110  hover:bg-gray-100"
+                    className="transition-all duration-300 flex flex-col ease-in-out rounded-md cursor-pointer p-2 hover:mx-2 hover:scale-110  hover:bg-gray-100 dark:hover:bg-slate-600"
                   >
-                    <div> {token.symbol}</div>
-
+                    <div className='flex items-center'> <TokenImg token={token.address} />{token.symbol}</div>
                     {BigNumber.from(token.address).eq(0) ? null : (
                       <span className="text-gray-500 italic  text-xs">
                         {token.address}

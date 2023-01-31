@@ -37,7 +37,7 @@ export function useCallContract(contract: Contract | undefined) {
         const { transactionHash } = response
         toast.success(
           <div>
-            Transaction Confirmed:
+            <span className='font-bold text-black'>Transaction Confirmed:</span>
             <br></br>
             <TranSactionHash hash={transactionHash}>
               {transactionHash.slice(0, 30)}...
@@ -52,8 +52,7 @@ export function useCallContract(contract: Contract | undefined) {
           data: response,
         }
       } catch (err: any) {
-        const errMsg = typeof err === 'object' ? err.message || err.reason : err
-        console.log('err', err)
+        const errMsg = typeof err === 'object' ? err.reason || err.message : err
         toast.error(errMsg)
         return {
           success: false,

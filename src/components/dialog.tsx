@@ -30,8 +30,8 @@ export function Dialog(props: TDialogProps) {
     <>
       {visible ? (
         <div
-          className="fixed w-screen h-screen top-0 left-0 opacity-40 z-30"
-          style={{ background: 'rgba(0,0,0,0.8)' }}
+          className="fixed w-screen h-screen top-0 left-0 z-50"
+          style={{ backdropFilter: "blur(5px)", }}
           onClick={() => onClose?.()}
         ></div>
       ) : null}
@@ -40,10 +40,11 @@ export function Dialog(props: TDialogProps) {
         <dialog
           open={visible}
           ref={(el) => (dialogRef.current = el as TDialogElement)}
-          className={`z-20 fixed rounded-lg border border-black overflow-y-auto ${dialogClass}`}
+          className={`z-50 fixed rounded-lg overflow-y-auto shadow-xl shadow-gray-500 dark:bg-slate-900 dark:text-white ${dialogClass}`}
           style={{
             transform: 'translate(0, -50%)',
             maxHeight: '70%',
+            // backdropFilter: "blur(5px)",
             ...dialogStyle,
           }}
         >

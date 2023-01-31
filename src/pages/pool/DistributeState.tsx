@@ -3,12 +3,6 @@ import { PoolState } from '../../type'
 import { Pool } from './PoolDetail'
 import { ActionEvent } from './PoolList'
 
-const stateMsg = {
-  [PoolState.Initialized]: 'Initialized',
-  [PoolState.Funded]: 'Funded',
-  [PoolState.None]: 'None',
-  [PoolState.Closed]: 'Closed',
-}
 const stateColorMap = {
   [PoolState.Initialized]: '#6B7280',
   [PoolState.Funded]: '#34D399',

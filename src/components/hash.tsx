@@ -1,6 +1,5 @@
 import { useWeb3React } from '@web3-react/core'
 import { ReactNode, useMemo } from 'react'
-import { hooks as metaMaskHooks } from '../connectors/metaMask'
 import { chains } from '../constants'
 
 export function TranSactionHash(props: {

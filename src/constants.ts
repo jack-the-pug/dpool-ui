@@ -84,7 +84,7 @@ export const chains: Chains = {
   // 1: Mainnet,
   5: Goerli,
   137: Polygon,
-  4: RinkeBy,
+  // 4: RinkeBy,
   // 80001: Mumbai,
 }
 export function getAddChainParameters(

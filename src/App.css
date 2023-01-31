@@ -53,6 +53,6 @@ input:checked+.slider:before {
   transform: translateX(16px);
 }
 
-tbody>tr:nth-child(even) {
+/* tbody>tr:nth-child(even) {
   background: #f3f4f6;
-}
+} */

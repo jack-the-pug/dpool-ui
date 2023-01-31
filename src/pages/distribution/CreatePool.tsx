@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MaterialSymbolsAdd } from '../../components/icon'
 import { usePageClose } from '../../hooks/usePageClose'
 
-import { BigNumber, constants, ethers, utils } from 'ethers'
+import { BigNumber, constants, utils } from 'ethers'
 import { hooks as metaMaskHooks } from '../../connectors/metaMask'
 import {
   PoolRow,
@@ -361,8 +361,8 @@ export default function PoolsList() {
   }, [tokenTotalAmounts, tokenBalanceList])
   const callDataCheck = useMemo(() => {
     if (!account) return 'Please connect your wallet'
-    if (!createPoolCallData) return
-    if (!isOwner) return
+    if (!createPoolCallData) return "Please check distribution list"
+    if (!isOwner) return "Not pool owner"
 
     const { distributionType, isFundNow } = poolConfig
     const callData = createPoolCallData[0]
@@ -478,148 +478,169 @@ export default function PoolsList() {
     setPoolList([createPoolEmptyItem()])
     setTableHeaderInputList([])
   }, [])
-
   return dPoolFactoryVisible ? (
     <DPoolFactory />
   ) : (
-    <div className="flex flex-col items-center justify-center">
-      <div className="w-full flex justify-center items-center">
-        <input
-          className="bg-neutral-200 text-center text-xl font-medium px-2 my-5 outline-dashed focus:outline-dashed outline-gray-400"
-          autoFocus
-          value={poolName}
-          placeholder="Name"
-          onChange={(e) => setPoolName(e.target.value)}
-        />
-      </div>
-      <div className="flex flex-row items-center mb-2 w-full">
-        <span className={`${isTextareaMode ? 'opacity-30' : 'text-green-500'}`}>
-          Table View
-        </span>
-        <label className="switch mx-2">
+    <div className='flex gap-5'>
+      <div className="flex flex-col items-center justify-center bg-white px-4 mb-8 rounded-lg shadow-lg dark:bg-slate-800">
+        <div className="w-full flex justify-center items-center">
           <input
-            onChange={(e) => {
-              setIsTextareaMode(e.target.checked)
-              e.target.checked ? poolList2textarea() : textarea2poolList()
-            }}
-            type="checkbox"
-            checked={isTextareaMode}
+            className="text-center text-xl font-medium px-2 my-5 outline-dashed focus:outline-dashed outline-gray-400 dark:bg-slate-800"
+            autoFocus
+            value={poolName}
+            placeholder="Name"
+            onChange={(e) => setPoolName(e.target.value)}
           />
-          <span className="slider rounded-lg"></span>
-        </label>
-
-        <span className={`${isTextareaMode ? 'text-green-500' : 'opacity-30'}`}>
-          Plain Text
-        </span>
-      </div>
-
-      <div className="w-full">
-        <div className="flex  w-full  justify-between  text-base ">
-          <div className="flex flex-1 justify-center items-center text-center  border border-solid  border-b-0 border-r-0 border-gray-400">
-            <div className="w-10"></div>
-            <div className="w-96">Address</div>
-          </div>
-          <div className="flex flex-col border border-b-0 border-gray-400">
-            <div className="text-center border-b border-gray-400 py-1">
-              Amount
-            </div>
-
-            <PoolHeader
-              tokenMetaList={tokenMetaList}
-              setTokenMetaList={setTokenMetaList}
-              tableHeaderInputList={tableHeaderInputList}
-              setTableHeaderInputList={setTableHeaderInputList}
+        </div>
+        <div className="flex flex-row items-center mb-2 w-full">
+          <span className={`${isTextareaMode ? 'opacity-30' : 'text-green-500'}`}>
+            Table View
+          </span>
+          <label className="switch mx-2">
+            <input
+              onChange={(e) => {
+                setIsTextareaMode(e.target.checked)
+                e.target.checked ? poolList2textarea() : textarea2poolList()
+              }}
+              type="checkbox"
+              checked={isTextareaMode}
             />
-          </div>
+            <span className="slider rounded-lg"></span>
+          </label>
+
+          <span className={`${isTextareaMode ? 'text-green-500' : 'opacity-30'}`}>
+            Plain Text
+          </span>
         </div>
-        {isTextareaMode ? (
-          <TextareaMode
-            textarea={textarea}
-            setTextarea={setTextarea}
-            textarea2poolList={textarea2poolList}
-            parsedTokenAmounts={parsedTokenAmounts}
-            tokenMetaList={tokenMetaList}
-          />
-        ) : (
-          <div className="w-full">
-            {poolList.map((p, index) => (
-              <Profile
-                key={`${p.key}`}
-                profileKey={`${p.key}`}
-                profile={p}
-                index={index}
-                onRemove={removeItemFromPool}
-                onChange={onPoolItemChange}
-                repeatedAddress={repeatedAddress}
-                parsedTokenAmounts={parsedTokenAmounts}
-                isPercentMode={isPercentMode}
+
+        <div className="w-full">
+          <div className="flex  w-full  justify-between  text-base ">
+            <div className="flex flex-1 justify-center items-center text-center  border border-solid  border-b-0 border-r-0 border-gray-400 dark:border-gray-600">
+              <div className="w-10"></div>
+              <div className="w-96">Address</div>
+            </div>
+            <div className="flex flex-col border border-b-0 border-gray-400 dark:border-gray-600">
+              <div className="text-center border-b border-gray-400 dark:border-gray-600 py-1">
+                Amount
+              </div>
+
+              <PoolHeader
                 tokenMetaList={tokenMetaList}
-                userInputTotal={baseUserInputTotal}
+                setTokenMetaList={setTokenMetaList}
+                tableHeaderInputList={tableHeaderInputList}
+                setTableHeaderInputList={setTableHeaderInputList}
               />
-            ))}
+            </div>
           </div>
-        )}
-
-        {isTextareaMode ? (
-          <div className="w-full border-t border-gray-400"></div>
-        ) : (
-          <button
-            onClick={() => addEmptyProfile()}
-            className="w-full cursor-pointer flex items-center justify-center h-8 border border-dashed  border-gray-500"
-          >
-            <MaterialSymbolsAdd className="flex-1" />
-          </button>
-        )}
-      </div>
-
-      <PoolSetting poolConfig={poolConfig} setPoolConfig={setPoolConfig} />
-
-      <div className="w-full mt-5 flex justify-between items-center">
-        <div className="flex items-baseline">
-          {tokenTotalAmounts ? `Total:` : null}
-          <div className="flex flex-col font-medium mx-2">
-            {tokenTotalAmounts &&
-              tokenTotalAmounts.map((amount, index) => (
-                <div key={'token-' + index}>
-                  {formatCurrencyAmount(amount, tokenMetaList[index])}
-                  <span className="ml-1 text-gray-500">
-                    {tokenMetaList[index]?.symbol}
-                  </span>
-                </div>
+          {isTextareaMode ? (
+            <TextareaMode
+              textarea={textarea}
+              setTextarea={setTextarea}
+              textarea2poolList={textarea2poolList}
+              parsedTokenAmounts={parsedTokenAmounts}
+              tokenMetaList={tokenMetaList}
+            />
+          ) : (
+            <div className="w-full">
+              {poolList.map((p, index) => (
+                <Profile
+                  key={`${p.key}`}
+                  profileKey={`${p.key}`}
+                  profile={p}
+                  index={index}
+                  onRemove={removeItemFromPool}
+                  onChange={onPoolItemChange}
+                  repeatedAddress={repeatedAddress}
+                  parsedTokenAmounts={parsedTokenAmounts}
+                  isPercentMode={isPercentMode}
+                  tokenMetaList={tokenMetaList}
+                  userInputTotal={baseUserInputTotal}
+                />
               ))}
-          </div>
-        </div>
-        <div>
-          {typeof callDataCheck === 'boolean' ? null : (
-            <span className=" text-red-500 mr-2">{callDataCheck}</span>
+            </div>
           )}
-          <button
-            onClick={typeof callDataCheck === 'boolean' ? onConfirm : undefined}
-            className={`border border-gray-900 px-2 rounded-md hover:bg-gray-100 ${
-              typeof callDataCheck === 'boolean'
-                ? 'text-black'
-                : 'text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            Preview Distributions
-          </button>
+
+          {isTextareaMode ? (
+            <div className="w-full border-t border-gray-400"></div>
+          ) : (
+            <button
+              onClick={() => addEmptyProfile()}
+              className="w-full cursor-pointer flex items-center justify-center h-8 border border-dashed  border-gray-500"
+            >
+              <MaterialSymbolsAdd className="flex-1" />
+            </button>
+          )}
+        </div>
+
+        <PoolSetting poolConfig={poolConfig} setPoolConfig={setPoolConfig} />
+        <div ref={(el) => (scrollToViewDiv.current = el)} className="h-10"></div>
+      </div>
+      <div>
+        <div className='bg-white rounded-lg py-4 px-2 dark:bg-slate-800'>
+          <div className='flex flex-col'>
+            <div className='flex gap-x-36 items-center justify-between px-2 border-b border-gray-200 dark:border-gray-600 border-solid'>
+              <span className='text-lg font-semibold'>Total</span>
+              <div>
+                <span className='text-2xl font-bold'>{tokenTotalAmounts ? formatCurrencyAmount(tokenTotalAmounts[0], tokenMetaList[0]) : "0"}</span>
+                <span className="ml-1">{tokenMetaList[0] && tokenMetaList[0].symbol}</span>
+              </div>
+            </div>
+            <div className='flex gap-x-36 items-center justify-between p-2 border-b border-gray-200 dark:border-gray-600 border-solid'>
+              <span className=''>Balance</span>
+              <div>
+                <span className=''>{tokenBalanceList ? formatCurrencyAmount(tokenBalanceList[0], tokenMetaList[0]) : null}</span>
+                <span className="ml-1">{tokenMetaList[0] && tokenMetaList[0].symbol}</span>
+              </div>
+            </div>
+            {tokenMetaList[1] && <div className='mt-4'>
+              <div className='flex gap-x-36 items-center justify-between px-2 border-b border-gray-200 dark:border-gray-600 border-solid'>
+                <span className='text-lg font-semibold'>Pool2</span>
+                <div>
+                  <span className='text-2xl font-bold'>{tokenTotalAmounts ? formatCurrencyAmount(tokenTotalAmounts[1], tokenMetaList[1]) : "0"}</span>
+                  <span className="ml-1">{tokenMetaList[1] && tokenMetaList[1].symbol}</span>
+                </div>
+              </div>
+              <div className='flex gap-x-36 items-center justify-between p-2 border-b border-gray-200 dark:border-gray-600 border-solid'>
+                <span className=''>Balance</span>
+                <div>
+                  <span className=''>{tokenBalanceList ? formatCurrencyAmount(tokenBalanceList[1], tokenMetaList[1]) : null}</span>
+                  <span className="ml-1">{tokenMetaList[1] && tokenMetaList[1].symbol}</span>
+                </div>
+              </div>
+            </div>}
+          </div>
+          <div className='mt-16'>
+            {typeof callDataCheck === 'boolean' ? null : (
+              <span className=" text-red-500 mr-2 text-xs">{callDataCheck}</span>
+            )}
+            <button
+              onClick={typeof callDataCheck === 'boolean' ? onConfirm : undefined}
+              className={`
+              ${typeof callDataCheck === 'boolean' ? "cursor-pointer hover:from-green-400 hover:to-purple-300 hover:text-black hover:shadow-none" : "cursor-not-allowed"}
+              px-4 h-12 text-base font-bold
+              bg-gradient-to-tr from-green-200 to-gray-300 transition-colors
+             text-black border-none block w-full  rounded-lg shadow `}
+            >
+              Preview Distributions
+            </button>
+          </div>
+
+          {createPoolCallData && confirmVisible && dPoolAddress ? (
+            <CreatePoolConfirm
+              visible={confirmVisible}
+              setVisible={setConfirmVisible}
+              callData={createPoolCallData}
+              tokenMetaList={tokenMetaList}
+              tokenBalanceList={tokenBalanceList}
+              isTokenBalanceEnough={isTokenBalanceEnough}
+              dPoolAddress={dPoolAddress}
+              distributionType={poolConfig.distributionType}
+              onDistributeSuccess={onDistributeSuccess}
+            />
+          ) : null}
         </div>
       </div>
-      <div ref={(el) => (scrollToViewDiv.current = el)} className="h-20"></div>
 
-      {createPoolCallData && confirmVisible && dPoolAddress ? (
-        <CreatePoolConfirm
-          visible={confirmVisible}
-          setVisible={setConfirmVisible}
-          callData={createPoolCallData}
-          tokenMetaList={tokenMetaList}
-          tokenBalanceList={tokenBalanceList}
-          isTokenBalanceEnough={isTokenBalanceEnough}
-          dPoolAddress={dPoolAddress}
-          distributionType={poolConfig.distributionType}
-          onDistributeSuccess={onDistributeSuccess}
-        />
-      ) : null}
     </div>
   )
 }
