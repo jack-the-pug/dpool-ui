@@ -5,6 +5,7 @@ import { chains } from "../constants";
 import { useDPoolContract } from "../hooks/useContract";
 import useDPoolAddress from "../hooks/useDPoolAddress";
 import { useEstimateGas } from "../hooks/useEstimateGas";
+import { parsedNumberByDecimal } from "../utils/number";
 import { EosIconsBubbleLoading, IcBaselineLocalGasStation } from "./icon";
 
 interface EstimateGasProps {
@@ -38,7 +39,6 @@ export function EstimateGas(props: EstimateGasProps) {
   if (!chainId) return null
   if (loading) return <div className="flex text-xs text-gray-400 my-1"><EosIconsBubbleLoading />Estimate gas fee</div>
   if (gasFee)
-    return <div className="text-xs text-gray-400 my-1 flex items-center"><IcBaselineLocalGasStation className="w-4 h-4" />:{utils.formatUnits(gasFee, "gwei")} {nativeCurrency}</div>
-  // return <div className="text-xs text-gray-400 my-1">Unknown Fee</div>
+    return <div className="text-xs text-gray-400 my-1 flex items-center"><IcBaselineLocalGasStation className="w-4 h-4" />:{parsedNumberByDecimal(utils.formatUnits(gasFee, "ether"), 6)} {nativeCurrency}</div>
   return null
 }
