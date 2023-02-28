@@ -2,7 +2,7 @@ import { useWeb3React } from '@web3-react/core'
 import { Contract, ContractInterface } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
 import { useMemo } from 'react'
-import useSignerOrProvider from './useSignOrProvider'
+import { useSigner } from './useSigner'
 import DPoolABI from '../abis/dPool.json'
 import DPoolFactoryABI from '../abis/dPoolFactory.json'
 import ERC20ABI from '../abis/erc20.json'
@@ -12,19 +12,21 @@ import { chains } from '../constants'
 export function useContract(
   contractAddress: string | undefined,
   abi: ContractInterface,
-  view?: true
+  view: boolean = true
 ): Contract | undefined {
   const { provider } = useWeb3React()
-  const signerOrProvider = useSignerOrProvider()
+  const signer = useSigner()
   return useMemo(() => {
     if (!contractAddress || !isAddress(contractAddress)) return
-    if (!signerOrProvider || !provider) return
+    if (!provider) return
+    if (!view && !signer) return
+    console.log("view", view)
     return new Contract(
       contractAddress,
       abi,
-      view ? provider : signerOrProvider
+      view ? provider : signer!
     )
-  }, [signerOrProvider, contractAddress, view])
+  }, [provider, signer, contractAddress, view])
 }
 export function useDPoolFactoryContract() {
   const { chainId } = useWeb3React()
@@ -37,7 +39,7 @@ export function useDPoolFactoryContract() {
 
 export function useDPoolContract(
   dPoolAddress: string | undefined,
-  view?: true
+  view: boolean = true
 ) {
   return useContract(dPoolAddress, DPoolABI, view)
 }

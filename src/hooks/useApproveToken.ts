@@ -1,7 +1,7 @@
 import { BigNumber, Contract, ContractReceipt, ethers } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
 import { useCallback } from 'react'
-import useSignerOrProvider from './useSignOrProvider'
+import { useSigner } from './useSigner'
 import ERC20ABI from '../abis/erc20.json'
 import { toast } from 'react-toastify'
 import { useWeb3React } from '@web3-react/core'
@@ -9,16 +9,15 @@ import { useWeb3React } from '@web3-react/core'
 type ApproveRes = [false] | [true, string | null]
 export const useApproveToken = (dPoolAddress: string | undefined) => {
   const { chainId, account } = useWeb3React()
-  const signerOrProvider = useSignerOrProvider()
-
+  const signer = useSigner()
   const getERC20TokenContract = useCallback(
     (tokenAddress: string) => {
-      if (!signerOrProvider || !tokenAddress || !isAddress(tokenAddress))
+      if (!signer || !tokenAddress || !isAddress(tokenAddress))
         return null
 
-      return new Contract(tokenAddress, ERC20ABI, signerOrProvider)
+      return new Contract(tokenAddress, ERC20ABI, signer)
     },
-    [signerOrProvider]
+    [signer]
   )
 
   const getApprovedAmount = useCallback(
@@ -49,8 +48,7 @@ export const useApproveToken = (dPoolAddress: string | undefined) => {
         return [true, transactionHash]
       } catch (err: any) {
         toast.error(
-          `${
-            typeof err === 'object' ? err.message || JSON.stringify(err) : err
+          `${typeof err === 'object' ? err.message || JSON.stringify(err) : err
           }`
         )
         return [false]
