@@ -441,7 +441,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
           <tr className=" w-full my-2 bg-gray-100 dark:bg-slate-800">
             <td className="py-2">Address</td>
             {tokenMetaList.map((tokenMeta) => (
-              <td>
+              <td key={tokenMeta.address}>
                 <AddressLink address={tokenMeta.address} className="text-black dark:text-gray-200">
                   {tokenMeta.symbol}
                 </AddressLink>
