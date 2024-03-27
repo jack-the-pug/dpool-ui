@@ -34,7 +34,7 @@ export function useDPoolFactoryContract() {
     if (!chainId || !chains[chainId]) return
     return chains[chainId].dPoolFactoryAddress
   }, [chainId])
-  return useContract(address, DPoolFactoryABI)
+  return useContract(address, DPoolFactoryABI, false)
 }
 
 export function useDPoolContract(
