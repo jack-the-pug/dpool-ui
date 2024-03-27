@@ -151,14 +151,14 @@ export function Fund(props: FundProps) {
   return (
     <div className="flex flex-col ml-5">
       <div className='bg-white dark:bg-slate-800 rounded-lg py-4'>
-        <div className='flex gap-x-36 items-center justify-between px-2 border-b border-gray-200 border-solid'>
+        <div className='flex gap-x-36 items-center justify-between px-2 border-b border-gray-200 dark:border-gray-500  border-solid'>
           <span className='text-lg font-semibold'>Fund</span>
           <div>
             <span className='text-2xl font-bold'>{utils.formatUnits(poolMeta.totalAmount, tokenMeta.decimals)}</span>
             <span className='ml-1'>{tokenMeta.symbol}</span>
           </div>
         </div>
-        {tokenBalance && <div className='flex gap-x-36 my-2 items-center justify-between px-2 border-b border-gray-200 border-solid'>
+        {tokenBalance && <div className='flex gap-x-36 my-2 items-center justify-between px-2 border-b border-gray-200 dark:border-gray-500 border-solid'>
           <span className='text-lg'>Balance</span>
           <div>
             <span className=''>{formatCurrencyAmount(tokenBalance, tokenMeta)}</span>

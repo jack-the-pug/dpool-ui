@@ -4,4 +4,4 @@ import { URLS } from '../constants'
 export const [network, hooks] = initializeConnector<Network>(
   (actions) => new Network({ actions, urlMap: URLS })
 )
-network.activate(137)
+

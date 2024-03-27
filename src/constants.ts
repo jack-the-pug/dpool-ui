@@ -52,7 +52,18 @@ const Polygon: Chain = {
     'https://api.thegraph.com/subgraphs/name/socemtzmdrmndfg/dpoolpolygon',
   isTestNet: false,
 }
-
+const Arbitrum: Chain = {
+  chainId: 42161,
+  name: 'Arbitrum',
+  symbol: 'ETH',
+  decimals: 18,
+  dPoolFactoryAddress: '0xC5A343Db03f89B45CA1C355fcd11ecf5B8b89092',
+  scan: 'https://arbiscan.io',
+  graphUrl:
+  'https://api.thegraph.com/subgraphs/name/socemtzmdrmndfg/dpoolarbitrum',
+  urls: ['https://arb1.arbitrum.io/rpc'],
+  isTestNet: false,
+}
 const Mumbai: Chain = {
   chainId: 80001,
   name: 'Mumbai',
@@ -84,6 +95,7 @@ export const chains: Chains = {
   // 1: Mainnet,
   5: Goerli,
   137: Polygon,
+  42161: Arbitrum,
   // 4: RinkeBy,
   // 80001: Mumbai,
 }
@@ -131,6 +143,10 @@ export const API_LIST: {
   //   key: import.meta.env.VITE_ETHEREUM_SCAN_KEY,
   //   url: 'https://api.etherscan.io',
   // },
+  [ChainId.Arbitrum]: {
+    key: import.meta.env.VITE_ARBITRUM_SCAN_KEY,
+    url: 'https://arbiscan.io',
+  },
 }
 
 export const URLS: { [chainId: number]: string[] } = Object.keys(

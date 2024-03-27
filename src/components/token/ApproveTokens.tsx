@@ -167,13 +167,13 @@ export function ApproveToken(props: ApproveTokenProps) {
 
   if (isApproved || BigNumber.from(token).eq(0)) return null
   return (
-    <div className="w-full rounded-lg cursor-pointer flex justify-between items-center bg-neutral-200 dark:bg-slate-800 px-1 py-1">
-      <div className="text-xs text-gray-500 pl-2">
+    <div className="w-full rounded-lg cursor-pointer flex justify-between items-center bg-neutral-200 dark:bg-slate-600 px-1 py-1">
+      <div className="text-xs text-gray-500 dark:text-gray-300 pl-2">
         Approve <AddressLink address={dPoolAddress}>dPool</AddressLink> to spend{' '}
         {tokenMeta?.symbol}
         {isSupportPermit ? null : (
           <select
-            className={`outline-none bg-neutral-200 mr-2 ${selectClass}`}
+            className={`outline-none bg-neutral-200 dark:bg-slate-600 mr-2 ${selectClass}`}
             onChange={(e) =>
               setApproveType(e.target.value as unknown as ApproveType)
             }
