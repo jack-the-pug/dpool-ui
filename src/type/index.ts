@@ -4,7 +4,8 @@ export enum ChainId {
   RinkeBy = 4,
   Polygon = 137,
   Mumbai = 800001,
-  Goerli = 5
+  Goerli = 5,
+  Arbitrum = 42161
 }
 export interface PoolRow {
   address: string

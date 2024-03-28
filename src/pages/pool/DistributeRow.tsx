@@ -96,32 +96,26 @@ export function RenderClaim(props: ClaimProps) {
   } = props
   if (!poolMeta || !dPoolAddress) return null
 
-  const [shouldClaimAmount, setShouldClaimAmount] = useState<BigNumber>(
-    claimer.amount
-  )
+  const [shouldClaimAmount, setShouldClaimAmount] = useState<BigNumber | undefined>()
   const dPoolContract = useDPoolContract(dPoolAddress)
 
   const getClaimedAmount = useCallback(async () => {
     if (!dPoolContract) return
-    if (poolMeta.state === PoolState.Initialized) {
-      return claimer.amount
-    }
     const claimedAmount = await dPoolContract.userClaimedAmount(
       claimer.address,
       poolId
     )
     const _shouldClaimAmount = claimer.amount.sub(claimedAmount)
     setShouldClaimAmount(_shouldClaimAmount)
-  }, [dPoolContract, claimer, poolId, poolMeta])
+  }, [dPoolContract, claimer, poolId])
 
   useEffect(() => {
     if (claimEvent) return
     getClaimedAmount()
   }, [getClaimedAmount, claimEvent])
 
-
-
   const actionCell = useMemo(() => {
+    if (!shouldClaimAmount) return "loading..."
     const { startTime, deadline, state } = poolMeta
     const nowTime = Date.now() / 1000
     if (distributeEvent) {

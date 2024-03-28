@@ -65,7 +65,7 @@ export function useCallContract(contract: Contract | undefined) {
 }
 
 export function useCallDPoolContract(dPoolAddress: string) {
-  const dPoolContract = useDPoolContract(dPoolAddress)
+  const dPoolContract = useDPoolContract(dPoolAddress, false)
   const call = useCallContract(dPoolContract)
   return useCallback(
     async (method: string, params: any[], eventName: DPoolEvent) => {
