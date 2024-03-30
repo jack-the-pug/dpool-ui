@@ -467,7 +467,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
                 ) : null}
               </td>
               {row.amounts.map((amount, i) => (
-                <td key={`${amount}-${i}`} className="py-2">
+                <td key={`${amount}-${i}`} className="py-2" title={formatCurrencyAmount(amount, tokenMetaList[i], tokenMetaList[i] ? tokenMetaList[i].decimals: 4)}>
                   {formatCurrencyAmount(amount, tokenMetaList[i])}
                 </td>
               ))}
@@ -480,7 +480,7 @@ export default function CreatePoolConfirm(props: CreatePoolConfirmProps) {
               Total: {renderUIData.length} Recipient(s)
             </td>
             {tokenTotalAmounts.map((total, index) => (
-              <td key={tokenMetaList[index].address} className="py-2 text-base">
+              <td key={tokenMetaList[index].address} className="py-2 text-base" title={formatCurrencyAmount(total, tokenMetaList[index], tokenMetaList[index] ? tokenMetaList[index].decimals: 4)}>
                 {formatCurrencyAmount(total, tokenMetaList[index])}
               </td>
             ))}

@@ -165,7 +165,7 @@ export function RenderClaim(props: ClaimProps) {
   ])
   return (
     <>
-      <td className="text-sm">
+      <td className="text-sm" title={formatCurrencyAmount(claimer.amount, tokenMeta, tokenMeta ? tokenMeta.decimals: 4)}>
         {formatCurrencyAmount(claimer.amount, tokenMeta)}
       </td>
       <td className="text-gray-400 text-sm">{actionCell}</td>
